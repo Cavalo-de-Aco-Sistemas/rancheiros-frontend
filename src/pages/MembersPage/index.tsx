@@ -30,6 +30,7 @@ import { useDisclosure } from '@mantine/hooks';
 import { Member, MemberDto } from '@/model/member';
 import useMemberMutation from '@/mutations/useMemberMutation';
 import useMembersQuery from '@/queries/useMembersQuery';
+import { MemberSelect } from '@/select/MemberSelect';
 
 interface Option {
   label: string;
@@ -208,7 +209,7 @@ export function MembersPage() {
   return (
     <>
       <MantineReactTable table={table} />
-      <Modal opened={opened} onClose={onClose} title="Cadastro de Membros" size="lg">
+      <Modal opened={opened} onClose={onClose} title="Cadastro de Membros" size="xl">
         <form onSubmit={form.onSubmit((data) => mutate({ data, id: selected?.id }))}>
           <Stack>
             <TextInput
@@ -241,11 +242,6 @@ export function MembersPage() {
                 {...form.getInputProps('phase')}
                 disabled={isPending || action === 'delete'}
               />
-              <TextInput
-                label="Encargo"
-                key={form.key('responsibility')}
-                {...form.getInputProps('responsibility')}
-              />
               <DateInput
                 label="Nascimento"
                 key={form.key('birthday')}
@@ -253,12 +249,29 @@ export function MembersPage() {
                 disabled={isPending || action === 'delete'}
                 valueFormat="DD/MM/YYYY"
                 placeholder="DD/MM/AAAA"
-              />
+              />{' '}
+            </SimpleGrid>
+            <SimpleGrid cols={{ base: 1, xs: 2, sm: 3 }}>
               <TextInput
                 label="Celular/WhatsApp"
                 placeholder="(99) 99999-9999"
                 key={form.key('phone')}
                 {...form.getInputProps('phone')}
+              />
+              <MemberSelect
+                label="Cônjuge"
+                key={form.key('spouse')}
+                {...form.getInputProps('spouse')}
+              />
+              <MemberSelect
+                label="Padrinho/Madrinha"
+                key={form.key('godfather')}
+                {...form.getInputProps('godfather')}
+              />{' '}
+              <TextInput
+                label="Encargo"
+                key={form.key('responsibility')}
+                {...form.getInputProps('responsibility')}
               />
               <Select
                 data={ranchOptions}
@@ -276,8 +289,6 @@ export function MembersPage() {
                   form.setFieldValue('residence', currentTarget.value.toLocaleUpperCase())
                 }
               />
-            </SimpleGrid>
-            <SimpleGrid cols={{ base: 1, xs: 3 }}>
               <DateInput
                 label="Data que prospectou"
                 key={form.key('dateProspect')}
