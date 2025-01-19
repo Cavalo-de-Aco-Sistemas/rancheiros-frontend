@@ -1,6 +1,8 @@
 export interface Member {
   id: number;
   name: string;
+  patch: string | null;
+  blood: string | null;
   phase: string | null; // prospect, half-patch, full-patch
   birthday: string | null;
   phone: string | null;

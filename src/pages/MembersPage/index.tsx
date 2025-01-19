@@ -14,6 +14,7 @@ import { MRT_Localization_PT_BR } from 'mantine-react-table/locales/pt-BR/index.
 import {
   ActionIcon,
   Anchor,
+  Badge,
   Button,
   Group,
   Modal,
@@ -92,6 +93,26 @@ export function MembersPage() {
   const columns = useMemo<MRT_ColumnDef<Member>[]>(
     () => [
       { accessorKey: 'name', header: 'Nome' },
+      {
+        accessorKey: 'patch',
+        header: 'Nome no Patch',
+        Cell: ({ row }) =>
+          row.original.patch && (
+            <Badge ff="Rye" variant="outline" color="white" radius="xs">
+              {row.original.patch}
+            </Badge>
+          ),
+      },
+      {
+        accessorKey: 'blood',
+        header: 'Tipo sanguíneo',
+        Cell: ({ row }) =>
+          row.original.blood && (
+            <Badge ff="Rye" variant="transparent" color="red.6" radius="xs">
+              {row.original.blood}
+            </Badge>
+          ),
+      },
       {
         accessorKey: 'phase',
         header: 'Fase',
@@ -198,6 +219,21 @@ export function MembersPage() {
               disabled={isPending || action === 'delete'}
             />
             <SimpleGrid cols={{ base: 1, xs: 2 }}>
+              <TextInput
+                label="Nome no Patch"
+                key={form.key('patch')}
+                {...form.getInputProps('patch')}
+                onChange={({ currentTarget }) =>
+                  form.setFieldValue('patch', currentTarget.value.toLocaleUpperCase())
+                }
+              />
+              <Select
+                data={['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-']}
+                label="Tipo sanguíneo"
+                key={form.key('blood')}
+                {...form.getInputProps('blood')}
+                disabled={isPending || action === 'delete'}
+              />
               <Select
                 data={phasesOptions}
                 label="Fase"
