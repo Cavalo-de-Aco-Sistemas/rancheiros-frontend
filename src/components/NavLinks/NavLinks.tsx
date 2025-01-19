@@ -10,7 +10,7 @@ export default function NavLinks({ toggleMobile }: { toggleMobile: () => void })
 
   const items = [
     { link: '/', label: 'Membros', icon: IconIdBadge2 },
-    { link: '/usuarios', label: 'Usuários', icon: IconShieldLock },
+    // { link: '/usuarios', label: 'Usuários', icon: IconShieldLock },
   ];
 
   return (

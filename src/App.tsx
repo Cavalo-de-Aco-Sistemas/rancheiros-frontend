@@ -6,12 +6,11 @@ import 'mantine-react-table/styles.css';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MantineProvider } from '@mantine/core';
 import { DatesProvider } from '@mantine/dates';
+import { ModalsProvider } from '@mantine/modals';
+import { Notifications } from '@mantine/notifications';
 import { AuthProvider } from './contexts/AuthContext';
 import { Router } from './Router';
 import { theme } from './theme';
-
-import { ModalsProvider } from '@mantine/modals';
-import { Notifications } from '@mantine/notifications';
 
 export default function App() {
   const queryClient = new QueryClient();
