@@ -22,7 +22,7 @@ export default function useMemberMutation(params: UseMemberMutationParams) {
         case 'create':
           return axiosInstance.post(`${BACKEND_ADDRESS}/members`, data);
         case 'update':
-          return axiosInstance.put(`${BACKEND_ADDRESS}/members/${id}`, data);
+          return axiosInstance.patch(`${BACKEND_ADDRESS}/members/${id}`, data);
         case 'delete':
           return axiosInstance.delete(`${BACKEND_ADDRESS}/members/${id}`);
         default:

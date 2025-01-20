@@ -1,11 +1,10 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { UseQueryResult } from '@tanstack/react-query';
 import { Button, Modal, Select, SimpleGrid, Stack, Text, TextInput } from '@mantine/core';
 import { DateInput } from '@mantine/dates';
 import { useForm } from '@mantine/form';
 import { Member, MemberDto } from '@/model/member';
 import useMemberMutation from '@/mutations/useMemberMutation';
-import { MemberSelect } from '@/select/MemberSelect';
 
 export const phasesOptions = [
   { label: 'Amigo', value: 'friend' },
@@ -35,21 +34,85 @@ interface MembersFormProps {
   selected?: Member;
   action: string;
   membersQuery: UseQueryResult<Member[], Error>;
+  membersOptions:
+    | {
+        label: string;
+        value: string;
+      }[]
+    | undefined;
 }
 
+const INITIAL_VALUES = { name: '' };
+
+const toDate = (date?: string | null) => (date ? new Date(`${date}T00:00:00`) : null);
+
+const parseSelected = (member: Member): MemberDto => {
+  const {
+    name,
+    phase,
+    blood,
+    patch,
+    birthday,
+    phone,
+    ranch,
+    residence,
+    responsibility,
+    dateProspect,
+    dateHalfPatch,
+    dateFullPatch,
+    spouse,
+    godfather,
+  } = member;
+  return {
+    name,
+    phase,
+    blood,
+    patch,
+    birthday: toDate(birthday),
+    phone,
+    ranch,
+    residence,
+    responsibility,
+    dateFullPatch: toDate(dateFullPatch),
+    dateHalfPatch: toDate(dateHalfPatch),
+    dateProspect: toDate(dateProspect),
+    spouse: spouse?.id.toString(),
+    godfather: godfather?.id.toString(),
+  };
+};
+
 export default function MembersForm(props: MembersFormProps) {
-  const { opened, close, selected, action, membersQuery } = props;
+  const { opened, close, selected, action, membersQuery, membersOptions } = props;
   const { refetch } = membersQuery;
   const [error, setError] = useState('');
 
+  const [initialValues, setInitialValues] = useState<MemberDto>(INITIAL_VALUES);
+
+  useEffect(() => {
+    if (opened) {
+      if (action === 'create') {
+        setInitialValues(INITIAL_VALUES);
+      } else if (selected) {
+        setInitialValues({
+          ...INITIAL_VALUES,
+          ...parseSelected(selected),
+        });
+      } else {
+        console.warn('Trying to edit without select entry!');
+      }
+    }
+  }, [selected, action, opened]);
+
   const form = useForm({
-    initialValues: {
-      name: '',
-      phase: '',
-    } as MemberDto,
+    initialValues: INITIAL_VALUES,
   });
 
   const { mutate, isPending } = useMemberMutation({ action, form, refetch, close, setError });
+
+  useEffect(() => {
+    form.setValues(initialValues);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialValues]);
 
   const onClose = () => {
     setError('');
@@ -107,13 +170,15 @@ export default function MembersForm(props: MembersFormProps) {
               key={form.key('phone')}
               {...form.getInputProps('phone')}
             />
-            <MemberSelect
+            <Select
               label="Cônjuge"
+              data={membersOptions}
               key={form.key('spouse')}
               {...form.getInputProps('spouse')}
             />
-            <MemberSelect
+            <Select
               label="Padrinho/Madrinha"
+              data={membersOptions}
               key={form.key('godfather')}
               {...form.getInputProps('godfather')}
             />
@@ -168,7 +233,11 @@ export default function MembersForm(props: MembersFormProps) {
               {error}
             </Text>
           )}
-          <Button type="submit" disabled={isPending} color={action === 'delete' ? 'red' : action === 'update' ? 'cyan.9' : 'teal.9'}>
+          <Button
+            type="submit"
+            disabled={isPending}
+            color={action === 'delete' ? 'red' : action === 'update' ? 'cyan.9' : 'teal.9'}
+          >
             {action === 'create' ? 'Cadastrar' : action === 'update' ? 'Atualizar' : 'Excluir'}
           </Button>
         </Stack>

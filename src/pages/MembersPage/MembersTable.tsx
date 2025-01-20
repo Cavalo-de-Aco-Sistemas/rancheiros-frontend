@@ -86,6 +86,7 @@ export function MembersTable(props: MembersTableProps) {
               }
               target="_blank"
               rel="noreferrer"
+              size='sm'
             >
               {row.original.phone.replace(/^(\d{2})(\d{5})(\d{4}).*/, '($1) $2-$3')}
             </Anchor>
@@ -133,7 +134,7 @@ export function MembersTable(props: MembersTableProps) {
     enablePagination: false,
     enableRowVirtualization: true,
     mantineTableContainerProps: { style: { maxHeight: 'calc(100vh - 128px)' } },
-    enableRowActions: false, // @TODO enable row actions to edit
+    enableRowActions: true,
     renderRowActionMenuItems: ({ row }) => {
       return (
         <>

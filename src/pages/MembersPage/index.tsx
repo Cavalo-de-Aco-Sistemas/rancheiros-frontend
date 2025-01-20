@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useDisclosure } from '@mantine/hooks';
 import { Member } from '@/model/member';
 import useMembersQuery from '@/queries/useMembersQuery';
@@ -10,6 +10,11 @@ export function MembersPage() {
   const [selected, setSelected] = useState<Member | undefined>();
   const [action, setAction] = useState('create');
   const [opened, { open, close }] = useDisclosure(false);
+
+  const membersOptions = useMemo(
+    () => membersQuery.data?.map((member) => ({ label: member.name, value: member.id.toString() })),
+    [membersQuery.data]
+  );
 
   return (
     <>
@@ -25,6 +30,7 @@ export function MembersPage() {
         close={close}
         selected={selected}
         action={action}
+        membersOptions={membersOptions}
       />
     </>
   );
