@@ -139,6 +139,7 @@ export default function MembersForm(props: MembersFormProps) {
               onChange={({ currentTarget }) =>
                 form.setFieldValue('patch', currentTarget.value.toLocaleUpperCase())
               }
+              disabled={isPending || action === 'delete'}
             />
             <Select
               data={['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-']}
@@ -169,23 +170,27 @@ export default function MembersForm(props: MembersFormProps) {
               placeholder="(99) 99999-9999"
               key={form.key('phone')}
               {...form.getInputProps('phone')}
+              disabled={isPending || action === 'delete'}
             />
             <Select
               label="Cônjuge"
               data={membersOptions}
               key={form.key('spouse')}
               {...form.getInputProps('spouse')}
+              disabled={isPending || action === 'delete'}
             />
             <Select
               label="Padrinho/Madrinha"
               data={membersOptions}
               key={form.key('godfather')}
               {...form.getInputProps('godfather')}
+              disabled={isPending || action === 'delete'}
             />
             <TextInput
               label="Encargo"
               key={form.key('responsibility')}
               {...form.getInputProps('responsibility')}
+              disabled={isPending || action === 'delete'}
             />
             <Select
               data={ranchOptions}
@@ -202,6 +207,7 @@ export default function MembersForm(props: MembersFormProps) {
               onChange={({ currentTarget }) =>
                 form.setFieldValue('residence', currentTarget.value.toLocaleUpperCase())
               }
+              disabled={isPending || action === 'delete'}
             />
             <DateInput
               label="Data que prospectou"
@@ -229,14 +235,14 @@ export default function MembersForm(props: MembersFormProps) {
             />
           </SimpleGrid>
           {error && (
-            <Text c="red" fs="sm" ta="center">
+            <Text c="red.6" fz="sm" ta="center">
               {error}
             </Text>
           )}
           <Button
             type="submit"
             disabled={isPending}
-            color={action === 'delete' ? 'red' : action === 'update' ? 'cyan.9' : 'teal.9'}
+            color={action === 'delete' ? 'red.9' : action === 'update' ? 'cyan.9' : 'teal.9'}
           >
             {action === 'create' ? 'Cadastrar' : action === 'update' ? 'Atualizar' : 'Excluir'}
           </Button>

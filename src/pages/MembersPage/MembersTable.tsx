@@ -155,7 +155,6 @@ export function MembersTable(props: MembersTableProps) {
               setAction('delete');
             }}
             color="red"
-            disabled
             leftSection={<IconTrash style={{ width: rem(16), height: rem(16) }} />}
           >
             Excluir
