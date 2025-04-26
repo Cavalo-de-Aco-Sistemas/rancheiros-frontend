@@ -1,4 +1,10 @@
-# Meu Dinheiro
+# Rancheiros Frontend
+
+## setup env
+
+```.env
+VITE_BACKEND_ADDRESS=http://localhost:3000
+```
 
 ## Code Features
 
