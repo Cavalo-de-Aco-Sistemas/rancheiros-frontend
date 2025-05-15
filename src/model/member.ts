@@ -18,15 +18,17 @@ export interface Member {
 
 export interface MemberDto {
   name: string;
-  phase?: string; // prospect, half-patch, full-patch
-  birthday?: string;
-  phone?: string;
-  ranch?: string; // ranch: Cambira
-  residence?: string; // residence: CAMBIRA-PR
-  responsibility?: string; // diretor, sgt. armas, etc.
-  dateProspect?: string;
-  dateHalfPatch?: string;
-  dateFullPatch?: string;
-  spouse?: number; // spouse id if registered as member
-  godfather?: number; // godfather ("padrinho") id if any
+  patch?: string | null;
+  blood?: string | null;
+  phase?: string | null; // prospect, half-patch, full-patch
+  birthday?: Date | null;
+  phone?: string | null;
+  ranch?: string | null; // ranch: Cambira
+  residence?: string | null; // residence: CAMBIRA-PR
+  responsibility?: string | null; // diretor, sgt. armas, etc.
+  dateProspect?: Date | null;
+  dateHalfPatch?: Date | null;
+  dateFullPatch?: Date | null;
+  spouse?: string | null; // spouse id if registered as member
+  godfather?: string | null; // godfather ("padrinho") id if any
 }

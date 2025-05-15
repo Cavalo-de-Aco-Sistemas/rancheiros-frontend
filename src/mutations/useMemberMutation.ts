@@ -22,7 +22,7 @@ export default function useMemberMutation(params: UseMemberMutationParams) {
         case 'create':
           return axiosInstance.post(`${BACKEND_ADDRESS}/members`, data);
         case 'update':
-          return axiosInstance.put(`${BACKEND_ADDRESS}/members/${id}`, data);
+          return axiosInstance.patch(`${BACKEND_ADDRESS}/members/${id}`, data);
         case 'delete':
           return axiosInstance.delete(`${BACKEND_ADDRESS}/members/${id}`);
         default:
@@ -37,7 +37,13 @@ export default function useMemberMutation(params: UseMemberMutationParams) {
     },
     onError: (error: AxiosError | Error) => {
       if (error instanceof AxiosError) {
-        setError(error.response?.data.detail ?? error.message);
+        if (error.status === 409) {
+          setError('O campo cônjuge deve ser único.');
+        } else if (error.status === 422) {
+          setError('O item não pode ser excluído pois é referenciado por outros itens');
+        } else {
+          setError(error.response?.data.detail ?? error.message);
+        }
       } else {
         setError(error.message);
       }
