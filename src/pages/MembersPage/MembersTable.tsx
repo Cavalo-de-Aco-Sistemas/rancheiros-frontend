@@ -1,18 +1,7 @@
 import { useMemo } from 'react';
-import { IconEdit, IconPlus, IconTrash } from '@tabler/icons-react';
-import { UseQueryResult } from '@tanstack/react-query';
-import {
-  MantineReactTable,
-  MRT_ColumnDef,
-  MRT_ShowHideColumnsButton,
-  MRT_ToggleDensePaddingButton,
-  MRT_ToggleFiltersButton,
-  MRT_ToggleFullScreenButton,
-  MRT_ToggleGlobalFilterButton,
-  useMantineReactTable,
-} from 'mantine-react-table';
-import { MRT_Localization_PT_BR } from 'mantine-react-table/locales/pt-BR/index.cjs';
-import { ActionIcon, Anchor, Badge, Group, Menu, rem } from '@mantine/core';
+import { MRT_ColumnDef } from 'mantine-react-table';
+import { Anchor, Badge } from '@mantine/core';
+import { CRUDTable } from '@/components/CRUDTable';
 import { Member } from '@/model/member';
 import { phasesOptions, ranchOptions } from './MembersForm';
 
@@ -30,16 +19,7 @@ const digits = /\d+/g;
 const ranchs = optionsToObject(ranchOptions);
 const phases = optionsToObject(phasesOptions);
 
-interface MembersTableProps {
-  membersQuery: UseQueryResult<Member[], Error>;
-  setSelected: React.Dispatch<React.SetStateAction<Member | undefined>>;
-  setAction: React.Dispatch<React.SetStateAction<string>>;
-  open: () => void;
-}
-
-export function MembersTable(props: MembersTableProps) {
-  const { membersQuery, setSelected, setAction, open } = props;
-  const { data, isLoading } = membersQuery;
+export function MembersTable() {
   const columns = useMemo<MRT_ColumnDef<Member>[]>(
     () => [
       { accessorKey: 'name', header: 'Nome' },
@@ -86,7 +66,7 @@ export function MembersTable(props: MembersTableProps) {
               }
               target="_blank"
               rel="noreferrer"
-              size='sm'
+              size="sm"
             >
               {row.original.phone.replace(/^(\d{2})(\d{5})(\d{4}).*/, '($1) $2-$3')}
             </Anchor>
@@ -120,70 +100,5 @@ export function MembersTable(props: MembersTableProps) {
     []
   );
 
-  const table = useMantineReactTable({
-    columns,
-    data: data ?? [],
-    localization: MRT_Localization_PT_BR,
-    state: { isLoading },
-    mantinePaperProps: {
-      style: {
-        border: 'none',
-      },
-    },
-    enableBottomToolbar: false,
-    enablePagination: false,
-    enableRowVirtualization: true,
-    mantineTableContainerProps: { style: { maxHeight: 'calc(100vh - 128px)' } },
-    enableRowActions: true,
-    renderRowActionMenuItems: ({ row }) => {
-      return (
-        <>
-          <Menu.Item
-            onClick={() => {
-              open();
-              setSelected(data?.[row.index]);
-              setAction('update');
-            }}
-            leftSection={<IconEdit style={{ width: rem(16), height: rem(16) }} />}
-          >
-            Editar
-          </Menu.Item>
-          <Menu.Item
-            onClick={() => {
-              open();
-              setSelected(data?.[row.index]);
-              setAction('delete');
-            }}
-            color="red"
-            leftSection={<IconTrash style={{ width: rem(16), height: rem(16) }} />}
-          >
-            Excluir
-          </Menu.Item>
-        </>
-      );
-    },
-
-    renderToolbarInternalActions: ({ table }) => (
-      <Group>
-        <MRT_ToggleGlobalFilterButton table={table} />
-        <MRT_ToggleFiltersButton table={table} />
-        <MRT_ShowHideColumnsButton table={table} />
-        <MRT_ToggleDensePaddingButton table={table} />
-        <MRT_ToggleFullScreenButton table={table} />
-        <ActionIcon
-          onClick={() => {
-            setSelected(undefined);
-            setAction('create');
-            open();
-          }}
-          variant="transparent"
-          color="brand.4"
-        >
-          <IconPlus />
-        </ActionIcon>
-      </Group>
-    ),
-  });
-
-  return <MantineReactTable table={table} />;
+  return <CRUDTable columns={columns} />;
 }
