@@ -13,10 +13,11 @@ import {
 } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { Logo } from '@/components/Logo';
+import { LoginProps } from '@/contexts/AuthContext';
 import { Credentials } from '@/model/models';
 import useLoginMutation from '@/mutations/useLoginMutation';
 
-export function LoginPage({ login }: { login: (value: string) => void }) {
+export function LoginPage({ login }: { login: ({ token, username, admin }: LoginProps) => void }) {
   const [errorMessage, setErrorMessage] = useState('');
 
   const { mutate, isPending } = useLoginMutation();
@@ -30,7 +31,10 @@ export function LoginPage({ login }: { login: (value: string) => void }) {
 
   const handleSubmit = (credentials: Credentials) => {
     mutate(credentials, {
-      onSuccess: (response) => login(response.access_token),
+      onSuccess: (response) => {
+        const { access_token, username, admin } = response;
+        login({ token: access_token, username, admin });
+      },
       onError: (error) => {
         setErrorMessage(
           axios.isAxiosError(error) && error.status === 401

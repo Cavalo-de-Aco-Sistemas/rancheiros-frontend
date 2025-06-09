@@ -1,4 +1,4 @@
-import { Outlet } from 'react-router-dom';
+import { Outlet, useLocation } from 'react-router-dom';
 import { AppShell, Burger, Group, ScrollArea } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import AffixStack from '@/components/AffixStack';
@@ -9,10 +9,21 @@ import OfflineIndicator from '@/components/OfflineIndicator';
 
 import 'dayjs/locale/pt-br';
 
+import { useAuth } from '@/contexts/AuthContext';
+import { NotFoundPage } from '../NotFoundPage';
+
+export const PROTECTED_ROUTES = ['/usuarios'];
+
 export function MainPage() {
   // disclosure to control mobile and desktop navigation menus
   const [mobileOpened, { toggle: toggleMobile }] = useDisclosure();
   const [desktopOpened, { toggle: toggleDesktop }] = useDisclosure(true);
+  const { admin } = useAuth();
+  const location = useLocation();
+
+  if (PROTECTED_ROUTES.includes(location.pathname) && !admin) {
+    return <NotFoundPage />;
+  }
 
   return (
     <AppShell
