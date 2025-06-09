@@ -21,7 +21,7 @@ export interface CRUDTableProps<T extends MRT_RowData> {
 export function CRUDTable<T extends MRT_RowData>(props: CRUDTableProps<T>) {
   const { columns } = props;
   const { query, setSelected, setAction, open } = useCRUD();
-  const { data, isLoading } = query;
+  const { data, isLoading, isError, isFetching, error } = query;
 
   const table = useMantineReactTable<T>({
     columns,
@@ -30,7 +30,13 @@ export function CRUDTable<T extends MRT_RowData>(props: CRUDTableProps<T>) {
     initialState: {
       density: 'xs',
     },
-    state: { isLoading },
+    mantineToolbarAlertBannerProps: isError
+      ? {
+          color: 'red',
+          children: error.message ?? 'Error loading data',
+        }
+      : undefined,
+    state: { isLoading, showAlertBanner: isError, showProgressBars: isFetching },
     mantinePaperProps: {
       style: {
         border: 'none',

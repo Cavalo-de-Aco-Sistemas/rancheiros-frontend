@@ -12,12 +12,14 @@ export interface CRUDFormProps<T extends { id: number }, D> {
   endpoint: string;
   handleError?: (error: AxiosError) => string | undefined;
   modalProps: Omit<ModalProps, 'opened' | 'onClose' | 'children'>;
+  validate?: (data: D) => string | undefined;
 }
 
 export default function CRUDForm<T extends { id: number }, D>(
   props: PropsWithChildren<CRUDFormProps<T, D>>
 ) {
-  const { baseValues, parseSelected, form, endpoint, handleError, modalProps, children } = props;
+  const { baseValues, parseSelected, form, endpoint, handleError, modalProps, children, validate } =
+    props;
   const { opened, close, selected, action, query } = useCRUD();
   const { refetch } = query;
   const [error, setError] = useState('');
@@ -60,9 +62,18 @@ export default function CRUDForm<T extends { id: number }, D>(
     close();
   };
 
+  const onSubmit = (data: D) => {
+    const error = validate?.(data);
+    if (error) {
+      setError(error);
+    } else {
+      mutate({ data, id: selected?.id });
+    }
+  };
+
   return (
     <Modal {...modalProps} opened={opened} onClose={onClose}>
-      <form onSubmit={form.onSubmit((data) => mutate({ data, id: selected?.id }))}>
+      <form onSubmit={form.onSubmit(onSubmit)}>
         <Stack>
           {children}
           {error && (

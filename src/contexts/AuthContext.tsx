@@ -8,6 +8,15 @@ import { useContextProvider } from './useContextProvider';
 export interface AuthContextType {
   axiosInstance: AxiosInstance;
   logout: () => void;
+  authToken: string | null;
+  username: string | null;
+  admin: boolean;
+}
+
+export interface LoginProps {
+  token: string;
+  username: string;
+  admin: boolean;
 }
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -31,6 +40,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     defaultValue: null,
   });
 
+  // the date and time from last login
+  const [username, setUsername] = useLocalStorage<string | null>({
+    key: 'username',
+    defaultValue: null,
+  });
+
+  // the date and time from last login
+  const [admin, setAdmin] = useLocalStorage<boolean>({
+    key: 'admin',
+    defaultValue: false,
+  });
+
   /**
    * Handles user login by saving the authentication token and the current authentication date
    * on state and local storage
@@ -38,11 +59,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
    * @param {string} token - The authentication token to be set.
    */
   const login = useCallback(
-    (token: string) => {
+    ({ token, username, admin }: LoginProps) => {
       setAuthToken(token);
       setAuthDate(new Date().toISOString());
+      setUsername(username);
+      setAdmin(admin);
     },
-    [setAuthDate, setAuthToken]
+    [setAuthToken, setAuthDate, setUsername, setAdmin]
   );
 
   /**
@@ -52,7 +75,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const logout = useCallback(() => {
     setAuthToken(null);
     setAuthDate(null);
-  }, [setAuthDate, setAuthToken]);
+    setUsername(null);
+    setAdmin(false);
+  }, [setAuthDate, setAuthToken, setUsername, setAdmin]);
 
   /**
    * After each login or logout process:
@@ -76,46 +101,53 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   // global axios instance
   const axiosInstance: AxiosInstance = useMemo(() => {
-    return axios.create({
+    const instance = axios.create({
       headers: {
         'Content-Type': 'application/json;charset=UTF-8',
       },
     });
-  }, []);
 
-  // intercept all requests and add the auth token
-  axiosInstance.interceptors.request.use(
-    (config) => {
-      const token = authToken;
-      if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
+    // intercept all requests and add the auth token
+    instance.interceptors.request.use(
+      (config) => {
+        if (authToken) {
+          config.headers.Authorization = `Bearer ${authToken}`;
+        }
+        return config;
+      },
+      (error) => {
+        return Promise.reject(error);
       }
-      return config;
-    },
-    (error) => {
-      return Promise.reject(error);
-    }
-  );
+    );
 
-  // intercept all responses for token expired
-  axiosInstance.interceptors.response.use(
-    (response) => response,
-    async (error) => {
-      // Unauthorized
-      if (error.response && error.response.status === 401) {
-        logout();
+    // intercept all responses for token expired
+    instance.interceptors.response.use(
+      (response) => response,
+      async (error) => {
+        // Unauthorized
+        if (error.response && error.response.status === 401) {
+          logout();
+        }
+        if (error.response && error.response.status === 403) {
+          return Promise.reject(new Error('Você não tem permissão para manipular este recurso'));
+        }
+        // log response
+        // eslint-disable-next-line no-console
+        console.error('error', error);
+        return Promise.reject(error);
       }
-      // log response
-      // eslint-disable-next-line no-console
-      console.error('error', error);
-      return Promise.reject(error);
-    }
-  );
+    );
+
+    return instance;
+  }, [authToken, logout]);
 
   // the value provided by auth context
   const value = {
     axiosInstance,
     logout,
+    authToken,
+    username,
+    admin,
   };
 
   return (
