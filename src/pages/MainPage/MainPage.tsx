@@ -1,4 +1,4 @@
-import { Outlet, useLocation } from 'react-router-dom';
+import { Link, Outlet, useLocation } from 'react-router-dom';
 import { AppShell, Burger, Group, ScrollArea } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import AffixStack from '@/components/AffixStack';
@@ -39,7 +39,9 @@ export function MainPage() {
           <Group>
             <Burger opened={mobileOpened} onClick={toggleMobile} hiddenFrom="sm" size="sm" />
             <Burger opened={desktopOpened} onClick={toggleDesktop} visibleFrom="sm" size="sm" />
-            <Logo order={3} />
+            <Link to="/" style={{ textDecoration: 'none', color: 'inherit' }}>
+              <Logo order={3} />
+            </Link>
           </Group>
         </Group>
       </AppShell.Header>

@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { IconIdBadge2, IconLogout, IconShieldLock } from '@tabler/icons-react';
+import { IconIdBadge2, IconLogout, IconSchool, IconShieldLock } from '@tabler/icons-react';
 import { Link, useLocation } from 'react-router-dom';
 import { Divider, Stack } from '@mantine/core';
 import { useAuth } from '@/contexts/AuthContext';
@@ -7,7 +7,8 @@ import { PROTECTED_ROUTES } from '@/pages/MainPage/MainPage';
 import classes from './NavLinks.module.css';
 
 const ITEMS = [
-  { link: '/', label: 'Membros', icon: IconIdBadge2 },
+  { link: '/members', label: 'Membros', icon: IconIdBadge2 },
+  { link: '/classes', label: 'Turmas', icon: IconSchool },
   { link: '/usuarios', label: 'Usuários', icon: IconShieldLock },
 ];
 

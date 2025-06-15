@@ -4,6 +4,7 @@ import { Anchor, Badge } from '@mantine/core';
 import { CRUDTable } from '@/components/CRUDTable';
 import { Member } from '@/model/member';
 import { phasesOptions, ranchOptions } from './MembersForm';
+import { dateBR } from '@/utils/dates';
 
 const optionsToObject = (
   options: {
@@ -14,7 +15,6 @@ const optionsToObject = (
   return Object.fromEntries(options.map(({ label, value }) => [value, label]));
 };
 
-const dateBR = (date: string | null) => date?.split('-').reverse().join('/');
 const digits = /\d+/g;
 const ranchs = optionsToObject(ranchOptions);
 const phases = optionsToObject(phasesOptions);

@@ -6,6 +6,7 @@ import CRUDForm from '@/components/CRUDForm';
 import { useCRUD } from '@/contexts/CRUDContext';
 import { Member, MemberDto } from '@/model/member';
 import useCRUDQuery from '@/queries/useCRUDQuery';
+import { toDate } from '@/utils/dates';
 
 export const phasesOptions = [
   { label: 'Amigo', value: 'friend' },
@@ -30,8 +31,6 @@ export const ranchOptions = [
 ];
 
 const INITIAL_VALUES = { name: '' };
-
-const toDate = (date?: string | null) => (date ? new Date(`${date}T00:00:00`) : null);
 
 const parseSelected = (member: Member): MemberDto => {
   const {
@@ -141,7 +140,7 @@ export default function MembersForm() {
           disabled={isPending || action === 'delete'}
           valueFormat="DD/MM/YYYY"
           placeholder="DD/MM/AAAA"
-        />{' '}
+        />
       </SimpleGrid>
       <SimpleGrid cols={{ base: 1, xs: 2, sm: 3 }}>
         <TextInput
