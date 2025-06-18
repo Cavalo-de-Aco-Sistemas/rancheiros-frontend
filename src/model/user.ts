@@ -1,12 +1,26 @@
+export interface Permissions {
+  create: boolean;
+  read: boolean;
+  update: boolean;
+  delete: boolean;
+}
+
+export interface UserPermissions {
+  members: Permissions;
+  classes: Permissions;
+  users: Permissions;
+  enrollments: Permissions;
+}
+
 export interface User {
   id: number;
   username: string;
-  admin: boolean;
+  permissions: UserPermissions;
 }
 
 export interface UserDto {
   username: string;
-  admin: boolean;
   password?: string;
   repeatPassword?: string;
+  permissions: UserPermissions;
 }

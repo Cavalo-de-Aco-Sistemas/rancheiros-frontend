@@ -25,5 +25,5 @@ export function ClassesTable() {
     []
   );
 
-  return <CRUDTable columns={columns} />;
+  return <CRUDTable columns={columns} title="Turmas" />;
 }

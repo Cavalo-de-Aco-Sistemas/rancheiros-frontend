@@ -100,5 +100,5 @@ export function MembersTable() {
     []
   );
 
-  return <CRUDTable columns={columns} />;
+  return <CRUDTable columns={columns} title="Membros" />;
 }

@@ -11,15 +11,16 @@ import {
   useMantineReactTable,
 } from 'mantine-react-table';
 import { MRT_Localization_PT_BR } from 'mantine-react-table/locales/pt-BR/index.cjs';
-import { ActionIcon, Group, Menu, rem } from '@mantine/core';
+import { ActionIcon, Group, Menu, rem, Title } from '@mantine/core';
 import { useCRUD } from '@/contexts/CRUDContext';
 
 export interface CRUDTableProps<T extends MRT_RowData> {
   columns: MRT_ColumnDef<T>[];
+  title: string;
 }
 
 export function CRUDTable<T extends MRT_RowData>(props: CRUDTableProps<T>) {
-  const { columns } = props;
+  const { columns, title } = props;
   const { query, setSelected, setAction, open } = useCRUD();
   const { data, isLoading, isError, isFetching, error } = query;
 
@@ -47,6 +48,7 @@ export function CRUDTable<T extends MRT_RowData>(props: CRUDTableProps<T>) {
     enableRowVirtualization: true,
     mantineTableContainerProps: { style: { maxHeight: 'calc(100vh - 128px)' } },
     enableRowActions: true,
+    renderTopToolbarCustomActions: () => <Title order={2}>{title}</Title>,
     renderRowActionMenuItems: ({ row }) => {
       return (
         <>
