@@ -10,13 +10,11 @@ export interface AuthContextType {
   logout: () => void;
   authToken: string | null;
   username: string | null;
-  admin: boolean;
 }
 
 export interface LoginProps {
   token: string;
   username: string;
-  admin: boolean;
 }
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -45,13 +43,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     key: 'username',
     defaultValue: null,
   });
-
-  // the date and time from last login
-  const [admin, setAdmin] = useLocalStorage<boolean>({
-    key: 'admin',
-    defaultValue: false,
-  });
-
   /**
    * Handles user login by saving the authentication token and the current authentication date
    * on state and local storage
@@ -59,13 +50,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
    * @param {string} token - The authentication token to be set.
    */
   const login = useCallback(
-    ({ token, username, admin }: LoginProps) => {
+    ({ token, username }: LoginProps) => {
       setAuthToken(token);
       setAuthDate(new Date().toISOString());
       setUsername(username);
-      setAdmin(admin);
     },
-    [setAuthToken, setAuthDate, setUsername, setAdmin]
+    [setAuthToken, setAuthDate, setUsername]
   );
 
   /**
@@ -76,8 +66,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setAuthToken(null);
     setAuthDate(null);
     setUsername(null);
-    setAdmin(false);
-  }, [setAuthDate, setAuthToken, setUsername, setAdmin]);
+  }, [setAuthDate, setAuthToken, setUsername]);
 
   /**
    * After each login or logout process:
@@ -147,7 +136,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     logout,
     authToken,
     username,
-    admin,
   };
 
   return (

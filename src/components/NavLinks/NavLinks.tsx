@@ -1,9 +1,7 @@
-import { useMemo } from 'react';
 import { IconIdBadge2, IconLogout, IconSchool, IconShieldLock } from '@tabler/icons-react';
 import { Link, useLocation } from 'react-router-dom';
 import { Divider, Stack } from '@mantine/core';
 import { useAuth } from '@/contexts/AuthContext';
-import { PROTECTED_ROUTES } from '@/pages/MainPage/MainPage';
 import classes from './NavLinks.module.css';
 
 const ITEMS = [
@@ -14,20 +12,11 @@ const ITEMS = [
 
 export default function NavLinks({ toggleMobile }: { toggleMobile: () => void }) {
   const location = useLocation();
-  const { logout, admin } = useAuth();
-
-  const items = useMemo(() => {
-    return ITEMS.filter((item) => {
-      if (PROTECTED_ROUTES.includes(item.link)) {
-        return admin;
-      }
-      return true;
-    });
-  }, [admin]);
+  const { logout } = useAuth();
 
   return (
     <Stack gap="xs" m="sm">
-      {items.map((item) => (
+      {ITEMS.map((item) => (
         <Link
           className={classes.link}
           data-active={item.link === location.pathname || undefined}
