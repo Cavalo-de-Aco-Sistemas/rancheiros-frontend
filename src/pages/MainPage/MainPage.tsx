@@ -54,7 +54,7 @@ export function MainPage() {
             <Burger opened={mobileOpened} onClick={toggleMobile} hiddenFrom="sm" size="sm" />
             <Burger opened={desktopOpened} onClick={toggleDesktop} visibleFrom="sm" size="sm" />
             <Link to="/" style={{ textDecoration: 'none', color: 'inherit' }}>
-              <Logo order={3} />
+              <Logo order={2} />
             </Link>
           </Group>
         </Group>
