@@ -10,13 +10,14 @@ import OfflineIndicator from '@/components/OfflineIndicator';
 import 'dayjs/locale/pt-br';
 
 import { useMemo } from 'react';
+import { IconIdBadge2, IconSchool, IconShieldLock } from '@tabler/icons-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { NotFoundPage } from '@/pages/NotFoundPage';
 
-const protectedRoutesMap = new Map([
-  ['/membros', 'members'],
-  ['/turmas', 'classes'],
-  ['/usuarios', 'users'],
+export const ROUTES_MAP = new Map([
+  ['/membros', { link: '/membros', label: 'Membros', icon: IconIdBadge2, entity: 'members' }],
+  ['/turmas', { link: '/turmas', label: 'Turmas', icon: IconSchool, entity: 'classes' }],
+  ['/usuarios', { link: '/usuarios', label: 'Usuários', icon: IconShieldLock, entity: 'users' }],
 ]);
 
 export function MainPage() {
@@ -29,8 +30,8 @@ export function MainPage() {
 
   const hasPermission = useMemo(
     () =>
-      !protectedRoutesMap.has(location.pathname) ||
-      permissions?.[protectedRoutesMap.get(location.pathname) as keyof typeof permissions]?.read,
+      !ROUTES_MAP.has(location.pathname) ||
+      permissions?.[ROUTES_MAP.get(location.pathname)?.entity as keyof typeof permissions]?.read,
     [permissions, location.pathname]
   );
 

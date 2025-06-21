@@ -1,22 +1,26 @@
-import { IconIdBadge2, IconLogout, IconSchool, IconShieldLock } from '@tabler/icons-react';
+import { useMemo } from 'react';
+import { IconLogout } from '@tabler/icons-react';
 import { Link, useLocation } from 'react-router-dom';
 import { Divider, Stack } from '@mantine/core';
 import { useAuth } from '@/contexts/AuthContext';
+import { ROUTES_MAP } from '@/pages/MainPage/MainPage';
 import classes from './NavLinks.module.css';
-
-const ITEMS = [
-  { link: '/membros', label: 'Membros', icon: IconIdBadge2 },
-  { link: '/turmas', label: 'Turmas', icon: IconSchool },
-  { link: '/usuarios', label: 'Usuários', icon: IconShieldLock },
-];
 
 export default function NavLinks({ toggleMobile }: { toggleMobile: () => void }) {
   const location = useLocation();
-  const { logout } = useAuth();
+  const { logout, permissions } = useAuth();
+
+  const items = useMemo(
+    () =>
+      [...ROUTES_MAP.values()].filter(
+        (item) => permissions?.[item.entity as keyof typeof permissions]?.read
+      ),
+    [permissions]
+  );
 
   return (
     <Stack gap="xs" m="sm">
-      {ITEMS.map((item) => (
+      {items.map((item) => (
         <Link
           className={classes.link}
           data-active={item.link === location.pathname || undefined}
