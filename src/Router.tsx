@@ -1,10 +1,10 @@
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import { ClassesPage } from './pages/ClassesPage';
+import HomePage from './pages/HomePage';
 import { MainPage } from './pages/MainPage';
 import { MembersPage } from './pages/MembersPage';
 import { NotFoundPage } from './pages/NotFoundPage';
 import { UsersPage } from './pages/UsersPage';
-import HomePage from './pages/HomePage';
 
 const router = createBrowserRouter([
   {
@@ -15,9 +15,9 @@ const router = createBrowserRouter([
         path: '/',
         element: <HomePage />,
       },
-      { path: '/members', element: <MembersPage /> },
+      { path: '/membros', element: <MembersPage /> },
       {
-        path: '/classes',
+        path: '/turmas',
         element: <ClassesPage />,
       },
       {

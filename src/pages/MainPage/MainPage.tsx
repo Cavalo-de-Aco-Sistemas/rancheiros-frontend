@@ -1,4 +1,4 @@
-import { Link, Outlet } from 'react-router-dom';
+import { Link, Outlet, useLocation } from 'react-router-dom';
 import { AppShell, Burger, Group, ScrollArea } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import AffixStack from '@/components/AffixStack';
@@ -9,10 +9,34 @@ import OfflineIndicator from '@/components/OfflineIndicator';
 
 import 'dayjs/locale/pt-br';
 
+import { useMemo } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
+import { NotFoundPage } from '@/pages/NotFoundPage';
+
+const protectedRoutesMap = new Map([
+  ['/membros', 'members'],
+  ['/turmas', 'classes'],
+  ['/usuarios', 'users'],
+]);
+
 export function MainPage() {
   // disclosure to control mobile and desktop navigation menus
   const [mobileOpened, { toggle: toggleMobile }] = useDisclosure();
   const [desktopOpened, { toggle: toggleDesktop }] = useDisclosure(true);
+
+  const { permissions } = useAuth();
+  const location = useLocation();
+
+  const hasPermission = useMemo(
+    () =>
+      !protectedRoutesMap.has(location.pathname) ||
+      permissions?.[protectedRoutesMap.get(location.pathname) as keyof typeof permissions]?.read,
+    [permissions, location.pathname]
+  );
+
+  if (!hasPermission) {
+    return <NotFoundPage />;
+  }
 
   return (
     <AppShell

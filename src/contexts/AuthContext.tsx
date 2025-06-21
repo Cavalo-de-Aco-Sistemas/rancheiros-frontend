@@ -10,11 +10,13 @@ export interface AuthContextType {
   logout: () => void;
   authToken: string | null;
   username: string | null;
+  permissions: Record<string, Record<'create' | 'read' | 'update' | 'delete', boolean>> | null;
 }
 
 export interface LoginProps {
   token: string;
   username: string;
+  permissions: Record<string, Record<'create' | 'read' | 'update' | 'delete', boolean>>;
 }
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -43,6 +45,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     key: 'username',
     defaultValue: null,
   });
+
+  const [permissions, setPermissions] = useLocalStorage<Record<
+    string,
+    Record<string, boolean>
+  > | null>({
+    key: 'permissions',
+    defaultValue: null,
+  });
+
   /**
    * Handles user login by saving the authentication token and the current authentication date
    * on state and local storage
@@ -50,12 +61,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
    * @param {string} token - The authentication token to be set.
    */
   const login = useCallback(
-    ({ token, username }: LoginProps) => {
+    ({ token, username, permissions }: LoginProps) => {
       setAuthToken(token);
       setAuthDate(new Date().toISOString());
       setUsername(username);
+      setPermissions(permissions);
     },
-    [setAuthToken, setAuthDate, setUsername]
+    [setAuthToken, setAuthDate, setUsername, setPermissions]
   );
 
   /**
@@ -66,7 +78,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setAuthToken(null);
     setAuthDate(null);
     setUsername(null);
-  }, [setAuthDate, setAuthToken, setUsername]);
+    setPermissions(null);
+  }, [setAuthDate, setAuthToken, setUsername, setPermissions]);
 
   /**
    * After each login or logout process:
@@ -136,6 +149,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     logout,
     authToken,
     username,
+    permissions,
   };
 
   return (

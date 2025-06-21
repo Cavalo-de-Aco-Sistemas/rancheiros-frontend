@@ -5,8 +5,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import classes from './NavLinks.module.css';
 
 const ITEMS = [
-  { link: '/members', label: 'Membros', icon: IconIdBadge2 },
-  { link: '/classes', label: 'Turmas', icon: IconSchool },
+  { link: '/membros', label: 'Membros', icon: IconIdBadge2 },
+  { link: '/turmas', label: 'Turmas', icon: IconSchool },
   { link: '/usuarios', label: 'Usuários', icon: IconShieldLock },
 ];
 
