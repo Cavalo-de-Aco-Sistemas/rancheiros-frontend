@@ -1,7 +1,7 @@
 import { useCallback, useState } from 'react';
 import { Checkbox, Fieldset, PasswordInput, SimpleGrid, Table, TextInput } from '@mantine/core';
 import { useForm, UseFormReturnType } from '@mantine/form';
-import CRUDForm from '@/components/CRUDForm';
+import { CRUDForm } from '@/components/CRUDForm';
 import { PasswordStrength } from '@/components/PasswordStrength';
 import { useCRUD } from '@/contexts/CRUDContext';
 import { User, UserDto, UserPermissions } from '@/model/user';
@@ -101,7 +101,7 @@ function PermissionRow({ title, entity, form }: PermissionRowProps) {
   );
 }
 
-export default function UsersForm() {
+export function UsersForm() {
   const { query, action } = useCRUD();
   const { isPending } = query;
   const [passwordStrength, setPasswordStrength] = useState(0);

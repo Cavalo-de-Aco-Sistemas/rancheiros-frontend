@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { Select, SimpleGrid, TextInput } from '@mantine/core';
 import { DateInput } from '@mantine/dates';
 import { useForm } from '@mantine/form';
-import CRUDForm from '@/components/CRUDForm';
+import { CRUDForm } from '@/components/CRUDForm';
 import { useCRUD } from '@/contexts/CRUDContext';
 import { Member, MemberDto } from '@/model/member';
 import useCRUDQuery from '@/queries/useCRUDQuery';

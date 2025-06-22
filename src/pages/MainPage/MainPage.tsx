@@ -10,13 +10,14 @@ import OfflineIndicator from '@/components/OfflineIndicator';
 import 'dayjs/locale/pt-br';
 
 import { useMemo } from 'react';
-import { IconIdBadge2, IconSchool, IconShieldLock } from '@tabler/icons-react';
+import { IconIdBadge2, IconMail, IconSchool, IconShieldLock } from '@tabler/icons-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { NotFoundPage } from '@/pages/NotFoundPage';
 
 export const ROUTES_MAP = new Map([
   ['/membros', { link: '/membros', label: 'Membros', icon: IconIdBadge2, entity: 'members' }],
   ['/turmas', { link: '/turmas', label: 'Turmas', icon: IconSchool, entity: 'classes' }],
+  ['/inscricoes', { link: '/inscricoes', label: 'Inscrições', icon: IconMail, entity: 'enrollments' }],
   ['/usuarios', { link: '/usuarios', label: 'Usuários', icon: IconShieldLock, entity: 'users' }],
 ]);
 

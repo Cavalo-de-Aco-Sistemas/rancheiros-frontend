@@ -13,7 +13,7 @@ export interface UserPermissions {
 }
 
 export interface User {
-  id: number;
+  id: string;
   username: string;
   permissions: UserPermissions;
 }

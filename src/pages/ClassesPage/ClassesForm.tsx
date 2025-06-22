@@ -1,7 +1,7 @@
 import { Checkbox, TextInput } from '@mantine/core';
 import { DateInput } from '@mantine/dates';
 import { useForm } from '@mantine/form';
-import CRUDForm from '@/components/CRUDForm';
+import { CRUDForm } from '@/components/CRUDForm';
 import { useCRUD } from '@/contexts/CRUDContext';
 import { Class, ClassDto } from '@/model/class';
 import { toDate } from '@/utils/dates';

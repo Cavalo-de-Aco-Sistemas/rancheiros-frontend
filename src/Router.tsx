@@ -5,6 +5,7 @@ import { MainPage } from './pages/MainPage';
 import { MembersPage } from './pages/MembersPage';
 import { NotFoundPage } from './pages/NotFoundPage';
 import { UsersPage } from './pages/UsersPage';
+import { EnrollmentsPage } from './pages/EnrollmentsPage';
 
 const router = createBrowserRouter([
   {
@@ -19,6 +20,10 @@ const router = createBrowserRouter([
       {
         path: '/turmas',
         element: <ClassesPage />,
+      },
+      {
+        path: '/inscricoes',
+        element: <EnrollmentsPage />,
       },
       {
         path: '/usuarios',
