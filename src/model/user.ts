@@ -10,6 +10,7 @@ export interface UserPermissions {
   classes: Permissions;
   users: Permissions;
   enrollments: Permissions;
+  locations: Permissions;
 }
 
 export interface User {

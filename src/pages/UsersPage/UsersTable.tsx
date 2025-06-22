@@ -49,6 +49,11 @@ export function UsersTable() {
         header: 'Inscrições',
         Cell: ({ row }) => <PermissionRow permission={row.original.permissions.enrollments} />,
       },
+      {
+        accessorKey: 'permissions.locations',
+        header: 'Locais',
+        Cell: ({ row }) => <PermissionRow permission={row.original.permissions.locations} />,
+      },
     ],
     []
   );
