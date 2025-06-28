@@ -8,14 +8,13 @@ import { dateBR } from '@/utils/dates';
 export function ClassesTable() {
   const columns = useMemo<MRT_ColumnDef<Class>[]>(
     () => [
-      { accessorKey: 'name', header: 'Nome' },
-      { accessorKey: 'city', header: 'Cidade' },
+      { accessorKey: 'location.name', header: 'Local do MPV' },
       {
         accessorKey: 'date',
         header: 'Data',
         Cell: ({ row }) => dateBR(row.original.date),
       },
-      { accessorKey: 'location', header: 'Localização' },
+      { accessorKey: 'mapsLink', header: 'Link do Maps' },
       {
         accessorKey: 'active',
         header: 'Ativo',

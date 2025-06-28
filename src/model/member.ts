@@ -1,3 +1,5 @@
+import { Ranch } from "./ranch";
+
 export interface Member {
   id: string;
   name: string;
@@ -6,7 +8,7 @@ export interface Member {
   phase: string | null; // prospect, half-patch, full-patch
   birthday: string | null;
   phone: string | null;
-  ranch: string | null; // ranch: Cambira
+  ranch: Ranch| null; // ranch: Cambira
   residence: string | null; // city: CAMBIRA-PR
   responsibility: string | null; // diretor, sgt. armas, etc.
   dateProspect: string | null;

@@ -3,8 +3,8 @@ import { MRT_ColumnDef } from 'mantine-react-table';
 import { Anchor, Badge } from '@mantine/core';
 import { CRUDTable } from '@/components/CRUDTable';
 import { Member } from '@/model/member';
-import { phasesOptions, ranchOptions } from './MembersForm';
 import { dateBR } from '@/utils/dates';
+import { phasesOptions } from './MembersForm';
 
 const optionsToObject = (
   options: {
@@ -16,7 +16,7 @@ const optionsToObject = (
 };
 
 const digits = /\d+/g;
-const ranchs = optionsToObject(ranchOptions);
+
 const phases = optionsToObject(phasesOptions);
 
 export function MembersTable() {
@@ -73,9 +73,14 @@ export function MembersTable() {
           ),
       },
       {
-        accessorKey: 'ranch',
+        accessorKey: 'ranch.name',
         header: 'Rancho',
-        Cell: ({ row }) => ranchs[row.original.ranch ?? ''] ?? '',
+        Cell: ({ row }) =>
+          row.original.ranch?.name && (
+            <Badge ff="Rye" variant="outline" color="white" radius="xs">
+              {row.original.ranch.name}
+            </Badge>
+          ),
       },
       { accessorKey: 'residence', header: 'Residência' },
       { accessorKey: 'responsibility', header: 'Encargo' },

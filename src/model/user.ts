@@ -11,6 +11,7 @@ export interface UserPermissions {
   users: Permissions;
   enrollments: Permissions;
   locations: Permissions;
+  ranches: Permissions;
 }
 
 export interface User {

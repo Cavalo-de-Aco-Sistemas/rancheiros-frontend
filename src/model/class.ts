@@ -1,16 +1,16 @@
+import { Location } from "./location";
+
 export interface Class {
   id: string;
-  name: string;
-  city: string;
+  location: Location | null;
   date: string;
-  location: string;
+  mapsLink: string;
   active: boolean;
 }
 
 export interface ClassDto {
-  name: string;
-  city: string;
+  location?: string | null;
   date: Date | null;
-  location: string;
+  mapsLink: string;
   active: boolean;
 }

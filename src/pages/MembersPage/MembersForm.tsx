@@ -5,6 +5,7 @@ import { useForm } from '@mantine/form';
 import { CRUDForm } from '@/components/CRUDForm';
 import { useCRUD } from '@/contexts/CRUDContext';
 import { Member, MemberDto } from '@/model/member';
+import { Ranch } from '@/model/ranch';
 import useCRUDQuery from '@/queries/useCRUDQuery';
 import { toDate } from '@/utils/dates';
 
@@ -56,7 +57,7 @@ const parseSelected = (member: Member): MemberDto => {
     patch,
     birthday: toDate(birthday),
     phone,
-    ranch,
+    ranch: ranch?.id.toString(),
     residence,
     responsibility,
     dateFullPatch: toDate(dateFullPatch),
@@ -69,10 +70,16 @@ const parseSelected = (member: Member): MemberDto => {
 
 export default function MembersForm() {
   const membersQuery = useCRUDQuery<Member>('members');
+  const ranchesQuery = useCRUDQuery<Ranch>('ranches');
 
   const membersOptions = useMemo(
     () => membersQuery.data?.map((member) => ({ label: member.name, value: member.id.toString() })),
     [membersQuery.data]
+  );
+
+  const ranchesOptions = useMemo(
+    () => ranchesQuery.data?.map((ranch) => ({ label: ranch.name, value: ranch.id.toString() })),
+    [ranchesQuery.data]
   );
 
   const { query, action } = useCRUD();
@@ -175,8 +182,8 @@ export default function MembersForm() {
           disabled={isPending || action === 'delete'}
         />
         <Select
-          data={ranchOptions}
           label="Rancho"
+          data={ranchesOptions}
           key={form.key('ranch')}
           {...form.getInputProps('ranch')}
           disabled={isPending || action === 'delete'}

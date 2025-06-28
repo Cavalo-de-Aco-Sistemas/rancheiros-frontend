@@ -1,11 +1,13 @@
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import { ClassesPage } from './pages/ClassesPage';
+import { EnrollmentsPage } from './pages/EnrollmentsPage';
 import HomePage from './pages/HomePage';
 import { MainPage } from './pages/MainPage';
 import { MembersPage } from './pages/MembersPage';
 import { NotFoundPage } from './pages/NotFoundPage';
+import { RanchesPage } from './pages/RanchesPage';
 import { UsersPage } from './pages/UsersPage';
-import { EnrollmentsPage } from './pages/EnrollmentsPage';
+import { LocationsPage } from './pages/LocationPage';
 
 const router = createBrowserRouter([
   {
@@ -28,6 +30,14 @@ const router = createBrowserRouter([
       {
         path: '/usuarios',
         element: <UsersPage />,
+      },
+      {
+        path: '/ranchos',
+        element: <RanchesPage />,
+      },
+      {
+        path: '/locais',
+        element: <LocationsPage />,
       },
     ],
   },

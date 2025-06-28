@@ -41,6 +41,12 @@ const INITIAL_VALUES = {
       update: false,
       delete: false,
     },
+    ranches: {
+      create: false,
+      read: false,
+      update: false,
+      delete: false,
+    },
   },
 };
 
@@ -179,7 +185,8 @@ export function UsersForm() {
             <PermissionRow title="Turmas" entity="classes" form={form} />
             <PermissionRow title="Usuários" entity="users" form={form} />
             <PermissionRow title="Inscrições" entity="enrollments" form={form} />
-            <PermissionRow title="Locais" entity="locations" form={form} />
+            <PermissionRow title="Locais MPV" entity="locations" form={form} />
+            <PermissionRow title="Ranchos" entity="ranches" form={form} />
           </Table.Tbody>
         </Table>
       </Fieldset>

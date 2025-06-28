@@ -51,8 +51,13 @@ export function UsersTable() {
       },
       {
         accessorKey: 'permissions.locations',
-        header: 'Locais',
+        header: 'Locais MPV',
         Cell: ({ row }) => <PermissionRow permission={row.original.permissions.locations} />,
+      },
+      {
+        accessorKey: 'permissions.ranches',
+        header: 'Ranchos',
+        Cell: ({ row }) => <PermissionRow permission={row.original.permissions.ranches} />,
       },
     ],
     []

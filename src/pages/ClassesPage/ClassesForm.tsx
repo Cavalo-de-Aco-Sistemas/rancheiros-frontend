@@ -1,20 +1,22 @@
-import { Checkbox, TextInput } from '@mantine/core';
+import { useMemo } from 'react';
+import { Checkbox, Select, TextInput } from '@mantine/core';
 import { DateInput } from '@mantine/dates';
 import { useForm } from '@mantine/form';
 import { CRUDForm } from '@/components/CRUDForm';
 import { useCRUD } from '@/contexts/CRUDContext';
 import { Class, ClassDto } from '@/model/class';
+import { Location } from '@/model/location';
+import useCRUDQuery from '@/queries/useCRUDQuery';
 import { toDate } from '@/utils/dates';
 
-const INITIAL_VALUES = { name: '', city: '', date: null, location: '', active: true };
+const INITIAL_VALUES = { name: '', location: null, date: null, mapsLink: '', active: true };
 
 const parseSelected = (classs: Class): ClassDto => {
-  const { name, city, date, location, active } = classs;
+  const { location, date, mapsLink, active } = classs;
   return {
-    name,
-    city,
+    location: location?.id,
     date: toDate(date),
-    location,
+    mapsLink,
     active,
   };
 };
@@ -22,6 +24,16 @@ const parseSelected = (classs: Class): ClassDto => {
 export function ClassesForm() {
   const { query, action } = useCRUD();
   const { isPending } = query;
+  const locationsQuery = useCRUDQuery<Location>('locations');
+
+  const locationsOptions = useMemo(
+    () =>
+      locationsQuery.data?.map((location: Location) => ({
+        label: location.name,
+        value: location.id.toString(),
+      })),
+    [locationsQuery.data]
+  );
 
   const form = useForm<ClassDto>({
     initialValues: INITIAL_VALUES,
@@ -35,19 +47,13 @@ export function ClassesForm() {
       endpoint="classes"
       modalProps={{ title: 'Cadastro de Turmas', size: 'xl' }}
     >
-      <TextInput
+      <Select
         required
-        label="Nome"
-        key={form.key('name')}
-        {...form.getInputProps('name')}
+        label="Local do treinamento"
+        key={form.key('location')}
+        {...form.getInputProps('location')}
         disabled={isPending || action === 'delete'}
-      />
-      <TextInput
-        required
-        label="Cidade"
-        key={form.key('city')}
-        {...form.getInputProps('city')}
-        disabled={isPending || action === 'delete'}
+        data={locationsOptions}
       />
       <DateInput
         required
@@ -60,9 +66,9 @@ export function ClassesForm() {
       />
       <TextInput
         required
-        label="Localização"
-        key={form.key('location')}
-        {...form.getInputProps('location')}
+        label="Link do Google Maps"
+        key={form.key('mapsLink')}
+        {...form.getInputProps('mapsLink')}
         disabled={isPending || action === 'delete'}
       />
       <Checkbox
