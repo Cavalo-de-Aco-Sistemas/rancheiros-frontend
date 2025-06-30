@@ -2,6 +2,7 @@ import { createContext, ReactNode, useCallback, useEffect, useMemo } from 'react
 import axios, { AxiosInstance } from 'axios';
 import { addHours, parseISO } from 'date-fns';
 import { useLocalStorage } from '@mantine/hooks';
+import { Ranch } from '@/model/ranch';
 import { LoginPage } from '@/pages/LoginPage';
 import { useContextProvider } from './useContextProvider';
 
@@ -11,12 +12,14 @@ export interface AuthContextType {
   authToken: string | null;
   username: string | null;
   permissions: Record<string, Record<'create' | 'read' | 'update' | 'delete', boolean>> | null;
+  ranches: Ranch[] | null;
 }
 
 export interface LoginProps {
   token: string;
   username: string;
   permissions: Record<string, Record<'create' | 'read' | 'update' | 'delete', boolean>>;
+  ranches: Ranch[];
 }
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -37,6 +40,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   // the date and time from last login
   const [authDate, setAuthDate] = useLocalStorage<string | null>({
     key: 'access_date',
+    defaultValue: null,
+  });
+
+  // the ranches from last login
+  const [ranches, setRanches] = useLocalStorage<Ranch[] | null>({
+    key: 'ranches',
     defaultValue: null,
   });
 
@@ -61,13 +70,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
    * @param {string} token - The authentication token to be set.
    */
   const login = useCallback(
-    ({ token, username, permissions }: LoginProps) => {
+    ({ token, username, permissions, ranches }: LoginProps) => {
       setAuthToken(token);
       setAuthDate(new Date().toISOString());
       setUsername(username);
       setPermissions(permissions);
+      setRanches(ranches);
     },
-    [setAuthToken, setAuthDate, setUsername, setPermissions]
+    [setAuthToken, setAuthDate, setUsername, setPermissions, setRanches]
   );
 
   /**
@@ -150,6 +160,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     authToken,
     username,
     permissions,
+    ranches,
   };
 
   return (

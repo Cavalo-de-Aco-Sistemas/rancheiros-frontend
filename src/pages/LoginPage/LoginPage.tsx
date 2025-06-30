@@ -32,8 +32,8 @@ export function LoginPage({ login }: { login: ({ token, username }: LoginProps) 
   const handleSubmit = (credentials: Credentials) => {
     mutate(credentials, {
       onSuccess: (response) => {
-        const { access_token, username, permissions } = response;
-        login({ token: access_token, username, permissions });
+        const { access_token, username, permissions, ranches } = response;
+        login({ token: access_token, username, permissions, ranches });
       },
       onError: (error) => {
         setErrorMessage(

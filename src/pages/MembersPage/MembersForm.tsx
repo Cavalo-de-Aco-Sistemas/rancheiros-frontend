@@ -3,6 +3,7 @@ import { Select, SimpleGrid, TextInput } from '@mantine/core';
 import { DateInput } from '@mantine/dates';
 import { useForm } from '@mantine/form';
 import { CRUDForm } from '@/components/CRUDForm';
+import { useAuth } from '@/contexts/AuthContext';
 import { useCRUD } from '@/contexts/CRUDContext';
 import { Member, MemberDto } from '@/model/member';
 import { Ranch } from '@/model/ranch';
@@ -70,7 +71,7 @@ const parseSelected = (member: Member): MemberDto => {
 
 export default function MembersForm() {
   const membersQuery = useCRUDQuery<Member>('members');
-  const ranchesQuery = useCRUDQuery<Ranch>('ranches');
+  const { ranches } = useAuth();
 
   const membersOptions = useMemo(
     () => membersQuery.data?.map((member) => ({ label: member.name, value: member.id.toString() })),
@@ -78,8 +79,8 @@ export default function MembersForm() {
   );
 
   const ranchesOptions = useMemo(
-    () => ranchesQuery.data?.map((ranch) => ({ label: ranch.name, value: ranch.id.toString() })),
-    [ranchesQuery.data]
+    () => ranches?.map((ranch: Ranch) => ({ label: ranch.name, value: ranch.id.toString() })),
+    [ranches]
   );
 
   const { query, action } = useCRUD();
