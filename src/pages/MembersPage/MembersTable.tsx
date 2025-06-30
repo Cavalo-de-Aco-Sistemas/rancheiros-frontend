@@ -1,7 +1,8 @@
-import { useMemo } from 'react';
-import { MRT_ColumnDef } from 'mantine-react-table';
+import { useCallback, useMemo } from 'react';
+import { MRT_ColumnDef, MRT_Row } from 'mantine-react-table';
 import { Anchor, Badge } from '@mantine/core';
 import { CRUDTable } from '@/components/CRUDTable';
+import { useCRUD } from '@/contexts/CRUDContext';
 import { Member } from '@/model/member';
 import { dateBR } from '@/utils/dates';
 import { phasesOptions } from './MembersForm';
@@ -19,7 +20,26 @@ const digits = /\d+/g;
 
 const phases = optionsToObject(phasesOptions);
 
+const tableHeaders = [
+  'Nome',
+  'Nome no Patch',
+  'Tipo sanguíneo',
+  'Fase',
+  'Aniversário',
+  'Telefone',
+  'Rancho',
+  'Residência',
+  'Encargo',
+  'Data Prospect',
+  'Data Meio escudo',
+  'Data Full patch',
+  'Cônjuge',
+  'Padrinho',
+];
+
 export function MembersTable() {
+  const { query } = useCRUD();
+
   const columns = useMemo<MRT_ColumnDef<Member>[]>(
     () => [
       { accessorKey: 'name', header: 'Nome' },
@@ -105,5 +125,80 @@ export function MembersTable() {
     []
   );
 
-  return <CRUDTable columns={columns} title="Membros" />;
+  const csvData = useMemo(
+    () =>
+      query.data?.map(
+        ({
+          name,
+          patch,
+          blood,
+          phase,
+          birthday,
+          phone,
+          ranch,
+          residence,
+          responsibility,
+          dateProspect,
+          dateHalfPatch,
+          dateFullPatch,
+          spouse,
+          godfather,
+        }) => ({
+          Nome: name,
+          'Nome no Patch': patch ?? '',
+          'Tipo sanguíneo': blood ?? '',
+          Fase: phase ?? '',
+          Aniversário: birthday ? (dateBR(birthday) ?? '') : '',
+          Telefone: phone ?? '',
+          Rancho: ranch?.name ?? '',
+          Residência: residence ?? '',
+          Encargo: responsibility ?? '',
+          'Data Prospect': dateProspect ? (dateBR(dateProspect) ?? '') : '',
+          'Data Meio escudo': dateHalfPatch ? (dateBR(dateHalfPatch) ?? '') : '',
+          'Data Full patch': dateFullPatch ? (dateBR(dateFullPatch) ?? '') : '',
+          Cônjuge: spouse?.name ?? '',
+          Padrinho: godfather?.name ?? '',
+        })
+      ) ?? [],
+    [query.data]
+  );
+
+  const rowMapper = useCallback((row: MRT_Row<Member>): string[] => {
+    const {
+      name,
+      patch,
+      blood,
+      phase,
+      birthday,
+      phone,
+      ranch,
+      residence,
+      responsibility,
+      dateProspect,
+      dateHalfPatch,
+      dateFullPatch,
+      spouse,
+      godfather,
+    } = row.original;
+    return [
+      name,
+      patch ?? '',
+      blood ?? '',
+      phase ?? '',
+      birthday ? (dateBR(birthday) ?? '') : '',
+      phone ?? '',
+      ranch?.name ?? '',
+      residence ?? '',
+      responsibility ?? '',
+      dateProspect ? (dateBR(dateProspect) ?? '') : '',
+      dateHalfPatch ? (dateBR(dateHalfPatch) ?? '') : '',
+      dateFullPatch ? (dateBR(dateFullPatch) ?? '') : '',
+      spouse?.name ?? '',
+      godfather?.name ?? '',
+    ];
+  }, []);
+
+  const pdfConfig = useMemo(() => ({ tableHeaders, rowMapper }), [rowMapper]);
+
+  return <CRUDTable columns={columns} title="Membros" csvData={csvData} pdfConfig={pdfConfig} />;
 }

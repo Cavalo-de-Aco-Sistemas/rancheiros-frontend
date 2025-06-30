@@ -5,6 +5,7 @@ import { CRUDForm } from '@/components/CRUDForm';
 import { useCRUD } from '@/contexts/CRUDContext';
 import { Class } from '@/model/class';
 import { Enrollment, EnrollmentDto, EnrollmentStatus } from '@/model/enrollment';
+import { Location } from '@/model/location';
 import useCRUDQuery from '@/queries/useCRUDQuery';
 
 const INITIAL_VALUES = {
@@ -25,15 +26,30 @@ const parseSelected = (enrollment: Enrollment): EnrollmentDto => {
   return {
     ...enrollment,
     class: enrollment.class?.id.toString() || null,
+    preferred_city: enrollment.preferred_city?.id.toString() ?? '',
   };
 };
 
 export function EnrollmentsForm() {
   const classesQuery = useCRUDQuery<Class>('classes');
+  const locationsQuery = useCRUDQuery<Location>('locations');
 
   const classesOptions = useMemo(
-    () => classesQuery.data?.map((classs) => ({ label: classs.name, value: classs.id.toString() })),
+    () =>
+      classesQuery.data?.map((classs) => ({
+        label: classs.location?.name ?? '',
+        value: classs.id.toString(),
+      })),
     [classesQuery.data]
+  );
+
+  const locationsOptions = useMemo(
+    () =>
+      locationsQuery.data?.map((location: Location) => ({
+        label: location.name,
+        value: location.id.toString(),
+      })),
+    [locationsQuery.data]
   );
 
   const { query, action } = useCRUD();
@@ -74,24 +90,27 @@ export function EnrollmentsForm() {
       />
       <TextInput
         required
+        label="Email"
+        key={form.key('email')}
+        {...form.getInputProps('email')}
+        disabled={isPending || action === 'delete'}
+      />
+      <TextInput
+        required
         label="UF da CNH"
         key={form.key('uf_cnh')}
         {...form.getInputProps('uf_cnh')}
         disabled={isPending || action === 'delete'}
       />
-      <TextInput
+      <Select
         required
-        label="Cidade Preferencial"
+        label="Localidade de Preferência"
         key={form.key('preferred_city')}
         {...form.getInputProps('preferred_city')}
         disabled={isPending || action === 'delete'}
-      />
-      <TextInput
-        required
-        label="Email"
-        key={form.key('email')}
-        {...form.getInputProps('email')}
-        disabled={isPending || action === 'delete'}
+        data={locationsOptions}
+        searchable
+        clearable
       />
       <Select
         required
@@ -102,12 +121,13 @@ export function EnrollmentsForm() {
         data={Object.values(EnrollmentStatus).map((status) => ({ label: status, value: status }))}
       />
       <Select
-        required
         label="Turma"
         key={form.key('class')}
         {...form.getInputProps('class')}
         disabled={isPending || action === 'delete'}
         data={classesOptions}
+        searchable
+        clearable
       />
     </CRUDForm>
   );

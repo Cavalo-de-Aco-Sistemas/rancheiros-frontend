@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
 import {
   IconEdit,
   IconEditOff,
@@ -9,9 +9,11 @@ import {
   IconTrash,
   IconTrashOff,
 } from '@tabler/icons-react';
-import { MRT_ColumnDef } from 'mantine-react-table';
+import { MRT_ColumnDef, MRT_Row } from 'mantine-react-table';
 import { Badge, Group, Indicator, Tooltip } from '@mantine/core';
 import { CRUDTable } from '@/components/CRUDTable';
+import { useCRUD } from '@/contexts/CRUDContext';
+import { Ranch } from '@/model/ranch';
 import { Permissions, User } from '@/model/user';
 
 function PermissionRow({ permission }: { permission: Permissions }) {
@@ -25,7 +27,26 @@ function PermissionRow({ permission }: { permission: Permissions }) {
   );
 }
 
+const tableHeaders = [
+  'Usuário',
+  'Membros',
+  'Turmas',
+  'Inscrições',
+  'Locais MPV',
+  'Ranchos',
+  'Filtros',
+];
+
+const permissionsToString = (permissions: Permissions) => {
+  return Object.entries(permissions)
+    .filter(([_, value]) => value)
+    .map(([key]) => key.charAt(0).toUpperCase())
+    .join(', ');
+};
+
 export function UsersTable() {
+  const { query } = useCRUD();
+
   const columns = useMemo<MRT_ColumnDef<User>[]>(
     () => [
       { accessorKey: 'username', header: 'Usuário' },
@@ -82,5 +103,34 @@ export function UsersTable() {
     []
   );
 
-  return <CRUDTable columns={columns} title="Usuários" />;
+  const csvData = useMemo(
+    () =>
+      query.data?.map(({ username, permissions, ranches }) => ({
+        Usuário: username,
+        Membros: permissionsToString(permissions.members),
+        Turmas: permissionsToString(permissions.classes),
+        Inscrições: permissionsToString(permissions.enrollments),
+        'Locais MPV': permissionsToString(permissions.locations),
+        Ranchos: permissionsToString(permissions.ranches),
+        Filtros: ranches.map((ranch: Ranch) => ranch.name).join(', '),
+      })) ?? [],
+    [query.data]
+  );
+
+  const rowMapper = useCallback((row: MRT_Row<User>): string[] => {
+    const { username, permissions, ranches } = row.original;
+    return [
+      username,
+      permissionsToString(permissions.members),
+      permissionsToString(permissions.classes),
+      permissionsToString(permissions.enrollments),
+      permissionsToString(permissions.locations),
+      permissionsToString(permissions.ranches),
+      ranches.map((ranch: Ranch) => ranch.name).join(', '),
+    ];
+  }, []);
+
+  const pdfConfig = useMemo(() => ({ tableHeaders, rowMapper }), [rowMapper]);
+
+  return <CRUDTable columns={columns} title="Usuários" csvData={csvData} pdfConfig={pdfConfig} />;
 }

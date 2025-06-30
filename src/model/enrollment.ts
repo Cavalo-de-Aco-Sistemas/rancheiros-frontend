@@ -1,4 +1,5 @@
 import { Class } from "./class";
+import { Location } from "./location";
 
 export enum EnrollmentStatus {
   // Em lista de espera (disponível para chamar para uma turma) [waiting]
@@ -23,7 +24,7 @@ export interface Enrollment {
   phone: string;
   cnh: string;
   uf_cnh: string;
-  preferred_city: string;
+  preferred_city: Location | null;
   email: string | null;
   motorcycle_usage: string | null;
   brand: string | null;
@@ -38,7 +39,7 @@ export interface EnrollmentDto {
   phone: string;
   cnh: string;
   uf_cnh: string;
-  preferred_city: string;
+  preferred_city: string | null;
   email: string | null;
   motorcycle_usage: string | null;
   brand: string | null;
