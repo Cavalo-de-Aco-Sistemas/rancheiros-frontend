@@ -1,3 +1,5 @@
+import { Ranch } from "./ranch";
+
 export interface Permissions {
   create: boolean;
   read: boolean;
@@ -18,6 +20,7 @@ export interface User {
   id: string;
   username: string;
   permissions: UserPermissions;
+  ranches: Ranch[];
 }
 
 export interface UserDto {
@@ -25,4 +28,5 @@ export interface UserDto {
   password?: string;
   repeatPassword?: string;
   permissions: UserPermissions;
+  ranches: string[];
 }

@@ -1,10 +1,22 @@
-import { useCallback, useState } from 'react';
-import { Checkbox, Fieldset, PasswordInput, SimpleGrid, Table, TextInput } from '@mantine/core';
+import { useCallback, useMemo, useState } from 'react';
+import { IconKey, IconLock } from '@tabler/icons-react';
+import {
+  Accordion,
+  Checkbox,
+  MultiSelect,
+  PasswordInput,
+  SimpleGrid,
+  Stack,
+  Table,
+  TextInput,
+} from '@mantine/core';
 import { useForm, UseFormReturnType } from '@mantine/form';
 import { CRUDForm } from '@/components/CRUDForm';
 import { PasswordStrength } from '@/components/PasswordStrength';
 import { useCRUD } from '@/contexts/CRUDContext';
+import { Ranch } from '@/model/ranch';
 import { User, UserDto, UserPermissions } from '@/model/user';
+import useCRUDQuery from '@/queries/useCRUDQuery';
 
 const INITIAL_VALUES = {
   username: '',
@@ -48,6 +60,7 @@ const INITIAL_VALUES = {
       delete: false,
     },
   },
+  ranches: [],
 };
 
 const parseSelected = (user: User): UserDto => {
@@ -56,6 +69,7 @@ const parseSelected = (user: User): UserDto => {
     password: '',
     repeatPassword: '',
     permissions: user.permissions,
+    ranches: user.ranches.map((ranch) => ranch.id),
   };
 };
 
@@ -118,6 +132,13 @@ export function UsersForm() {
   const { isPending } = query;
   const [passwordStrength, setPasswordStrength] = useState(0);
 
+  const ranchesQuery = useCRUDQuery<Ranch>('ranches');
+
+  const ranchesOptions = useMemo(
+    () => ranchesQuery.data?.map((ranch) => ({ label: ranch.name, value: ranch.id.toString() })),
+    [ranchesQuery.data]
+  );
+
   const form = useForm<UserDto>({
     initialValues: INITIAL_VALUES,
   });
@@ -154,42 +175,65 @@ export function UsersForm() {
         {...form.getInputProps('username')}
         disabled={isPending || action === 'delete'}
       />
-      <SimpleGrid cols={{ base: 1, xs: 2 }}>
-        <PasswordStrength
-          label="Senha"
-          key={form.key('password')}
-          {...form.getInputProps('password')}
-          disabled={isPending || action === 'delete'}
-          setPasswordStrength={setPasswordStrength}
-        />
-        <PasswordInput
-          label="Repetir senha"
-          key={form.key('repeatPassword')}
-          {...form.getInputProps('repeatPassword')}
-          disabled={isPending || action === 'delete'}
-        />
-      </SimpleGrid>
-      <Fieldset legend="Permissões">
-        <Table>
-          <Table.Thead>
-            <Table.Tr>
-              <Table.Th />
-              <Table.Th>Inserir</Table.Th>
-              <Table.Th>Visualizar</Table.Th>
-              <Table.Th>Editar</Table.Th>
-              <Table.Th>Excluir</Table.Th>
-            </Table.Tr>
-          </Table.Thead>
-          <Table.Tbody>
-            <PermissionRow title="Membros" entity="members" form={form} />
-            <PermissionRow title="Turmas" entity="classes" form={form} />
-            <PermissionRow title="Usuários" entity="users" form={form} />
-            <PermissionRow title="Inscrições" entity="enrollments" form={form} />
-            <PermissionRow title="Locais MPV" entity="locations" form={form} />
-            <PermissionRow title="Ranchos" entity="ranches" form={form} />
-          </Table.Tbody>
-        </Table>
-      </Fieldset>
+      <Accordion defaultValue="senha">
+        <Accordion.Item value="senha">
+          <Accordion.Control icon={<IconKey />}>Senha</Accordion.Control>
+          <Accordion.Panel>
+            <SimpleGrid cols={{ base: 1, xs: 2 }}>
+              <PasswordStrength
+                label="Senha"
+                key={form.key('password')}
+                {...form.getInputProps('password')}
+                disabled={isPending || action === 'delete'}
+                setPasswordStrength={setPasswordStrength}
+              />
+              <PasswordInput
+                label="Repetir senha"
+                key={form.key('repeatPassword')}
+                {...form.getInputProps('repeatPassword')}
+                disabled={isPending || action === 'delete'}
+              />
+            </SimpleGrid>
+          </Accordion.Panel>
+        </Accordion.Item>
+        <Accordion.Item value="permissoes">
+          <Accordion.Control icon={<IconLock />}>Permissões</Accordion.Control>
+          <Accordion.Panel>
+            <Stack>
+              <MultiSelect
+                label="Ranchos"
+                key={form.key('ranches')}
+                {...form.getInputProps('ranches')}
+                data={ranchesOptions}
+                searchable
+                clearable
+                hidePickedOptions
+                nothingFoundMessage="Nenhum rancho encontrado"
+                placeholder="Selecione os ranchos"
+              />
+              <Table>
+                <Table.Thead>
+                  <Table.Tr>
+                    <Table.Th>Permissões</Table.Th>
+                    <Table.Th>Inserir</Table.Th>
+                    <Table.Th>Visualizar</Table.Th>
+                    <Table.Th>Editar</Table.Th>
+                    <Table.Th>Excluir</Table.Th>
+                  </Table.Tr>
+                </Table.Thead>
+                <Table.Tbody>
+                  <PermissionRow title="Membros" entity="members" form={form} />
+                  <PermissionRow title="Turmas" entity="classes" form={form} />
+                  <PermissionRow title="Usuários" entity="users" form={form} />
+                  <PermissionRow title="Inscrições" entity="enrollments" form={form} />
+                  <PermissionRow title="Locais MPV" entity="locations" form={form} />
+                  <PermissionRow title="Ranchos" entity="ranches" form={form} />
+                </Table.Tbody>
+              </Table>
+            </Stack>
+          </Accordion.Panel>
+        </Accordion.Item>
+      </Accordion>
     </CRUDForm>
   );
 }

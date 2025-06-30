@@ -10,7 +10,7 @@ import {
   IconTrashOff,
 } from '@tabler/icons-react';
 import { MRT_ColumnDef } from 'mantine-react-table';
-import { Group } from '@mantine/core';
+import { Badge, Group, Indicator, Tooltip } from '@mantine/core';
 import { CRUDTable } from '@/components/CRUDTable';
 import { Permissions, User } from '@/model/user';
 
@@ -58,6 +58,25 @@ export function UsersTable() {
         accessorKey: 'permissions.ranches',
         header: 'Ranchos',
         Cell: ({ row }) => <PermissionRow permission={row.original.permissions.ranches} />,
+      },
+      {
+        accessorKey: 'ranches',
+        header: 'Ranchos',
+        Cell: ({ row }) =>
+          row.original.ranches.length > 0 && (
+            <Tooltip label={row.original.ranches.map((ranch) => ranch.name).join(', ')}>
+              <Indicator
+                inline
+                disabled={row.original.ranches.length <= 1}
+                label={`+${row.original.ranches.length - 1}`}
+                size={16}
+              >
+                <Badge ff="Rye" variant="outline" color="white" radius="xs">
+                  {row.original.ranches[0].name}
+                </Badge>
+              </Indicator>
+            </Tooltip>
+          ),
       },
     ],
     []
