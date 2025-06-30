@@ -105,14 +105,26 @@ export default function MembersForm() {
         return undefined;
       }}
     >
-      <TextInput
-        required
-        label="Nome"
-        key={form.key('name')}
-        {...form.getInputProps('name')}
-        disabled={isPending || action === 'delete'}
-      />
       <SimpleGrid cols={{ base: 1, xs: 2 }}>
+        <TextInput
+          required
+          label="Nome"
+          key={form.key('name')}
+          {...form.getInputProps('name')}
+          disabled={isPending || action === 'delete'}
+        />
+        <Select
+          required
+          label="Rancho"
+          data={ranchesOptions}
+          key={form.key('ranch')}
+          {...form.getInputProps('ranch')}
+          disabled={isPending || action === 'delete'}
+          searchable
+          clearable
+        />
+      </SimpleGrid>
+      <SimpleGrid cols={{ base: 1, xs: 2, sm: 3 }}>
         <TextInput
           label="Nome no Patch"
           key={form.key('patch')}
@@ -148,8 +160,6 @@ export default function MembersForm() {
           valueFormat="DD/MM/YYYY"
           placeholder="DD/MM/AAAA"
         />
-      </SimpleGrid>
-      <SimpleGrid cols={{ base: 1, xs: 2, sm: 3 }}>
         <TextInput
           label="Celular/WhatsApp"
           placeholder="(99) 99999-9999"
@@ -180,15 +190,6 @@ export default function MembersForm() {
           key={form.key('responsibility')}
           {...form.getInputProps('responsibility')}
           disabled={isPending || action === 'delete'}
-        />
-        <Select
-          label="Rancho"
-          data={ranchesOptions}
-          key={form.key('ranch')}
-          {...form.getInputProps('ranch')}
-          disabled={isPending || action === 'delete'}
-          searchable
-          clearable
         />
         <TextInput
           label="Residência"
