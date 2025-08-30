@@ -1,6 +1,6 @@
-import { Outlet, useLocation } from 'react-router-dom';
-import { AppShell, Burger, Group, ScrollArea } from '@mantine/core';
-import { useDisclosure } from '@mantine/hooks';
+import { Link, Outlet, useLocation } from 'react-router-dom';
+import { AppShell, Burger, Group, LoadingOverlay, ScrollArea } from '@mantine/core';
+import { useDisclosure, useMounted } from '@mantine/hooks';
 import AffixStack from '@/components/AffixStack';
 import FetchingLoader from '@/components/FetchingLoader';
 import { Logo } from '@/components/Logo';
@@ -9,19 +9,60 @@ import OfflineIndicator from '@/components/OfflineIndicator';
 
 import 'dayjs/locale/pt-br';
 
+import { useMemo } from 'react';
+import {
+  IconHome,
+  IconIdBadge2,
+  IconMail,
+  IconMapPin,
+  IconSchool,
+  IconShieldLock,
+} from '@tabler/icons-react';
 import { useAuth } from '@/contexts/AuthContext';
-import { NotFoundPage } from '../NotFoundPage';
+import { NotFoundPage } from '@/pages/NotFoundPage';
 
-export const PROTECTED_ROUTES = ['/usuarios'];
+export const ROUTES_MAP = new Map([
+  ['/membros', { link: '/membros', label: 'Membros', icon: IconIdBadge2, entity: 'members' }],
+  ['/ranchos', { link: '/ranchos', label: 'Ranchos', icon: IconHome, entity: 'ranches' }],
+  [
+    '/inscricoes',
+    { link: '/inscricoes', label: 'Inscrições', icon: IconMail, entity: 'enrollments' },
+  ],
+  ['/turmas', { link: '/turmas', label: 'Turmas', icon: IconSchool, entity: 'classes' }],
+  [
+    '/locais',
+    { link: '/locais', label: 'Locais de Treinamento', icon: IconMapPin, entity: 'locations' },
+  ],
+  ['/usuarios', { link: '/usuarios', label: 'Usuários', icon: IconShieldLock, entity: 'users' }],
+]);
 
 export function MainPage() {
   // disclosure to control mobile and desktop navigation menus
   const [mobileOpened, { toggle: toggleMobile }] = useDisclosure();
   const [desktopOpened, { toggle: toggleDesktop }] = useDisclosure(true);
-  const { admin } = useAuth();
+  const mounted = useMounted();
+
+  const { permissions } = useAuth();
   const location = useLocation();
 
-  if (PROTECTED_ROUTES.includes(location.pathname) && !admin) {
+  const hasPermission = useMemo(
+    () =>
+      !ROUTES_MAP.has(location.pathname) ||
+      permissions?.[ROUTES_MAP.get(location.pathname)?.entity as keyof typeof permissions]?.read,
+    [permissions, location.pathname]
+  );
+
+  if (!mounted) {
+    return (
+      <LoadingOverlay
+        visible
+        overlayProps={{ blur: 2 }}
+        loaderProps={{ type: 'dots', size: 'xl' }}
+      />
+    );
+  }
+
+  if (!hasPermission) {
     return <NotFoundPage />;
   }
 
@@ -39,7 +80,9 @@ export function MainPage() {
           <Group>
             <Burger opened={mobileOpened} onClick={toggleMobile} hiddenFrom="sm" size="sm" />
             <Burger opened={desktopOpened} onClick={toggleDesktop} visibleFrom="sm" size="sm" />
-            <Logo order={3} />
+            <Link to="/" style={{ textDecoration: 'none', color: 'inherit' }}>
+              <Logo order={2} />
+            </Link>
           </Group>
         </Group>
       </AppShell.Header>

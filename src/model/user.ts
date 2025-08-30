@@ -1,12 +1,32 @@
+import { Ranch } from "./ranch";
+
+export interface Permissions {
+  create: boolean;
+  read: boolean;
+  update: boolean;
+  delete: boolean;
+}
+
+export interface UserPermissions {
+  members: Permissions;
+  classes: Permissions;
+  users: Permissions;
+  enrollments: Permissions;
+  locations: Permissions;
+  ranches: Permissions;
+}
+
 export interface User {
-  id: number;
+  id: string;
   username: string;
-  admin: boolean;
+  permissions: UserPermissions;
+  ranches: Ranch[];
 }
 
 export interface UserDto {
   username: string;
-  admin: boolean;
   password?: string;
   repeatPassword?: string;
+  permissions: UserPermissions;
+  ranches: string[];
 }

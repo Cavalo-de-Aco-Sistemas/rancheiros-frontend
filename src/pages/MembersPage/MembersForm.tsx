@@ -2,10 +2,13 @@ import { useMemo } from 'react';
 import { Select, SimpleGrid, TextInput } from '@mantine/core';
 import { DateInput } from '@mantine/dates';
 import { useForm } from '@mantine/form';
-import CRUDForm from '@/components/CRUDForm';
+import { CRUDForm } from '@/components/CRUDForm';
+import { useAuth } from '@/contexts/AuthContext';
 import { useCRUD } from '@/contexts/CRUDContext';
 import { Member, MemberDto } from '@/model/member';
+import { Ranch } from '@/model/ranch';
 import useCRUDQuery from '@/queries/useCRUDQuery';
+import { toDate } from '@/utils/dates';
 
 export const phasesOptions = [
   { label: 'Amigo', value: 'friend' },
@@ -31,8 +34,6 @@ export const ranchOptions = [
 
 const INITIAL_VALUES = { name: '' };
 
-const toDate = (date?: string | null) => (date ? new Date(`${date}T00:00:00`) : null);
-
 const parseSelected = (member: Member): MemberDto => {
   const {
     name,
@@ -57,7 +58,7 @@ const parseSelected = (member: Member): MemberDto => {
     patch,
     birthday: toDate(birthday),
     phone,
-    ranch,
+    ranch: ranch?.id.toString(),
     residence,
     responsibility,
     dateFullPatch: toDate(dateFullPatch),
@@ -70,10 +71,16 @@ const parseSelected = (member: Member): MemberDto => {
 
 export default function MembersForm() {
   const membersQuery = useCRUDQuery<Member>('members');
+  const { ranches } = useAuth();
 
   const membersOptions = useMemo(
     () => membersQuery.data?.map((member) => ({ label: member.name, value: member.id.toString() })),
     [membersQuery.data]
+  );
+
+  const ranchesOptions = useMemo(
+    () => ranches?.map((ranch: Ranch) => ({ label: ranch.name, value: ranch.id.toString() })),
+    [ranches]
   );
 
   const { query, action } = useCRUD();
@@ -99,14 +106,26 @@ export default function MembersForm() {
         return undefined;
       }}
     >
-      <TextInput
-        required
-        label="Nome"
-        key={form.key('name')}
-        {...form.getInputProps('name')}
-        disabled={isPending || action === 'delete'}
-      />
       <SimpleGrid cols={{ base: 1, xs: 2 }}>
+        <TextInput
+          required
+          label="Nome"
+          key={form.key('name')}
+          {...form.getInputProps('name')}
+          disabled={isPending || action === 'delete'}
+        />
+        <Select
+          required
+          label="Rancho"
+          data={ranchesOptions}
+          key={form.key('ranch')}
+          {...form.getInputProps('ranch')}
+          disabled={isPending || action === 'delete'}
+          searchable
+          clearable
+        />
+      </SimpleGrid>
+      <SimpleGrid cols={{ base: 1, xs: 2, sm: 3 }}>
         <TextInput
           label="Nome no Patch"
           key={form.key('patch')}
@@ -141,9 +160,7 @@ export default function MembersForm() {
           disabled={isPending || action === 'delete'}
           valueFormat="DD/MM/YYYY"
           placeholder="DD/MM/AAAA"
-        />{' '}
-      </SimpleGrid>
-      <SimpleGrid cols={{ base: 1, xs: 2, sm: 3 }}>
+        />
         <TextInput
           label="Celular/WhatsApp"
           placeholder="(99) 99999-9999"
@@ -174,15 +191,6 @@ export default function MembersForm() {
           key={form.key('responsibility')}
           {...form.getInputProps('responsibility')}
           disabled={isPending || action === 'delete'}
-        />
-        <Select
-          data={ranchOptions}
-          label="Rancho"
-          key={form.key('ranch')}
-          {...form.getInputProps('ranch')}
-          disabled={isPending || action === 'delete'}
-          searchable
-          clearable
         />
         <TextInput
           label="Residência"

@@ -5,7 +5,7 @@ import { UseFormReturnType } from '@mantine/form';
 import { useCRUD } from '@/contexts/CRUDContext';
 import useCRUDMutation from '@/mutations/useCRUDMutation';
 
-export interface CRUDFormProps<T extends { id: number }, D> {
+export interface CRUDFormProps<T extends { id: string }, D> {
   baseValues: D;
   parseSelected: (selected: T) => D;
   form: UseFormReturnType<D, (values: D) => D>;
@@ -15,7 +15,7 @@ export interface CRUDFormProps<T extends { id: number }, D> {
   validate?: (data: D) => string | undefined;
 }
 
-export default function CRUDForm<T extends { id: number }, D>(
+export function CRUDForm<T extends { id: string }, D>(
   props: PropsWithChildren<CRUDFormProps<T, D>>
 ) {
   const { baseValues, parseSelected, form, endpoint, handleError, modalProps, children, validate } =

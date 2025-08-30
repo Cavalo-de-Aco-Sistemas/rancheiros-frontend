@@ -17,7 +17,7 @@ import { LoginProps } from '@/contexts/AuthContext';
 import { Credentials } from '@/model/models';
 import useLoginMutation from '@/mutations/useLoginMutation';
 
-export function LoginPage({ login }: { login: ({ token, username, admin }: LoginProps) => void }) {
+export function LoginPage({ login }: { login: ({ token, username }: LoginProps) => void }) {
   const [errorMessage, setErrorMessage] = useState('');
 
   const { mutate, isPending } = useLoginMutation();
@@ -32,8 +32,8 @@ export function LoginPage({ login }: { login: ({ token, username, admin }: Login
   const handleSubmit = (credentials: Credentials) => {
     mutate(credentials, {
       onSuccess: (response) => {
-        const { access_token, username, admin } = response;
-        login({ token: access_token, username, admin });
+        const { access_token, username, permissions, ranches } = response;
+        login({ token: access_token, username, permissions, ranches });
       },
       onError: (error) => {
         setErrorMessage(

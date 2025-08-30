@@ -1,28 +1,22 @@
 import { useMemo } from 'react';
-import { IconIdBadge2, IconLogout, IconShieldLock } from '@tabler/icons-react';
+import { IconLogout } from '@tabler/icons-react';
 import { Link, useLocation } from 'react-router-dom';
 import { Divider, Stack } from '@mantine/core';
 import { useAuth } from '@/contexts/AuthContext';
-import { PROTECTED_ROUTES } from '@/pages/MainPage/MainPage';
+import { ROUTES_MAP } from '@/pages/MainPage/MainPage';
 import classes from './NavLinks.module.css';
-
-const ITEMS = [
-  { link: '/', label: 'Membros', icon: IconIdBadge2 },
-  { link: '/usuarios', label: 'Usuários', icon: IconShieldLock },
-];
 
 export default function NavLinks({ toggleMobile }: { toggleMobile: () => void }) {
   const location = useLocation();
-  const { logout, admin } = useAuth();
+  const { logout, permissions } = useAuth();
 
-  const items = useMemo(() => {
-    return ITEMS.filter((item) => {
-      if (PROTECTED_ROUTES.includes(item.link)) {
-        return admin;
-      }
-      return true;
-    });
-  }, [admin]);
+  const items = useMemo(
+    () =>
+      [...ROUTES_MAP.values()].filter(
+        (item) => permissions?.[item.entity as keyof typeof permissions]?.read
+      ),
+    [permissions]
+  );
 
   return (
     <Stack gap="xs" m="sm">

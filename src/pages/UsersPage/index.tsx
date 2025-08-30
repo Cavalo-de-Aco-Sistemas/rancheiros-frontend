@@ -1,5 +1,5 @@
 import { CRUDProvider } from '@/contexts/CRUDContext';
-import UsersForm from './UsersForm';
+import { UsersForm } from './UsersForm';
 import { UsersTable } from './UsersTable';
 
 export function UsersPage() {
@@ -10,4 +10,3 @@ export function UsersPage() {
     </CRUDProvider>
   );
 }
-
