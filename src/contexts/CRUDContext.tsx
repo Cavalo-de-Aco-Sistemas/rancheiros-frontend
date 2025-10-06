@@ -5,7 +5,7 @@ import useCRUDQuery from '@/queries/useCRUDQuery';
 import { useContextProvider } from './useContextProvider';
 
 interface Identifiable {
-  id: number;
+  id: string;
 }
 
 type CRUDType = MRT_RowData & Identifiable;

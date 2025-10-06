@@ -18,7 +18,7 @@ export default function useCRUDMutation<T>(params: UseCRUDMutationParams<T>) {
   const { action, form, refetch, close, setError, endpoint, handleError } = params;
   const { axiosInstance } = useAuth();
   const mutation = useMutation({
-    mutationFn: ({ data, id }: { data: T; id?: number }) => {
+    mutationFn: ({ data, id }: { data: T; id?: string }) => {
       switch (action) {
         case 'create':
           return axiosInstance.post(`${BACKEND_ADDRESS}/${endpoint}`, data);

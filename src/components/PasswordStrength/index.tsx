@@ -45,8 +45,8 @@ interface PasswordStrengthProps extends PasswordInputProps {
 }
 
 export function PasswordStrength(props: PasswordStrengthProps) {
-  const { setPasswordStrength, value: rawValue } = props;
-  const value = rawValue as string;
+  const { setPasswordStrength, value: rawValue, ...rest } = props;
+  const value = typeof rawValue === 'string' ? rawValue : '';
 
   const strength = useMemo(() => getStrength(value), [value]);
 
@@ -54,8 +54,12 @@ export function PasswordStrength(props: PasswordStrengthProps) {
     setPasswordStrength(strength);
   }, [strength, setPasswordStrength]);
 
-  const checks = requirements.map((requirement, index) => (
-    <PasswordRequirement key={index} label={requirement.label} meets={requirement.re.test(value)} />
+  const checks = requirements.map((requirement) => (
+    <PasswordRequirement
+      key={requirement.label}
+      label={requirement.label}
+      meets={requirement.re.test(value)}
+    />
   ));
 
   const bars = Array(4)
@@ -74,7 +78,7 @@ export function PasswordStrength(props: PasswordStrengthProps) {
 
   return (
     <div>
-      <PasswordInput {...props} />
+      <PasswordInput {...rest} value={value} />
 
       <Group gap={5} grow mt="xs" mb="md">
         {bars}

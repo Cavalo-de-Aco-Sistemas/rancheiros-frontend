@@ -89,7 +89,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setAuthDate(null);
     setUsername(null);
     setPermissions(null);
-  }, [setAuthDate, setAuthToken, setUsername, setPermissions]);
+    setRanches(null);
+  }, [setAuthDate, setAuthToken, setUsername, setPermissions, setRanches]);
 
   /**
    * After each login or logout process:
