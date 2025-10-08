@@ -40,6 +40,15 @@ export function slugify(str: string): string {
     .replace(/-+$/, ""); // Trim trailing dashes
 }
 
+export interface CustomAction<T extends MRT_RowData> {
+  label: string;
+  icon: React.ComponentType<any>;
+  color?: string;
+  onClick: (row: T) => void;
+  isVisible?: (row: T) => boolean;
+  isLoading?: boolean;
+}
+
 export interface CRUDTableProps<T extends MRT_RowData> {
   columns: MRT_ColumnDef<T>[];
   title: string;
@@ -48,6 +57,7 @@ export interface CRUDTableProps<T extends MRT_RowData> {
     tableHeaders: string[];
     rowMapper: (row: MRT_Row<T>) => RowInput;
   };
+  customActions?: CustomAction<T>[];
 }
 
 const DEFAULT_PERMISSIONS = {
@@ -57,7 +67,7 @@ const DEFAULT_PERMISSIONS = {
 };
 
 export function CRUDTable<T extends MRT_RowData>(props: CRUDTableProps<T>) {
-  const { columns, title, csvData, pdfConfig } = props;
+  const { columns, title, csvData, pdfConfig, customActions = [] } = props;
   const { query, setSelected, setAction, open } = useCRUD();
   const { data, isLoading, isError, isFetching, error } = query;
   const { tableHeaders, rowMapper } = pdfConfig;
@@ -140,13 +150,16 @@ export function CRUDTable<T extends MRT_RowData>(props: CRUDTableProps<T>) {
       </Title>
     ),
     renderRowActionMenuItems: ({ row }) => {
+      const rowData = data?.[row.index];
+      if (!rowData) return null;
+      
       return (
         <>
           {update && (
             <Menu.Item
               onClick={() => {
                 open();
-                setSelected(data?.[row.index]);
+                setSelected(rowData);
                 setAction('update');
               }}
               leftSection={<IconEdit style={{ width: rem(16), height: rem(16) }} />}
@@ -154,11 +167,28 @@ export function CRUDTable<T extends MRT_RowData>(props: CRUDTableProps<T>) {
               Editar
             </Menu.Item>
           )}
+          {customActions.map((action, index) => {
+            const isVisible = action.isVisible ? action.isVisible(rowData as T) : true;
+            if (!isVisible) return null;
+            
+            const IconComponent = action.icon;
+            return (
+              <Menu.Item
+                key={index}
+                onClick={() => action.onClick(rowData as T)}
+                color={action.color}
+                disabled={action.isLoading}
+                leftSection={<IconComponent style={{ width: rem(16), height: rem(16) }} />}
+              >
+                {action.label}
+              </Menu.Item>
+            );
+          })}
           {remove && (
             <Menu.Item
               onClick={() => {
                 open();
-                setSelected(data?.[row.index]);
+                setSelected(rowData);
                 setAction('delete');
               }}
               color="red"

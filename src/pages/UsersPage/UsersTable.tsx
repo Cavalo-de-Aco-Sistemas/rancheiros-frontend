@@ -29,6 +29,7 @@ function PermissionRow({ permission }: { permission: Permissions }) {
 
 const tableHeaders = [
   'Usuário',
+  'Super Admin',
   'Membros',
   'Turmas',
   'Inscrições',
@@ -50,6 +51,18 @@ export function UsersTable() {
   const columns = useMemo<MRT_ColumnDef<User>[]>(
     () => [
       { accessorKey: 'username', header: 'Usuário' },
+      {
+        accessorKey: 'super_admin',
+        header: 'Super Admin',
+        Cell: ({ row }) => (
+          <Badge 
+            color={row.original.super_admin ? 'green' : 'gray'} 
+            variant={row.original.super_admin ? 'filled' : 'light'}
+          >
+            {row.original.super_admin ? 'Sim' : 'Não'}
+          </Badge>
+        ),
+      },
       {
         accessorKey: 'permissions.members',
         header: 'Membros',
@@ -105,8 +118,9 @@ export function UsersTable() {
 
   const csvData = useMemo(
     () =>
-      query.data?.map(({ username, permissions, ranches }) => ({
+      query.data?.map(({ username, super_admin, permissions, ranches }) => ({
         Usuário: username,
+        'Super Admin': super_admin ? 'Sim' : 'Não',
         Membros: permissionsToString(permissions.members),
         Turmas: permissionsToString(permissions.classes),
         Inscrições: permissionsToString(permissions.enrollments),
@@ -118,9 +132,10 @@ export function UsersTable() {
   );
 
   const rowMapper = useCallback((row: MRT_Row<User>): string[] => {
-    const { username, permissions, ranches } = row.original;
+    const { username, super_admin, permissions, ranches } = row.original;
     return [
       username,
+      super_admin ? 'Sim' : 'Não',
       permissionsToString(permissions.members),
       permissionsToString(permissions.classes),
       permissionsToString(permissions.enrollments),
