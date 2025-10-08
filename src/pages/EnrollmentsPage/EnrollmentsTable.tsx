@@ -4,7 +4,7 @@ import { CRUDTable } from '@/components/CRUDTable';
 import { useCRUD } from '@/contexts/CRUDContext';
 import { Enrollment, EnrollmentStatus } from '@/model/enrollment';
 import { dateBR } from '@/utils/dates';
-import { EnrollmentStatusActions } from '@/components/EnrollmentStatusActions';
+import EnrollmentStatusActionsWithModal from '@/components/EnrollmentStatusActions';
 import { useEnrollmentFlowMutation } from '@/mutations/useEnrollmentFlowMutation';
 import { IconClock } from '@tabler/icons-react';
 
@@ -61,7 +61,7 @@ export function EnrollmentsTable() {
         id: 'actions',
         header: 'Fluxo',
         Cell: ({ row }) => (
-          <EnrollmentStatusActions
+          <EnrollmentStatusActionsWithModal
             enrollment={row.original}
           />
         ),

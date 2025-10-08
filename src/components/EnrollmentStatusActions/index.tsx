@@ -1,5 +1,6 @@
 import { useCallback, useMemo } from 'react';
-import { ActionIcon, Group, Tooltip, Select } from '@mantine/core';
+import { ActionIcon, Group, Tooltip, Select, Modal, Text, Button } from '@mantine/core';
+import { useDisclosure } from '@mantine/hooks';
 import {
   IconClock,
   IconPhone,
@@ -8,6 +9,7 @@ import {
   IconEyeOff,
   IconCertificate,
   IconUserX,
+  IconArrowBack,
 } from '@tabler/icons-react';
 import { Enrollment, EnrollmentStatus } from '@/model/enrollment';
 import { useEnrollmentFlowMutation } from '@/mutations/useEnrollmentFlowMutation';
@@ -18,6 +20,7 @@ import { dateBR } from '@/utils/dates';
 
 interface EnrollmentStatusActionsProps {
   enrollment: Enrollment;
+  onRevertClick?: () => void;
 }
 
 const STATUS_ACTIONS = [
@@ -59,10 +62,11 @@ const STATUS_ACTIONS = [
   },
 ];
 
-export function EnrollmentStatusActions({ enrollment }: EnrollmentStatusActionsProps) {
+export function EnrollmentStatusActions({ enrollment, onRevertClick }: EnrollmentStatusActionsProps) {
   const updateFlowMutation = useEnrollmentFlowMutation();
   const assignClassMutation = useEnrollmentAssignClassMutation();
   const classesQuery = useCRUDQuery<Class>('classes');
+  const [opened, { open, close }] = useDisclosure(false);
 
   const classesOptions = useMemo(() => {
     return classesQuery.data?.map((classItem) => ({
@@ -77,6 +81,29 @@ export function EnrollmentStatusActions({ enrollment }: EnrollmentStatusActionsP
       classId,
     });
   }, [assignClassMutation, enrollment.id]);
+
+  const canRevertStatus = useCallback(() => {
+    const currentStatus = enrollment.status;
+    // Só pode reverter se estiver em certified ou missed
+    return currentStatus === EnrollmentStatus.CERTIFIED || currentStatus === EnrollmentStatus.MISSED;
+  }, [enrollment.status]);
+
+  const handleRevertStatus = useCallback(() => {
+    if (onRevertClick) {
+      onRevertClick();
+    } else {
+      open();
+    }
+  }, [onRevertClick, open]);
+
+  const confirmRevertStatus = useCallback(() => {
+    // Reverte para confirmed (estado anterior lógico)
+    updateFlowMutation.mutate({
+      enrollmentId: enrollment.id,
+      status: EnrollmentStatus.CONFIRMED,
+    });
+    close();
+  }, [updateFlowMutation, enrollment.id, close]);
 
   const isActionEnabled = useCallback((actionStatus: EnrollmentStatus) => {
     const currentStatus = enrollment.status;
@@ -159,6 +186,81 @@ export function EnrollmentStatusActions({ enrollment }: EnrollmentStatusActionsP
           </Tooltip>
         );
       })}
+      
+      {/* Botão para reverter status de certified/missed */}
+      {canRevertStatus() && (
+        <Tooltip label="Reverter Status" position="top">
+          <ActionIcon
+            variant="filled"
+            color="orange"
+            size="sm"
+            onClick={handleRevertStatus}
+            loading={updateFlowMutation.isPending}
+          >
+            <IconArrowBack size={16} />
+          </ActionIcon>
+        </Tooltip>
+      )}
     </Group>
+  );
+}
+
+export default function EnrollmentStatusActionsWithModal({ enrollment }: EnrollmentStatusActionsProps) {
+  const [opened, { open, close }] = useDisclosure(false);
+  const updateFlowMutation = useEnrollmentFlowMutation();
+
+  const confirmRevertStatus = useCallback(() => {
+    // Reverte para confirmed (estado anterior lógico)
+    updateFlowMutation.mutate({
+      enrollmentId: enrollment.id,
+      status: EnrollmentStatus.CONFIRMED,
+    });
+    close();
+  }, [updateFlowMutation, enrollment.id, close]);
+
+  const getStatusLabel = (status: EnrollmentStatus) => {
+    switch (status) {
+      case EnrollmentStatus.CERTIFIED:
+        return 'Certificado';
+      case EnrollmentStatus.MISSED:
+        return 'Faltou';
+      default:
+        return status;
+    }
+  };
+
+  return (
+    <>
+      <EnrollmentStatusActions enrollment={enrollment} onRevertClick={open} />
+      
+      <Modal
+        opened={opened}
+        onClose={close}
+        title="Confirmar Reversão de Status"
+        centered
+      >
+        <Text mb="md">
+          Tem certeza que deseja reverter o status de <strong>{enrollment.name}</strong> de 
+          <strong> {getStatusLabel(enrollment.status)}</strong> para <strong>Confirmado</strong>?
+        </Text>
+        
+        <Text size="sm" c="dimmed" mb="lg">
+          Esta ação permitirá que o aluno volte ao fluxo normal de confirmação.
+        </Text>
+
+        <Group justify="flex-end">
+          <Button variant="outline" onClick={close}>
+            Cancelar
+          </Button>
+          <Button 
+            color="orange" 
+            onClick={confirmRevertStatus}
+            loading={updateFlowMutation.isPending}
+          >
+            Confirmar Reversão
+          </Button>
+        </Group>
+      </Modal>
+    </>
   );
 }
