@@ -2,7 +2,6 @@ import { useCallback, useMemo } from 'react';
 import { ActionIcon, Group, Tooltip, Select, Modal, Text, Button } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import {
-  IconClock,
   IconPhone,
   IconCheck,
   IconX,
@@ -66,10 +65,12 @@ export function EnrollmentStatusActions({ enrollment, onRevertClick }: Enrollmen
   const updateFlowMutation = useEnrollmentFlowMutation();
   const assignClassMutation = useEnrollmentAssignClassMutation();
   const classesQuery = useCRUDQuery<Class>('classes');
-  const [opened, { open, close }] = useDisclosure(false);
+  const [, { open }] = useDisclosure(false);
 
   const classesOptions = useMemo(() => {
-    if (!classesQuery.data) return [];
+    if (!classesQuery.data) {
+      return [];
+    }
     
     return classesQuery.data.map((classItem) => ({
       value: classItem.id,
@@ -97,15 +98,6 @@ export function EnrollmentStatusActions({ enrollment, onRevertClick }: Enrollmen
       open();
     }
   }, [onRevertClick, open]);
-
-  const confirmRevertStatus = useCallback(() => {
-    // Reverte para confirmed (estado anterior lógico)
-    updateFlowMutation.mutate({
-      enrollmentId: enrollment.id,
-      status: EnrollmentStatus.CONFIRMED,
-    });
-    close();
-  }, [updateFlowMutation, enrollment.id, close]);
 
   const isActionEnabled = useCallback((actionStatus: EnrollmentStatus) => {
     const currentStatus = enrollment.status;

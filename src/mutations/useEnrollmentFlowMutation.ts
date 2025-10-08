@@ -41,7 +41,9 @@ export function useEnrollmentFlowMutation() {
 
       // Optimistically update the enrollment status
       updateQueryData<Enrollment>('enrollments', (old) => {
-        if (!old) return old;
+        if (!old) {
+          return [];
+        }
         return old.map((enrollment) =>
           enrollment.id === enrollmentId
             ? { ...enrollment, status }
@@ -51,7 +53,7 @@ export function useEnrollmentFlowMutation() {
 
       return { previousEnrollments };
     },
-    onSuccess: (data, { status }) => {
+    onSuccess: (_data, { status }) => {
       notifications.show({
         title: 'Sucesso',
         message: `Status alterado para ${STATUS_LABELS[status]}`,
@@ -61,7 +63,7 @@ export function useEnrollmentFlowMutation() {
       // Only invalidate enrollments query - classes don't need to be refetched for status changes
       invalidateQuery('enrollments');
     },
-    onError: (error: AxiosError, variables, context) => {
+    onError: (error: AxiosError, _variables, context) => {
       // Revert optimistic update on error
       if (context?.previousEnrollments) {
         updateQueryData<Enrollment>('enrollments', () => context.previousEnrollments!);

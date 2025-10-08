@@ -35,7 +35,9 @@ export function useEnrollmentAssignClassMutation() {
 
       // Optimistically update the enrollment with the assigned class
       updateQueryData<Enrollment>('enrollments', (old) => {
-        if (!old) return old;
+        if (!old) {
+          return [];
+        }
         return old.map((enrollment) =>
           enrollment.id === enrollmentId
             ? { ...enrollment, class: assignedClass || null }
@@ -55,7 +57,7 @@ export function useEnrollmentAssignClassMutation() {
       // Only invalidate enrollments query - classes data doesn't change when assigning
       invalidateQuery('enrollments');
     },
-    onError: (error: AxiosError, variables, context) => {
+    onError: (error: AxiosError, _variables, context) => {
       // Revert optimistic update on error
       if (context?.previousEnrollments) {
         updateQueryData<Enrollment>('enrollments', () => context.previousEnrollments!);

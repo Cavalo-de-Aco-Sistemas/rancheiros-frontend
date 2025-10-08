@@ -80,7 +80,9 @@ export function EnrollmentsTable() {
         header: 'Turma',
         Cell: ({ row }) => {
           const classData = row.original.class;
-          if (!classData) return '';
+          if (!classData) {
+            return '';
+          }
           
           const date = classData.date ? (dateBR(classData.date) ?? '') : '';
           const location = classData.location?.name ?? '';
@@ -184,26 +186,6 @@ export function EnrollmentsTable() {
 
   const pdfConfig = useMemo(() => ({ tableHeaders, rowMapper }), [rowMapper]);
 
-  const getStatusLabel = (status: EnrollmentStatus) => {
-    switch (status) {
-      case EnrollmentStatus.WAITING:
-        return 'Lista de Espera';
-      case EnrollmentStatus.CALLED:
-        return 'Chamado';
-      case EnrollmentStatus.CONFIRMED:
-        return 'Confirmado';
-      case EnrollmentStatus.DROPPED:
-        return 'Cancelado';
-      case EnrollmentStatus.IGNORED:
-        return 'Ignorado';
-      case EnrollmentStatus.CERTIFIED:
-        return 'Certificado';
-      case EnrollmentStatus.MISSED:
-        return 'Faltou';
-      default:
-        return status;
-    }
-  };
 
   return (
     <>

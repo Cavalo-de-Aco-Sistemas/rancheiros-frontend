@@ -204,7 +204,9 @@ export function CRUDTable<T extends MRT_RowData>(props: CRUDTableProps<T>) {
     ),
     renderRowActionMenuItems: ({ row }) => {
       const rowData = data?.[row.index];
-      if (!rowData) return null;
+      if (!rowData) {
+        return null;
+      }
       
       return (
         <>
@@ -222,7 +224,9 @@ export function CRUDTable<T extends MRT_RowData>(props: CRUDTableProps<T>) {
           )}
           {customActions.map((action, index) => {
             const isVisible = action.isVisible ? action.isVisible(rowData as T) : true;
-            if (!isVisible) return null;
+            if (!isVisible) {
+              return null;
+            }
             
             const IconComponent = action.icon;
             return (

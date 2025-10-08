@@ -51,7 +51,9 @@ const tableHeaders = [
 ];
 
 const permissionsToString = (permissions: Permissions | undefined) => {
-  if (!permissions) return '';
+  if (!permissions) {
+    return '';
+  }
   return Object.entries(permissions)
     .filter(([_, value]) => value)
     .map(([key]) => key.charAt(0).toUpperCase())
