@@ -32,9 +32,7 @@ export function LoginPage({ login }: { login: ({ token, username }: LoginProps) 
   const handleSubmit = (credentials: Credentials) => {
     mutate(credentials, {
       onSuccess: (response) => {
-        console.log('Login response:', response);
         const { access_token, username, permissions, ranches, super_admin } = response;
-        console.log('super_admin extraído:', super_admin);
         login({ token: access_token, username, permissions, ranches, super_admin });
       },
       onError: (error) => {

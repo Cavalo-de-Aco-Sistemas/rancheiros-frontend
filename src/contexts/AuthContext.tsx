@@ -78,7 +78,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
    */
   const login = useCallback(
     ({ token, username, permissions, ranches, super_admin }: LoginProps) => {
-      console.log('Login - super_admin recebido:', super_admin);
       setAuthToken(token);
       setAuthDate(new Date().toISOString());
       setUsername(username);
@@ -153,9 +152,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         if (error.response && error.response.status === 403) {
           return Promise.reject(new Error('Você não tem permissão para manipular este recurso'));
         }
-        // log response
-        // eslint-disable-next-line no-console
-        console.error('error', error);
+        // Error handling - could be logged to external service in production
         return Promise.reject(error);
       }
     );

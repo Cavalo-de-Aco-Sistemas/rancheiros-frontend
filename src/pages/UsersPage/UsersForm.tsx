@@ -169,8 +169,6 @@ export function UsersForm() {
   const [passwordStrength, setPasswordStrength] = useState(0);
   const { super_admin: currentUserIsSuperAdmin } = useAuth();
   
-  // Debug: verificar se o valor está chegando
-  console.log('currentUserIsSuperAdmin:', currentUserIsSuperAdmin);
 
   const ranchesQuery = useCRUDQuery<Ranch>('ranches');
 
