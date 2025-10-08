@@ -10,7 +10,7 @@ import {
   IconUserX,
 } from '@tabler/icons-react';
 import { Enrollment, EnrollmentStatus } from '@/model/enrollment';
-import { useEnrollmentStatusMutation } from '@/mutations/useEnrollmentStatusMutation';
+import { useEnrollmentFlowMutation } from '@/mutations/useEnrollmentFlowMutation';
 
 interface EnrollmentStatusActionsProps {
   enrollment: Enrollment;
@@ -56,7 +56,7 @@ const STATUS_ACTIONS = [
 ];
 
 export function EnrollmentStatusActions({ enrollment }: EnrollmentStatusActionsProps) {
-  const updateStatusMutation = useEnrollmentStatusMutation();
+  const updateFlowMutation = useEnrollmentFlowMutation();
 
   const isActionEnabled = useCallback((actionStatus: EnrollmentStatus) => {
     const currentStatus = enrollment.status;
@@ -83,11 +83,11 @@ export function EnrollmentStatusActions({ enrollment }: EnrollmentStatusActionsP
   }, [enrollment.status]);
 
   const handleStatusUpdate = useCallback((newStatus: EnrollmentStatus) => {
-    updateStatusMutation.mutate({
+    updateFlowMutation.mutate({
       enrollmentId: enrollment.id,
       status: newStatus,
     });
-  }, [updateStatusMutation, enrollment.id]);
+  }, [updateFlowMutation, enrollment.id]);
 
   return (
     <Group gap="xs">
@@ -106,7 +106,7 @@ export function EnrollmentStatusActions({ enrollment }: EnrollmentStatusActionsP
               color={color}
               size="sm"
               onClick={() => handleStatusUpdate(status)}
-              loading={updateStatusMutation.isPending}
+                    loading={updateFlowMutation.isPending}
             >
               <Icon size={16} />
             </ActionIcon>

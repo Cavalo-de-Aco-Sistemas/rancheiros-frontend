@@ -13,6 +13,7 @@ export interface AuthContextType {
   username: string | null;
   permissions: Record<string, Record<'create' | 'read' | 'update' | 'delete', boolean>> | null;
   ranches: Ranch[] | null;
+  super_admin: boolean | null;
 }
 
 export interface LoginProps {
@@ -20,6 +21,7 @@ export interface LoginProps {
   username: string;
   permissions: Record<string, Record<'create' | 'read' | 'update' | 'delete', boolean>>;
   ranches: Ranch[];
+  super_admin: boolean;
 }
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -63,6 +65,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     defaultValue: null,
   });
 
+  const [super_admin, setSuper_admin] = useLocalStorage<boolean | null>({
+    key: 'super_admin',
+    defaultValue: null,
+  });
+
   /**
    * Handles user login by saving the authentication token and the current authentication date
    * on state and local storage
@@ -70,14 +77,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
    * @param {string} token - The authentication token to be set.
    */
   const login = useCallback(
-    ({ token, username, permissions, ranches }: LoginProps) => {
+    ({ token, username, permissions, ranches, super_admin }: LoginProps) => {
+      console.log('Login - super_admin recebido:', super_admin);
       setAuthToken(token);
       setAuthDate(new Date().toISOString());
       setUsername(username);
       setPermissions(permissions);
       setRanches(ranches);
+      setSuper_admin(super_admin);
     },
-    [setAuthToken, setAuthDate, setUsername, setPermissions, setRanches]
+    [setAuthToken, setAuthDate, setUsername, setPermissions, setRanches, setSuper_admin]
   );
 
   /**
@@ -89,7 +98,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setAuthDate(null);
     setUsername(null);
     setPermissions(null);
-  }, [setAuthDate, setAuthToken, setUsername, setPermissions]);
+    setSuper_admin(null);
+  }, [setAuthDate, setAuthToken, setUsername, setPermissions, setSuper_admin]);
 
   /**
    * After each login or logout process:
@@ -161,6 +171,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     username,
     permissions,
     ranches,
+    super_admin,
   };
 
   return (

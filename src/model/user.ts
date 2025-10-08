@@ -14,6 +14,7 @@ export interface UserPermissions {
   enrollments: Permissions;
   locations: Permissions;
   ranches: Permissions;
+  flow: Permissions;
 }
 
 export interface User {
@@ -30,5 +31,5 @@ export interface UserDto {
   repeatPassword?: string;
   permissions: UserPermissions;
   ranches: string[];
-  super_admin: boolean;
+  super_admin?: boolean;
 }

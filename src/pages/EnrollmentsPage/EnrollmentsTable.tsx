@@ -5,7 +5,7 @@ import { useCRUD } from '@/contexts/CRUDContext';
 import { Enrollment, EnrollmentStatus } from '@/model/enrollment';
 import { dateBR } from '@/utils/dates';
 import { EnrollmentStatusActions } from '@/components/EnrollmentStatusActions';
-import { useEnrollmentStatusMutation } from '@/mutations/useEnrollmentStatusMutation';
+import { useEnrollmentFlowMutation } from '@/mutations/useEnrollmentFlowMutation';
 import { IconClock } from '@tabler/icons-react';
 
 const tableHeaders = [
@@ -26,14 +26,14 @@ const tableHeaders = [
 
 export function EnrollmentsTable() {
   const { query } = useCRUD();
-  const updateStatusMutation = useEnrollmentStatusMutation();
+  const updateFlowMutation = useEnrollmentFlowMutation();
 
   const handleReturnToWaiting = useCallback((enrollment: Enrollment) => {
-    updateStatusMutation.mutate({
+    updateFlowMutation.mutate({
       enrollmentId: enrollment.id,
       status: EnrollmentStatus.WAITING,
     });
-  }, [updateStatusMutation]);
+  }, [updateFlowMutation]);
 
   const canReturnToWaiting = useCallback((enrollment: Enrollment) => {
     // Só pode voltar para lista de espera se:
@@ -51,9 +51,9 @@ export function EnrollmentsTable() {
       icon: IconClock,
       onClick: handleReturnToWaiting,
       isVisible: canReturnToWaiting,
-      isLoading: updateStatusMutation.isPending,
+      isLoading: updateFlowMutation.isPending,
     },
-  ], [handleReturnToWaiting, canReturnToWaiting, updateStatusMutation.isPending]);
+  ], [handleReturnToWaiting, canReturnToWaiting, updateFlowMutation.isPending]);
 
   const columns = useMemo<MRT_ColumnDef<Enrollment>[]>(
     () => [

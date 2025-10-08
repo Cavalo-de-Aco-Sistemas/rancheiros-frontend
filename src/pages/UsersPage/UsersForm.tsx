@@ -13,6 +13,7 @@ import {
 import { useForm, UseFormReturnType } from '@mantine/form';
 import { CRUDForm } from '@/components/CRUDForm';
 import { PasswordStrength } from '@/components/PasswordStrength';
+import { useAuth } from '@/contexts/AuthContext';
 import { useCRUD } from '@/contexts/CRUDContext';
 import { Ranch } from '@/model/ranch';
 import { User, UserDto, UserPermissions } from '@/model/user';
@@ -59,8 +60,15 @@ const INITIAL_VALUES = {
       update: false,
       delete: false,
     },
+    flow: {
+      create: false,
+      read: false,
+      update: false,
+      delete: false,
+    },
   },
   ranches: [],
+  super_admin: false,
 };
 
 const parseSelected = (user: User): UserDto => {
@@ -70,13 +78,14 @@ const parseSelected = (user: User): UserDto => {
     repeatPassword: '',
     permissions: user.permissions,
     ranches: user.ranches.map((ranch) => ranch.id),
+    super_admin: user.super_admin,
   };
 };
 
 interface PermissionRowProps {
   title: string;
   entity: keyof UserPermissions;
-  form: UseFormReturnType<UserDto, (values: UserDto) => UserDto>;
+  form: UseFormReturnType<UserDto>;
 }
 
 function PermissionRow({ title, entity, form }: PermissionRowProps) {
@@ -127,10 +136,41 @@ function PermissionRow({ title, entity, form }: PermissionRowProps) {
   );
 }
 
+function FlowPermissionRow({ form }: { form: UseFormReturnType<UserDto> }) {
+  return (
+    <Table.Tr>
+      <Table.Td>Fluxo</Table.Td>
+      <Table.Td>
+        <Checkbox disabled checked={false} />
+      </Table.Td>
+      <Table.Td>
+        <Checkbox disabled checked={false} />
+      </Table.Td>
+      <Table.Td>
+        <Checkbox
+          key={form.key('permissions.flow.update')}
+          {...form.getInputProps('permissions.flow.update')}
+          checked={form.values.permissions.flow.update}
+          onChange={(event) => {
+            form.setFieldValue('permissions.flow.update', event.currentTarget.checked);
+          }}
+        />
+      </Table.Td>
+      <Table.Td>
+        <Checkbox disabled checked={false} />
+      </Table.Td>
+    </Table.Tr>
+  );
+}
+
 export function UsersForm() {
   const { query, action } = useCRUD();
   const { isPending } = query;
   const [passwordStrength, setPasswordStrength] = useState(0);
+  const { super_admin: currentUserIsSuperAdmin } = useAuth();
+  
+  // Debug: verificar se o valor está chegando
+  console.log('currentUserIsSuperAdmin:', currentUserIsSuperAdmin);
 
   const ranchesQuery = useCRUDQuery<Ranch>('ranches');
 
@@ -200,6 +240,18 @@ export function UsersForm() {
           <Accordion.Control icon={<IconLock />}>Permissões</Accordion.Control>
           <Accordion.Panel>
             <Stack>
+              {currentUserIsSuperAdmin === true && (
+                <Checkbox
+                  label="Super Administrador"
+                  description="Usuário com acesso a todos os ranchos"
+                  key={form.key('super_admin')}
+                  {...form.getInputProps('super_admin')}
+                  checked={form.values.super_admin}
+                  onChange={(event) => {
+                    form.setFieldValue('super_admin', event.currentTarget.checked);
+                  }}
+                />
+              )}
               <MultiSelect
                 label="Ranchos"
                 key={form.key('ranches')}
@@ -228,6 +280,7 @@ export function UsersForm() {
                   <PermissionRow title="Inscrições" entity="enrollments" form={form} />
                   <PermissionRow title="Locais MPV" entity="locations" form={form} />
                   <PermissionRow title="Ranchos" entity="ranches" form={form} />
+                  <FlowPermissionRow form={form} />
                 </Table.Tbody>
               </Table>
             </Stack>
