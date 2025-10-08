@@ -16,7 +16,18 @@ import { useCRUD } from '@/contexts/CRUDContext';
 import { Ranch } from '@/model/ranch';
 import { Permissions, User } from '@/model/user';
 
-function PermissionRow({ permission }: { permission: Permissions }) {
+function PermissionRow({ permission }: { permission: Permissions | undefined }) {
+  if (!permission) {
+    return (
+      <Group>
+        <IconStarOff stroke={1} color="gray" />
+        <IconEyeOff stroke={1} color="gray" />
+        <IconEditOff stroke={1} color="gray" />
+        <IconTrashOff stroke={1} color="gray" />
+      </Group>
+    );
+  }
+  
   return (
     <Group>
       {permission.create ? <IconStar stroke={1.5} /> : <IconStarOff stroke={1} color="gray" />}
@@ -35,10 +46,14 @@ const tableHeaders = [
   'Inscrições',
   'Locais MPV',
   'Ranchos',
+  'Fluxo',
   'Filtros',
 ];
 
-const permissionsToString = (permissions: Permissions) => {
+const permissionsToString = (permissions: Permissions | undefined) => {
+  if (!permissions) {
+    return '';
+  }
   return Object.entries(permissions)
     .filter(([_, value]) => value)
     .map(([key]) => key.charAt(0).toUpperCase())
@@ -94,8 +109,13 @@ export function UsersTable() {
         Cell: ({ row }) => <PermissionRow permission={row.original.permissions.ranches} />,
       },
       {
+        accessorKey: 'permissions.flow',
+        header: 'Fluxo',
+        Cell: ({ row }) => <PermissionRow permission={row.original.permissions.flow} />,
+      },
+      {
         accessorKey: 'ranches',
-        header: 'Ranchos',
+        header: 'Filtros',
         Cell: ({ row }) =>
           row.original.ranches.length > 0 && (
             <Tooltip label={row.original.ranches.map((ranch) => ranch.name).join(', ')}>
@@ -126,6 +146,7 @@ export function UsersTable() {
         Inscrições: permissionsToString(permissions.enrollments),
         'Locais MPV': permissionsToString(permissions.locations),
         Ranchos: permissionsToString(permissions.ranches),
+        Fluxo: permissionsToString(permissions.flow),
         Filtros: ranches.map((ranch: Ranch) => ranch.name).join(', '),
       })) ?? [],
     [query.data]
@@ -141,6 +162,7 @@ export function UsersTable() {
       permissionsToString(permissions.enrollments),
       permissionsToString(permissions.locations),
       permissionsToString(permissions.ranches),
+      permissionsToString(permissions.flow),
       ranches.map((ranch: Ranch) => ranch.name).join(', '),
     ];
   }, []);

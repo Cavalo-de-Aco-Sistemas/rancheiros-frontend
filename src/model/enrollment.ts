@@ -1,6 +1,8 @@
 import { Class } from "./class";
 import { Location } from "./location";
 
+export type { Class } from "./class";
+
 export enum EnrollmentStatus {
   // Em lista de espera (disponível para chamar para uma turma) [waiting]
   WAITING = 'waiting',

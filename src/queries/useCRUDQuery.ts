@@ -11,5 +11,13 @@ export default function useCRUDQuery<T>(endpoint: string) {
     return response.data as T[];
   }, [axiosInstance, endpoint]);
 
-  return useQuery({ queryKey: [authToken, endpoint], queryFn });
+  return useQuery({ 
+    queryKey: [authToken, endpoint], 
+    queryFn,
+    staleTime: 5 * 60 * 1000, // 5 minutes - data is considered fresh for 5 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes - cache is kept for 10 minutes after last use
+    refetchOnWindowFocus: false, // Don't refetch when window regains focus
+    refetchOnMount: true, // Refetch when component mounts
+    retry: 2, // Retry failed requests up to 2 times
+  });
 }
