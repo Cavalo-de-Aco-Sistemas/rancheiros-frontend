@@ -174,7 +174,7 @@ export function CRUDTable<T extends MRT_RowData>(props: CRUDTableProps<T>) {
     mantineToolbarAlertBannerProps: isError
       ? {
           color: 'red' as const,
-          children: error.message ?? 'Error loading data',
+          children: error?.message ?? 'Error loading data',
         }
       : undefined,
     state: { isLoading, showAlertBanner: isError, showProgressBars: isFetching },
@@ -188,7 +188,7 @@ export function CRUDTable<T extends MRT_RowData>(props: CRUDTableProps<T>) {
     enableRowVirtualization: true,
     mantineTableContainerProps: { style: { maxHeight: 'calc(100vh - 128px)' } },
     enableRowActions: true,
-  }), [columns, data, isError, error.message, isLoading, isFetching]);
+  }), [columns, data, isError, error?.message, isLoading, isFetching]);
 
   const handleExportDataCSV = useCallback(() => {
     const csv = generateCsv(csvConfig)(csvData ?? []);
