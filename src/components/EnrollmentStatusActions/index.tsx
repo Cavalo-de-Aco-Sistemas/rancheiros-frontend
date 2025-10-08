@@ -1,5 +1,5 @@
-import { useCallback } from 'react';
-import { ActionIcon, Group, Tooltip } from '@mantine/core';
+import { useCallback, useMemo } from 'react';
+import { ActionIcon, Group, Tooltip, Select } from '@mantine/core';
 import {
   IconClock,
   IconPhone,
@@ -11,6 +11,10 @@ import {
 } from '@tabler/icons-react';
 import { Enrollment, EnrollmentStatus } from '@/model/enrollment';
 import { useEnrollmentFlowMutation } from '@/mutations/useEnrollmentFlowMutation';
+import { useEnrollmentAssignClassMutation } from '@/mutations/useEnrollmentAssignClassMutation';
+import useCRUDQuery from '@/queries/useCRUDQuery';
+import { Class } from '@/model/class';
+import { dateBR } from '@/utils/dates';
 
 interface EnrollmentStatusActionsProps {
   enrollment: Enrollment;
@@ -57,9 +61,31 @@ const STATUS_ACTIONS = [
 
 export function EnrollmentStatusActions({ enrollment }: EnrollmentStatusActionsProps) {
   const updateFlowMutation = useEnrollmentFlowMutation();
+  const assignClassMutation = useEnrollmentAssignClassMutation();
+  const classesQuery = useCRUDQuery<Class>('classes');
+
+  const classesOptions = useMemo(() => {
+    return classesQuery.data?.map((classItem) => ({
+      value: classItem.id,
+      label: `${classItem.location?.name ?? 'Sem local'} - ${classItem.date ? dateBR(classItem.date) : 'Sem data'}`,
+    })) ?? [];
+  }, [classesQuery.data]);
+
+  const handleAssignClass = useCallback((classId: string) => {
+    assignClassMutation.mutate({
+      enrollmentId: enrollment.id,
+      classId,
+    });
+  }, [assignClassMutation, enrollment.id]);
 
   const isActionEnabled = useCallback((actionStatus: EnrollmentStatus) => {
     const currentStatus = enrollment.status;
+    const hasClass = !!enrollment.class;
+
+    // Só permite ações de fluxo se tiver turma atribuída
+    if (!hasClass) {
+      return false;
+    }
 
     switch (actionStatus) {
       case EnrollmentStatus.CALLED:
@@ -80,7 +106,7 @@ export function EnrollmentStatusActions({ enrollment }: EnrollmentStatusActionsP
       default:
         return false;
     }
-  }, [enrollment.status]);
+  }, [enrollment.status, enrollment.class]);
 
   const handleStatusUpdate = useCallback((newStatus: EnrollmentStatus) => {
     updateFlowMutation.mutate({
@@ -89,6 +115,26 @@ export function EnrollmentStatusActions({ enrollment }: EnrollmentStatusActionsP
     });
   }, [updateFlowMutation, enrollment.id]);
 
+  // Se não tem turma atribuída, mostra seleção de turma
+  if (!enrollment.class) {
+    return (
+      <Select
+        placeholder="Selecionar turma"
+        data={classesOptions}
+        value=""
+        onChange={(value) => {
+          if (value) {
+            handleAssignClass(value);
+          }
+        }}
+        disabled={assignClassMutation.isPending}
+        size="xs"
+        w={200}
+      />
+    );
+  }
+
+  // Se tem turma atribuída, mostra ações de fluxo
   return (
     <Group gap="xs">
       {STATUS_ACTIONS.map(({ status, label, icon: Icon, color }) => {
@@ -106,7 +152,7 @@ export function EnrollmentStatusActions({ enrollment }: EnrollmentStatusActionsP
               color={color}
               size="sm"
               onClick={() => handleStatusUpdate(status)}
-                    loading={updateFlowMutation.isPending}
+              loading={updateFlowMutation.isPending}
             >
               <Icon size={16} />
             </ActionIcon>

@@ -3,27 +3,26 @@ import { AxiosError } from 'axios';
 import { notifications } from '@mantine/notifications';
 import { useAuth } from '@/contexts/AuthContext';
 import { BACKEND_ADDRESS } from '@/utils/constants';
-import { EnrollmentStatus } from '@/model/enrollment';
 
-interface UpdateEnrollmentFlowParams {
+interface AssignClassParams {
   enrollmentId: string;
-  status: EnrollmentStatus;
+  classId: string;
 }
 
-export function useEnrollmentFlowMutation() {
+export function useEnrollmentAssignClassMutation() {
   const { axiosInstance, authToken } = useAuth();
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ enrollmentId, status }: UpdateEnrollmentFlowParams) => {
-      await axiosInstance.patch(`${BACKEND_ADDRESS}/enrollments/${enrollmentId}/status`, {
-        status,
+    mutationFn: async ({ enrollmentId, classId }: AssignClassParams) => {
+      await axiosInstance.patch(`${BACKEND_ADDRESS}/enrollments/${enrollmentId}/assign-class`, {
+        classId,
       });
     },
     onSuccess: () => {
       notifications.show({
         title: 'Sucesso',
-        message: 'Status da inscrição atualizado com sucesso!',
+        message: 'Turma atribuída com sucesso!',
         color: 'green',
       });
       // Invalida todas as queries relacionadas a enrollments
@@ -35,7 +34,7 @@ export function useEnrollmentFlowMutation() {
     },
     onError: (error: AxiosError) => {
       const errorMessage =
-        (error.response?.data as any)?.message || 'Erro ao atualizar status da inscrição.';
+        (error.response?.data as any)?.message || 'Erro ao atribuir turma.';
       notifications.show({
         title: 'Erro',
         message: errorMessage,

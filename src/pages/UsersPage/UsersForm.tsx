@@ -139,7 +139,7 @@ function PermissionRow({ title, entity, form }: PermissionRowProps) {
 function FlowPermissionRow({ form }: { form: UseFormReturnType<UserDto> }) {
   return (
     <Table.Tr>
-      <Table.Td>Fluxo</Table.Td>
+      <Table.Td>Fluxo de Inscrições</Table.Td>
       <Table.Td>
         <Checkbox disabled checked={false} />
       </Table.Td>
