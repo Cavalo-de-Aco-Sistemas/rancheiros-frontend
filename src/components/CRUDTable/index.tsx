@@ -163,21 +163,17 @@ export function CRUDTable<T extends MRT_RowData>(props: CRUDTableProps<T>) {
     [filename]
   );
 
-  const handleExportDataCSV = useCallback(() => {
-    const csv = generateCsv(csvConfig)(csvData ?? []);
-    download(csvConfig)(csv);
-  }, [csvConfig, csvData]);
-
-  const table = useMantineReactTable<T>({
+  // Memoize the table configuration to prevent unnecessary re-renders
+  const tableConfig = useMemo(() => ({
     columns,
     data: (data ?? []) as T[],
     localization: MRT_Localization_PT_BR,
     initialState: {
-      density: 'xs',
+      density: 'xs' as const,
     },
     mantineToolbarAlertBannerProps: isError
       ? {
-          color: 'red',
+          color: 'red' as const,
           children: error.message ?? 'Error loading data',
         }
       : undefined,
@@ -192,6 +188,15 @@ export function CRUDTable<T extends MRT_RowData>(props: CRUDTableProps<T>) {
     enableRowVirtualization: true,
     mantineTableContainerProps: { style: { maxHeight: 'calc(100vh - 128px)' } },
     enableRowActions: true,
+  }), [columns, data, isError, error.message, isLoading, isFetching]);
+
+  const handleExportDataCSV = useCallback(() => {
+    const csv = generateCsv(csvConfig)(csvData ?? []);
+    download(csvConfig)(csv);
+  }, [csvConfig, csvData]);
+
+  const table = useMantineReactTable<T>({
+    ...tableConfig,
     renderTopToolbarCustomActions: () => (
       <Title order={3} tt="uppercase">
         {title}

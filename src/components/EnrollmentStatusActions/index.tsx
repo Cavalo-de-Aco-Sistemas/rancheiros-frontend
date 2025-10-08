@@ -69,10 +69,12 @@ export function EnrollmentStatusActions({ enrollment, onRevertClick }: Enrollmen
   const [opened, { open, close }] = useDisclosure(false);
 
   const classesOptions = useMemo(() => {
-    return classesQuery.data?.map((classItem) => ({
+    if (!classesQuery.data) return [];
+    
+    return classesQuery.data.map((classItem) => ({
       value: classItem.id,
       label: `${classItem.location?.name ?? 'Sem local'} - ${classItem.date ? dateBR(classItem.date) : 'Sem data'}`,
-    })) ?? [];
+    }));
   }, [classesQuery.data]);
 
   const handleAssignClass = useCallback((classId: string) => {
@@ -135,6 +137,11 @@ export function EnrollmentStatusActions({ enrollment, onRevertClick }: Enrollmen
     }
   }, [enrollment.status, enrollment.class]);
 
+  // Memoize enabled actions to prevent unnecessary re-renders
+  const enabledActions = useMemo(() => {
+    return STATUS_ACTIONS.filter(({ status }) => isActionEnabled(status));
+  }, [isActionEnabled]);
+
   const handleStatusUpdate = useCallback((newStatus: EnrollmentStatus) => {
     updateFlowMutation.mutate({
       enrollmentId: enrollment.id,
@@ -164,28 +171,19 @@ export function EnrollmentStatusActions({ enrollment, onRevertClick }: Enrollmen
   // Se tem turma atribuída, mostra ações de fluxo
   return (
     <Group gap="xs">
-      {STATUS_ACTIONS.map(({ status, label, icon: Icon, color }) => {
-        const enabled = isActionEnabled(status);
-        
-        // Só renderiza se estiver habilitado
-        if (!enabled) {
-          return null;
-        }
-        
-        return (
-          <Tooltip key={status} label={label} position="top">
-            <ActionIcon
-              variant="filled"
-              color={color}
-              size="sm"
-              onClick={() => handleStatusUpdate(status)}
-              loading={updateFlowMutation.isPending}
-            >
-              <Icon size={16} />
-            </ActionIcon>
-          </Tooltip>
-        );
-      })}
+      {enabledActions.map(({ status, label, icon: Icon, color }) => (
+        <Tooltip key={status} label={label} position="top">
+          <ActionIcon
+            variant="filled"
+            color={color}
+            size="sm"
+            onClick={() => handleStatusUpdate(status)}
+            loading={updateFlowMutation.isPending}
+          >
+            <Icon size={16} />
+          </ActionIcon>
+        </Tooltip>
+      ))}
       
       {/* Botão para reverter status de certified/missed */}
       {canRevertStatus() && (
