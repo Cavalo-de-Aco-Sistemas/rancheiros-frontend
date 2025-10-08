@@ -36,7 +36,7 @@ export function CRUDForm<T extends { id: string }, D>(
           ...parseSelected(selected as T),
         });
       } else {
-        console.warn('Trying to edit without select entry!');
+        // Warning: Trying to edit without select entry!
       }
     }
   }, [selected, action, opened, baseValues, parseSelected]);

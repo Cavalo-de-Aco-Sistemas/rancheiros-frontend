@@ -16,7 +16,18 @@ import { useCRUD } from '@/contexts/CRUDContext';
 import { Ranch } from '@/model/ranch';
 import { Permissions, User } from '@/model/user';
 
-function PermissionRow({ permission }: { permission: Permissions }) {
+function PermissionRow({ permission }: { permission: Permissions | undefined }) {
+  if (!permission) {
+    return (
+      <Group>
+        <IconStarOff stroke={1} color="gray" />
+        <IconEyeOff stroke={1} color="gray" />
+        <IconEditOff stroke={1} color="gray" />
+        <IconTrashOff stroke={1} color="gray" />
+      </Group>
+    );
+  }
+  
   return (
     <Group>
       {permission.create ? <IconStar stroke={1.5} /> : <IconStarOff stroke={1} color="gray" />}
@@ -29,15 +40,20 @@ function PermissionRow({ permission }: { permission: Permissions }) {
 
 const tableHeaders = [
   'Usuário',
+  'Super Admin',
   'Membros',
   'Turmas',
   'Inscrições',
   'Locais MPV',
   'Ranchos',
+  'Fluxo',
   'Filtros',
 ];
 
-const permissionsToString = (permissions: Permissions) => {
+const permissionsToString = (permissions: Permissions | undefined) => {
+  if (!permissions) {
+    return '';
+  }
   return Object.entries(permissions)
     .filter(([_, value]) => value)
     .map(([key]) => key.charAt(0).toUpperCase())
@@ -50,6 +66,18 @@ export function UsersTable() {
   const columns = useMemo<MRT_ColumnDef<User>[]>(
     () => [
       { accessorKey: 'username', header: 'Usuário' },
+      {
+        accessorKey: 'super_admin',
+        header: 'Super Admin',
+        Cell: ({ row }) => (
+          <Badge 
+            color={row.original.super_admin ? 'green' : 'gray'} 
+            variant={row.original.super_admin ? 'filled' : 'light'}
+          >
+            {row.original.super_admin ? 'Sim' : 'Não'}
+          </Badge>
+        ),
+      },
       {
         accessorKey: 'permissions.members',
         header: 'Membros',
@@ -81,8 +109,13 @@ export function UsersTable() {
         Cell: ({ row }) => <PermissionRow permission={row.original.permissions.ranches} />,
       },
       {
+        accessorKey: 'permissions.flow',
+        header: 'Fluxo',
+        Cell: ({ row }) => <PermissionRow permission={row.original.permissions.flow} />,
+      },
+      {
         accessorKey: 'ranches',
-        header: 'Ranchos',
+        header: 'Filtros',
         Cell: ({ row }) =>
           row.original.ranches.length > 0 && (
             <Tooltip label={row.original.ranches.map((ranch) => ranch.name).join(', ')}>
@@ -105,27 +138,31 @@ export function UsersTable() {
 
   const csvData = useMemo(
     () =>
-      query.data?.map(({ username, permissions, ranches }) => ({
+      query.data?.map(({ username, super_admin, permissions, ranches }) => ({
         Usuário: username,
+        'Super Admin': super_admin ? 'Sim' : 'Não',
         Membros: permissionsToString(permissions.members),
         Turmas: permissionsToString(permissions.classes),
         Inscrições: permissionsToString(permissions.enrollments),
         'Locais MPV': permissionsToString(permissions.locations),
         Ranchos: permissionsToString(permissions.ranches),
+        Fluxo: permissionsToString(permissions.flow),
         Filtros: ranches.map((ranch: Ranch) => ranch.name).join(', '),
       })) ?? [],
     [query.data]
   );
 
   const rowMapper = useCallback((row: MRT_Row<User>): string[] => {
-    const { username, permissions, ranches } = row.original;
+    const { username, super_admin, permissions, ranches } = row.original;
     return [
       username,
+      super_admin ? 'Sim' : 'Não',
       permissionsToString(permissions.members),
       permissionsToString(permissions.classes),
       permissionsToString(permissions.enrollments),
       permissionsToString(permissions.locations),
       permissionsToString(permissions.ranches),
+      permissionsToString(permissions.flow),
       ranches.map((ranch: Ranch) => ranch.name).join(', '),
     ];
   }, []);

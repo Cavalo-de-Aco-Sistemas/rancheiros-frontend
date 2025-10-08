@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { IconCsv, IconEdit, IconPdf, IconPlus, IconTrash } from '@tabler/icons-react';
 import jsPDF from 'jspdf';
 import autoTable, { RowInput } from 'jspdf-autotable';
@@ -16,7 +16,7 @@ import {
 } from 'mantine-react-table';
 import { MRT_Localization_PT_BR } from 'mantine-react-table/locales/pt-BR/index.cjs';
 import { useLocation } from 'react-router-dom';
-import { ActionIcon, Group, Menu, rem, Title } from '@mantine/core';
+import { ActionIcon, Group, Menu, rem, Title, Modal, Text, Button } from '@mantine/core';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCRUD } from '@/contexts/CRUDContext';
 import { ROUTES_MAP } from '@/pages/MainPage/MainPage';
@@ -40,6 +40,20 @@ export function slugify(str: string): string {
     .replace(/-+$/, ""); // Trim trailing dashes
 }
 
+export interface CustomAction<T extends MRT_RowData> {
+  label: string;
+  icon: React.ComponentType<any>;
+  color?: string;
+  onClick: (row: T) => void;
+  isVisible?: (row: T) => boolean;
+  isLoading?: boolean;
+  requiresConfirmation?: boolean;
+  confirmationTitle?: string;
+  confirmationMessage?: (row: T) => string;
+  confirmationButtonText?: string;
+  confirmationButtonColor?: string;
+}
+
 export interface CRUDTableProps<T extends MRT_RowData> {
   columns: MRT_ColumnDef<T>[];
   title: string;
@@ -48,6 +62,7 @@ export interface CRUDTableProps<T extends MRT_RowData> {
     tableHeaders: string[];
     rowMapper: (row: MRT_Row<T>) => RowInput;
   };
+  customActions?: CustomAction<T>[];
 }
 
 const DEFAULT_PERMISSIONS = {
@@ -57,13 +72,56 @@ const DEFAULT_PERMISSIONS = {
 };
 
 export function CRUDTable<T extends MRT_RowData>(props: CRUDTableProps<T>) {
-  const { columns, title, csvData, pdfConfig } = props;
+  const { columns, title, csvData, pdfConfig, customActions = [] } = props;
   const { query, setSelected, setAction, open } = useCRUD();
+  
+  // Estados para modal de confirmação
+  const [confirmationModal, setConfirmationModal] = useState<{
+    opened: boolean;
+    action: CustomAction<T> | null;
+    row: T | null;
+  }>({
+    opened: false,
+    action: null,
+    row: null,
+  });
   const { data, isLoading, isError, isFetching, error } = query;
   const { tableHeaders, rowMapper } = pdfConfig;
 
   const { permissions } = useAuth();
   const location = useLocation();
+
+  // Funções para modal de confirmação
+  const handleActionClick = useCallback((action: CustomAction<T>, row: T) => {
+    if (action.requiresConfirmation) {
+      setConfirmationModal({
+        opened: true,
+        action,
+        row,
+      });
+    } else {
+      action.onClick(row);
+    }
+  }, []);
+
+  const confirmAction = useCallback(() => {
+    if (confirmationModal.action && confirmationModal.row) {
+      confirmationModal.action.onClick(confirmationModal.row);
+    }
+    setConfirmationModal({
+      opened: false,
+      action: null,
+      row: null,
+    });
+  }, [confirmationModal]);
+
+  const cancelConfirmation = useCallback(() => {
+    setConfirmationModal({
+      opened: false,
+      action: null,
+      row: null,
+    });
+  }, []);
 
   const filename = useMemo(() => slugify(title), [title]);
 
@@ -105,22 +163,18 @@ export function CRUDTable<T extends MRT_RowData>(props: CRUDTableProps<T>) {
     [filename]
   );
 
-  const handleExportDataCSV = useCallback(() => {
-    const csv = generateCsv(csvConfig)(csvData ?? []);
-    download(csvConfig)(csv);
-  }, [csvConfig, csvData]);
-
-  const table = useMantineReactTable<T>({
+  // Memoize the table configuration to prevent unnecessary re-renders
+  const tableConfig = useMemo(() => ({
     columns,
     data: (data ?? []) as T[],
     localization: MRT_Localization_PT_BR,
     initialState: {
-      density: 'xs',
+      density: 'xs' as const,
     },
     mantineToolbarAlertBannerProps: isError
       ? {
-          color: 'red',
-          children: error.message ?? 'Error loading data',
+          color: 'red' as const,
+          children: error?.message ?? 'Error loading data',
         }
       : undefined,
     state: { isLoading, showAlertBanner: isError, showProgressBars: isFetching },
@@ -134,19 +188,33 @@ export function CRUDTable<T extends MRT_RowData>(props: CRUDTableProps<T>) {
     enableRowVirtualization: true,
     mantineTableContainerProps: { style: { maxHeight: 'calc(100vh - 128px)' } },
     enableRowActions: true,
+  }), [columns, data, isError, error?.message, isLoading, isFetching]);
+
+  const handleExportDataCSV = useCallback(() => {
+    const csv = generateCsv(csvConfig)(csvData ?? []);
+    download(csvConfig)(csv);
+  }, [csvConfig, csvData]);
+
+  const table = useMantineReactTable<T>({
+    ...tableConfig,
     renderTopToolbarCustomActions: () => (
       <Title order={3} tt="uppercase">
         {title}
       </Title>
     ),
     renderRowActionMenuItems: ({ row }) => {
+      const rowData = data?.[row.index];
+      if (!rowData) {
+        return null;
+      }
+      
       return (
         <>
           {update && (
             <Menu.Item
               onClick={() => {
                 open();
-                setSelected(data?.[row.index]);
+                setSelected(rowData);
                 setAction('update');
               }}
               leftSection={<IconEdit style={{ width: rem(16), height: rem(16) }} />}
@@ -154,11 +222,30 @@ export function CRUDTable<T extends MRT_RowData>(props: CRUDTableProps<T>) {
               Editar
             </Menu.Item>
           )}
+          {customActions.map((action, index) => {
+            const isVisible = action.isVisible ? action.isVisible(rowData as T) : true;
+            if (!isVisible) {
+              return null;
+            }
+            
+            const IconComponent = action.icon;
+            return (
+              <Menu.Item
+                key={index}
+                onClick={() => handleActionClick(action, rowData as T)}
+                color={action.color}
+                disabled={action.isLoading}
+                leftSection={<IconComponent style={{ width: rem(16), height: rem(16) }} />}
+              >
+                {action.label}
+              </Menu.Item>
+            );
+          })}
           {remove && (
             <Menu.Item
               onClick={() => {
                 open();
-                setSelected(data?.[row.index]);
+                setSelected(rowData);
                 setAction('delete');
               }}
               color="red"
@@ -205,5 +292,36 @@ export function CRUDTable<T extends MRT_RowData>(props: CRUDTableProps<T>) {
     ),
   });
 
-  return <MantineReactTable table={table} />;
+  return (
+    <>
+      <MantineReactTable table={table} />
+      
+      {/* Modal de confirmação genérico */}
+      <Modal
+        opened={confirmationModal.opened}
+        onClose={cancelConfirmation}
+        title={confirmationModal.action?.confirmationTitle || 'Confirmar Ação'}
+        centered
+      >
+        <Text mb="md">
+          {confirmationModal.action?.confirmationMessage && confirmationModal.row
+            ? confirmationModal.action.confirmationMessage(confirmationModal.row)
+            : 'Tem certeza que deseja executar esta ação?'}
+        </Text>
+
+        <Group justify="flex-end">
+          <Button variant="outline" onClick={cancelConfirmation}>
+            Cancelar
+          </Button>
+          <Button 
+            color={confirmationModal.action?.confirmationButtonColor || 'blue'}
+            onClick={confirmAction}
+            loading={confirmationModal.action?.isLoading}
+          >
+            {confirmationModal.action?.confirmationButtonText || 'Confirmar'}
+          </Button>
+        </Group>
+      </Modal>
+    </>
+  );
 }
