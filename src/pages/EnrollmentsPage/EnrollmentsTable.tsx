@@ -27,13 +27,14 @@ const tableHeaders = [
 export function EnrollmentsTable() {
   const { query } = useCRUD();
   const updateFlowMutation = useEnrollmentFlowMutation();
-
+  
   const handleReturnToWaiting = useCallback((enrollment: Enrollment) => {
     updateFlowMutation.mutate({
       enrollmentId: enrollment.id,
       status: EnrollmentStatus.WAITING,
     });
   }, [updateFlowMutation]);
+
 
   const canReturnToWaiting = useCallback((enrollment: Enrollment) => {
     // Só pode voltar para lista de espera se:
@@ -52,6 +53,12 @@ export function EnrollmentsTable() {
       onClick: handleReturnToWaiting,
       isVisible: canReturnToWaiting,
       isLoading: updateFlowMutation.isPending,
+      requiresConfirmation: true,
+      confirmationTitle: 'Confirmar Retorno para Lista de Espera',
+      confirmationMessage: (enrollment: Enrollment) => 
+        `Tem certeza que deseja mover ${enrollment.name} de volta para a Lista de Espera?`,
+      confirmationButtonText: 'Confirmar',
+      confirmationButtonColor: 'blue',
     },
   ], [handleReturnToWaiting, canReturnToWaiting, updateFlowMutation.isPending]);
 
@@ -177,13 +184,38 @@ export function EnrollmentsTable() {
 
   const pdfConfig = useMemo(() => ({ tableHeaders, rowMapper }), [rowMapper]);
 
+  const getStatusLabel = (status: EnrollmentStatus) => {
+    switch (status) {
+      case EnrollmentStatus.WAITING:
+        return 'Lista de Espera';
+      case EnrollmentStatus.CALLED:
+        return 'Chamado';
+      case EnrollmentStatus.CONFIRMED:
+        return 'Confirmado';
+      case EnrollmentStatus.DROPPED:
+        return 'Cancelado';
+      case EnrollmentStatus.IGNORED:
+        return 'Ignorado';
+      case EnrollmentStatus.CERTIFIED:
+        return 'Certificado';
+      case EnrollmentStatus.MISSED:
+        return 'Faltou';
+      default:
+        return status;
+    }
+  };
+
   return (
-    <CRUDTable<Enrollment>
-      columns={columns}
-      title="Inscrições"
-      csvData={csvData}
-      pdfConfig={pdfConfig}
-      customActions={customActions}
-    />
+    <>
+      <CRUDTable<Enrollment>
+        columns={columns}
+        title="Inscrições"
+        csvData={csvData}
+        pdfConfig={pdfConfig}
+        customActions={customActions}
+      />
+
+
+    </>
   );
 }
