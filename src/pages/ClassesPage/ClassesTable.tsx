@@ -1,6 +1,7 @@
 import { useCallback, useMemo } from 'react';
 import { MRT_ColumnDef, MRT_Row } from 'mantine-react-table';
-import { Checkbox } from '@mantine/core';
+import { Checkbox, ActionIcon, Tooltip } from '@mantine/core';
+import { IconMapPin } from '@tabler/icons-react';
 import { CRUDTable } from '@/components/CRUDTable';
 import { useCRUD } from '@/contexts/CRUDContext';
 import { Class } from '@/model/class';
@@ -19,7 +20,27 @@ export function ClassesTable() {
         header: 'Data',
         Cell: ({ row }) => dateBR(row.original.date),
       },
-      { accessorKey: 'mapsLink', header: 'Link do Maps' },
+      {
+        accessorKey: 'mapsLink',
+        header: 'Link do Maps',
+        Cell: ({ row }) => {
+          const mapsLink = row.original.mapsLink;
+          if (!mapsLink) return null;
+          
+          return (
+            <Tooltip label="Abrir no Google Maps" position="top">
+              <ActionIcon
+                variant="subtle"
+                color="blue"
+                size="sm"
+                onClick={() => window.open(mapsLink, '_blank', 'noopener,noreferrer')}
+              >
+                <IconMapPin size={16} />
+              </ActionIcon>
+            </Tooltip>
+          );
+        },
+      },
       {
         accessorKey: 'active',
         header: 'Ativo',

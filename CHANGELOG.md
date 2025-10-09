@@ -11,14 +11,19 @@ e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR
 - **ClassesForm**: Corrigido erro de validação na criação de classes
   - Removido campo `name` inexistente do `INITIAL_VALUES` que causava erro "property name should not exist"
   - Corrigido formato de data enviado para API - agora converte objetos `Date` para strings ISO (YYYY-MM-DD) antes do envio
-  - Adicionado suporte para transformação de dados no componente `CRUDForm` com novo tipo genérico `API`
-  - Criado tipo `ClassCreateDto` para representar dados enviados para API com `date` como string
 
 ### Added
 - **CRUDForm**: Adicionado suporte para transformação de dados antes do envio para API
   - Nova propriedade opcional `transformData?: (data: D) => API`
   - Novo tipo genérico `API` para permitir transformação de tipos
   - Função `onSubmit` atualizada para usar transformação quando fornecida
+
+- **Model**: Criado tipo `ClassCreateDto` para representar dados enviados para API com `date` como string
+
+- **ClassesTable**: Melhorada experiência do usuário na coluna de link do Maps
+  - Substituído texto do link por ícone de mapa (IconMapPin) clicável com tooltip
+  - Link abre em nova aba com segurança (noopener, noreferrer)
+  - Interface mais limpa e intuitiva com ícone semânticamente correto
 
 ### Changed
 - **ClassesForm**: Melhorada compatibilidade entre frontend e backend
