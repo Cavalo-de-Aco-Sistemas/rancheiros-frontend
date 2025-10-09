@@ -7,6 +7,8 @@ e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR
 
 ## [Unreleased]
 
+## [1.1.0] - 2025-01-09
+
 ### Fixed
 - **ClassesForm**: Corrigido erro de validação na criação de classes
   - Removido campo `name` inexistente do `INITIAL_VALUES` que causava erro "property name should not exist"
@@ -30,6 +32,9 @@ e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR
   - Formulário continua trabalhando com objetos `Date` para facilitar uso com componentes de data
   - Transformação automática de data para formato esperado pelo backend
   - Mantida compatibilidade com padrão estabelecido no projeto
+
+### Pull Requests
+- **PR #16**: [fix: Corrigir validação de criação de classes e melhorar UX da tabela](https://github.com/Cavalo-de-Aco-Sistemas/rancheiros-frontend/pull/16) - Enviado para develop
 
 ## [1.0.0] - 2024-01-XX
 
