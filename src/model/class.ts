@@ -14,3 +14,10 @@ export interface ClassDto {
   mapsLink: string;
   active: boolean;
 }
+
+export interface ClassCreateDto {
+  location?: string | null;
+  date: string | null;
+  mapsLink: string;
+  active: boolean;
+}

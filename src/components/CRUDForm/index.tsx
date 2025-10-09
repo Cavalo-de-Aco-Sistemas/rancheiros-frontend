@@ -5,7 +5,7 @@ import { UseFormReturnType } from '@mantine/form';
 import { useCRUD } from '@/contexts/CRUDContext';
 import useCRUDMutation from '@/mutations/useCRUDMutation';
 
-export interface CRUDFormProps<T extends { id: string }, D> {
+export interface CRUDFormProps<T extends { id: string }, D, API = D> {
   baseValues: D;
   parseSelected: (selected: T) => D;
   form: UseFormReturnType<D, (values: D) => D>;
@@ -13,12 +13,13 @@ export interface CRUDFormProps<T extends { id: string }, D> {
   handleError?: (error: AxiosError) => string | undefined;
   modalProps: Omit<ModalProps, 'opened' | 'onClose' | 'children'>;
   validate?: (data: D) => string | undefined;
+  transformData?: (data: D) => API;
 }
 
-export function CRUDForm<T extends { id: string }, D>(
-  props: PropsWithChildren<CRUDFormProps<T, D>>
+export function CRUDForm<T extends { id: string }, D, API = D>(
+  props: PropsWithChildren<CRUDFormProps<T, D, API>>
 ) {
-  const { baseValues, parseSelected, form, endpoint, handleError, modalProps, children, validate } =
+  const { baseValues, parseSelected, form, endpoint, handleError, modalProps, children, validate, transformData } =
     props;
   const { opened, close, selected, action, query } = useCRUD();
   const { refetch } = query;
@@ -67,7 +68,8 @@ export function CRUDForm<T extends { id: string }, D>(
     if (error) {
       setError(error);
     } else {
-      mutate({ data, id: selected?.id });
+      const transformedData = transformData ? transformData(data) : (data as any);
+      mutate({ data: transformedData, id: selected?.id });
     }
   };
 
