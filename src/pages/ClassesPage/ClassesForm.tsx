@@ -4,18 +4,18 @@ import { DateInput } from '@mantine/dates';
 import { useForm } from '@mantine/form';
 import { CRUDForm } from '@/components/CRUDForm';
 import { useCRUD } from '@/contexts/CRUDContext';
-import { Class, ClassDto } from '@/model/class';
+import { Class, ClassDto, ClassCreateDto } from '@/model/class';
 import { Location } from '@/model/location';
 import useCRUDQuery from '@/queries/useCRUDQuery';
 import { toDate } from '@/utils/dates';
 
-const INITIAL_VALUES = { name: '', location: null, date: null, mapsLink: '', active: true };
+const INITIAL_VALUES = { location: null, date: null, mapsLink: '', active: true };
 
 const parseSelected = (classs: Class): ClassDto => {
   const { location, date, mapsLink, active } = classs;
   return {
     location: location?.id,
-    date: toDate(date),
+    date: date ? new Date(`${date}T00:00:00`) : null,
     mapsLink,
     active,
   };
@@ -39,13 +39,19 @@ export function ClassesForm() {
     initialValues: INITIAL_VALUES,
   });
 
+  const transformForAPI = (data: ClassDto): ClassCreateDto => ({
+    ...data,
+    date: data.date ? data.date.toISOString().split('T')[0] : null,
+  });
+
   return (
-    <CRUDForm<Class, ClassDto>
+    <CRUDForm<Class, ClassDto, ClassCreateDto>
       baseValues={INITIAL_VALUES}
       parseSelected={parseSelected}
       form={form}
       endpoint="classes"
       modalProps={{ title: 'Cadastro de Turmas', size: 'xl' }}
+      transformData={transformForAPI}
     >
       <Select
         required
