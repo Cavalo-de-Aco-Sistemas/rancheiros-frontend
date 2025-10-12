@@ -11,19 +11,20 @@ import { IconClock } from '@tabler/icons-react';
 import { Anchor } from '@mantine/core';
 
 const tableHeaders = [
-  'Fluxo',
+  'Fluxo (Ações)',
+  'Fluxo (Status)',
   'Turma',
   'Status',
-  'Nome',
+  'Data de Inscrição',
   'Cidade Preferencial',
+  'Nome',
   'Telefone',
+  'UF',
   'CNH',
-  'UF da CNH',
   'Email',
   'Uso de Moto',
   'Marca',
-  'Modelo',
-  'Data de Inscrição'
+  'Modelo'
 ];
 
 export function EnrollmentsTable() {
@@ -79,6 +80,17 @@ export function EnrollmentsTable() {
         enableColumnFilter: false,
       },
       {
+        id: 'flow',
+        header: 'Fluxo',
+        Cell: ({ row }) => (
+          <EnrollmentStatusActionsWithModal
+            enrollment={row.original}
+          />
+        ),
+        enableSorting: false,
+        enableColumnFilter: false,
+      },
+      {
         accessorKey: 'class',
         header: 'Turma',
         Cell: ({ row }) => {
@@ -102,12 +114,13 @@ export function EnrollmentsTable() {
         },
       },
       { accessorKey: 'status', header: 'Status' },
-      { accessorKey: 'name', header: 'Nome' },
+      { accessorKey: 'enrollment_date', header: 'Data de Inscrição' },
       {
         accessorKey: 'preferred_city',
         header: 'Cidade Preferencial',
         Cell: ({ row }) => row.original.preferred_city?.name ?? '',
       },
+      { accessorKey: 'name', header: 'Nome' },
       {
         accessorKey: 'phone',
         header: 'Telefone',
@@ -184,13 +197,13 @@ Deus abençoe grandemente.`;
           );
         },
       },
-      { accessorKey: 'cnh', header: 'CNH' },
-      { accessorKey: 'uf_cnh', header: 'UF da CNH' },
-      { accessorKey: 'email', header: 'Email' },
-      { accessorKey: 'motorcycle_usage', header: 'Uso de Moto' },
-      { accessorKey: 'brand', header: 'Marca' },
-      { accessorKey: 'model', header: 'Modelo' },
-      { accessorKey: 'enrollment_date', header: 'Data de Inscrição' },
+      { accessorKey: 'uf_cnh', header: 'UF' },
+      // Colunas ocultas por padrão
+      { accessorKey: 'cnh', header: 'CNH', enableHiding: true },
+      { accessorKey: 'email', header: 'Email', enableHiding: true },
+      { accessorKey: 'motorcycle_usage', header: 'Uso de Moto', enableHiding: true },
+      { accessorKey: 'brand', header: 'Marca', enableHiding: true },
+      { accessorKey: 'model', header: 'Modelo', enableHiding: true },
     ],
     []
   );
@@ -212,19 +225,20 @@ Deus abençoe grandemente.`;
           enrollment_date,
           class: class_,
         }) => ({
-          Fluxo: '', // Ações não são exportadas para CSV/PDF
+          'Fluxo (Ações)': '', // Fluxo não é exportado para CSV/PDF
+          'Fluxo (Status)': '', // Fluxo não é exportado para CSV/PDF
           Turma: class_?.date ? (dateBR(class_.date) ?? '') : '',
           Status: status,
-          Nome: name,
+          'Data de Inscrição': enrollment_date,
           'Cidade Preferencial': preferred_city?.name ?? '',
+          Nome: name,
           Telefone: phone,
+          UF: uf_cnh,
           CNH: cnh,
-          'UF da CNH': uf_cnh,
           Email: email,
           'Uso de Moto': motorcycle_usage,
           Marca: brand,
-          Modelo: model,
-          'Data de Inscrição': enrollment_date
+          Modelo: model
         })
       ) ?? [],
     [query.data]
@@ -246,19 +260,20 @@ Deus abençoe grandemente.`;
       enrollment_date,
     } = row.original;
     return [
-      '', // Ações não são exportadas para CSV/PDF
+      '', // Fluxo não é exportado para CSV/PDF
+      '', // Fluxo não é exportado para CSV/PDF
       class_?.date ? (dateBR(class_.date) ?? '') : '',
       status,
-      name,
+      enrollment_date ? (dateBR(enrollment_date) ?? '') : '',
       preferred_city?.name ?? '',
+      name,
       phone,
-      cnh,
       uf_cnh,
+      cnh,
       email ?? '',
       motorcycle_usage ?? '',
       brand ?? '',
-      model ?? '',
-      enrollment_date ? (dateBR(enrollment_date) ?? '') : ''
+      model ?? ''
     ];
   }, []);
 
@@ -273,9 +288,14 @@ Deus abençoe grandemente.`;
         csvData={csvData}
         pdfConfig={pdfConfig}
         customActions={customActions}
+        columnVisibility={{
+          cnh: false,
+          email: false,
+          motorcycle_usage: false,
+          brand: false,
+          model: false,
+        }}
       />
-
-
     </>
   );
 }

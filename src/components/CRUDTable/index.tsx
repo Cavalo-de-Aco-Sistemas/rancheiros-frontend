@@ -63,6 +63,7 @@ export interface CRUDTableProps<T extends MRT_RowData> {
     rowMapper: (row: MRT_Row<T>) => RowInput;
   };
   customActions?: CustomAction<T>[];
+  columnVisibility?: Record<string, boolean>;
 }
 
 const DEFAULT_PERMISSIONS = {
@@ -72,7 +73,7 @@ const DEFAULT_PERMISSIONS = {
 };
 
 export function CRUDTable<T extends MRT_RowData>(props: CRUDTableProps<T>) {
-  const { columns, title, csvData, pdfConfig, customActions = [] } = props;
+  const { columns, title, csvData, pdfConfig, customActions = [], columnVisibility } = props;
   const { query, setSelected, setAction, open } = useCRUD();
   
   // Estados para modal de confirmação
@@ -170,6 +171,7 @@ export function CRUDTable<T extends MRT_RowData>(props: CRUDTableProps<T>) {
     localization: MRT_Localization_PT_BR,
     initialState: {
       density: 'xs' as const,
+      columnVisibility: columnVisibility || {},
     },
     mantineToolbarAlertBannerProps: isError
       ? {
@@ -188,7 +190,7 @@ export function CRUDTable<T extends MRT_RowData>(props: CRUDTableProps<T>) {
     enableRowVirtualization: true,
     mantineTableContainerProps: { style: { maxHeight: 'calc(100vh - 128px)' } },
     enableRowActions: true,
-  }), [columns, data, isError, error?.message, isLoading, isFetching]);
+  }), [columns, data, isError, error?.message, isLoading, isFetching, columnVisibility]);
 
   const handleExportDataCSV = useCallback(() => {
     const csv = generateCsv(csvConfig)(csvData ?? []);
