@@ -1,16 +1,25 @@
 import { useCallback, useMemo } from 'react';
 import { MRT_ColumnDef, MRT_Row } from 'mantine-react-table';
-import { Checkbox, ActionIcon, Tooltip } from '@mantine/core';
+import { ActionIcon, Tooltip, Switch } from '@mantine/core';
 import { IconMapPin } from '@tabler/icons-react';
 import { CRUDTable } from '@/components/CRUDTable';
 import { useCRUD } from '@/contexts/CRUDContext';
 import { Class } from '@/model/class';
 import { dateBR } from '@/utils/dates';
+import { useClassToggleActiveMutation } from '@/mutations/useClassToggleActiveMutation';
 
 const tableHeaders = ['Local do MPV', 'Data', 'Link do Maps', 'Ativo'];
 
 export function ClassesTable() {
   const { query } = useCRUD();
+  const toggleActiveMutation = useClassToggleActiveMutation();
+
+  const handleToggleActive = useCallback((classItem: Class) => {
+    toggleActiveMutation.mutate({
+      classId: classItem.id,
+      active: !classItem.active,
+    });
+  }, [toggleActiveMutation]);
 
   const columns = useMemo<MRT_ColumnDef<Class>[]>(
     () => [
@@ -44,7 +53,15 @@ export function ClassesTable() {
       {
         accessorKey: 'active',
         header: 'Ativo',
-        Cell: ({ row }) => <Checkbox.Indicator checked={row.original.active} radius="xl" />,
+        Cell: ({ row }) => (
+          <Switch
+            checked={row.original.active}
+            onChange={() => handleToggleActive(row.original)}
+            disabled={toggleActiveMutation.isPending}
+            size="sm"
+            color="green"
+          />
+        ),
       },
     ],
     []
@@ -68,5 +85,12 @@ export function ClassesTable() {
 
   const pdfConfig = useMemo(() => ({ tableHeaders, rowMapper }), [rowMapper]);
 
-  return <CRUDTable columns={columns} title="Turmas" csvData={csvData} pdfConfig={pdfConfig} />;
+  return (
+    <CRUDTable 
+      columns={columns} 
+      title="Turmas" 
+      csvData={csvData} 
+      pdfConfig={pdfConfig}
+    />
+  );
 }

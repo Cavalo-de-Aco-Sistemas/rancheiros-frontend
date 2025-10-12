@@ -251,6 +251,26 @@ e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR
   - **Impact**: Status IGNORED, CONFIRMED e DROPPED podem retornar para CALLED conforme necessário
   - **Business Logic**: Flexibilidade no fluxo de chamadas - permite reativar alunos ignorados/cancelados
 
+- **Classes Table Toggle Active Feature**: Funcionalidade para ativar/desativar turmas
+  - **Problem**: Não havia forma de ativar/desativar turmas diretamente na tabela
+  - **Solution**: Criada ação personalizada na tabela de turmas com botão de toggle
+  - **Impact**: Usuários podem ativar/desativar turmas com confirmação e feedback visual
+  - **Technical**: Nova mutation `useClassToggleActiveMutation` com atualização otimista
+  - **UX**: Confirmação antes da ação, ícones dinâmicos e notificações de sucesso/erro
+
+- **Classes Table Icon Fix**: Correção de erro de renderização de ícones
+  - **Problem**: Erro "Objects are not valid as a React child" na página de turmas
+  - **Solution**: Corrigido tipo de ícone nas ações personalizadas - usando componente estático
+  - **Impact**: Página de turmas funciona corretamente sem erros de renderização
+  - **Technical**: Ícone fixo `IconToggleRight` em vez de função dinâmica
+
+- **Classes Table Switch Implementation**: Implementação de switch na coluna Ativo
+  - **Problem**: Ação personalizada para ativar/desativar turmas não era intuitiva
+  - **Solution**: Removida ação personalizada e implementado Switch diretamente na coluna "Ativo"
+  - **Impact**: Interface mais intuitiva - switch clicável para ativar/desativar turmas
+  - **UX**: Ativação/desativação imediata sem necessidade de confirmação
+  - **Technical**: Switch com estado de loading e cor verde para melhor feedback visual
+
 ### Technical Details
 - **Column Management**: Utilização do sistema nativo de visibilidade do MantineReactTable
 - **Export Compatibility**: CSV e PDF mantêm compatibilidade com nova ordem de colunas
