@@ -7,6 +7,28 @@ e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR
 
 ## [Unreleased]
 
+### Added
+- **CRUDTable**: Implementado sistema de controle de visibilidade de colunas
+  - Novo parâmetro `columnVisibility?: Record<string, boolean>` para definir colunas visíveis por padrão
+  - Integração com funcionalidade nativa do MantineReactTable para mostrar/ocultar colunas
+  - Botão "Mostrar/Ocultar Colunas" na toolbar da tabela para controle do usuário
+  - Persistência do estado das colunas durante a sessão
+
+### Changed
+- **EnrollmentsTable**: Reorganizada ordem e visibilidade das colunas
+  - Nova ordem das colunas: Fluxo, Fluxo, Turma, Status, Data de Inscrição, Cidade Preferencial, Nome, Telefone, UF
+  - Colunas CNH, Email, Uso de Moto, Marca e Modelo ocultas por padrão
+  - Usuários podem ativar/desativar colunas ocultas através do botão nativo da tabela
+  - Renomeação de "UF da CNH" para "UF" para simplificação
+  - Atualização dos headers de exportação CSV/PDF para refletir nova ordem
+  - Melhoria na organização visual da tabela com colunas mais relevantes em destaque
+
+### Technical Details
+- **Column Management**: Utilização do sistema nativo de visibilidade do MantineReactTable
+- **Export Compatibility**: CSV e PDF mantêm compatibilidade com nova ordem de colunas
+- **Type Safety**: Tipos TypeScript atualizados para suportar controle de visibilidade
+- **User Experience**: Interface mais limpa com colunas menos utilizadas ocultas por padrão
+
 ## [1.2.0] - 2025-01-09
 
 ### Added
