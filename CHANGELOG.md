@@ -79,6 +79,9 @@ e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR
 - **Validation**: Validações de backend e frontend sincronizadas
 - **Data Transformation**: Implementada transformação de dados no CRUDForm para limpeza antes do envio
 
+### Pull Requests
+- **PR #24**: [feat: Implementação de link WhatsApp e campo name para usuários](https://github.com/Cavalo-de-Aco-Sistemas/rancheiros-frontend/pull/24) - Enviado para develop
+
 ## [1.1.0] - 2025-01-09
 
 ### Fixed
