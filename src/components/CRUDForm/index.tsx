@@ -13,7 +13,7 @@ export interface CRUDFormProps<T extends { id: string }, D, API = D> {
   handleError?: (error: AxiosError) => string | undefined;
   modalProps: Omit<ModalProps, 'opened' | 'onClose' | 'children'>;
   validate?: (data: D) => string | undefined;
-  transformData?: (data: D) => API;
+  transformData?: (data: D, isCreate?: boolean) => API;
 }
 
 export function CRUDForm<T extends { id: string }, D, API = D>(
@@ -68,7 +68,8 @@ export function CRUDForm<T extends { id: string }, D, API = D>(
     if (error) {
       setError(error);
     } else {
-      const transformedData = transformData ? transformData(data) : (data as any);
+      const isCreate = action === 'create';
+      const transformedData = transformData ? transformData(data, isCreate) : (data as any);
       mutate({ data: transformedData, id: selected?.id });
     }
   };

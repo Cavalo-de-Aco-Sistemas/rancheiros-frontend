@@ -5,12 +5,14 @@ import { useCRUD } from '@/contexts/CRUDContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { Enrollment, EnrollmentStatus } from '@/model/enrollment';
 import { dateBR } from '@/utils/dates';
+import { EnrollmentStatusCertificationActions } from '@/components/EnrollmentStatusActions/EnrollmentStatusCertificationActions';
 import { useEnrollmentFlowMutation } from '@/mutations/useEnrollmentFlowMutation';
 import { StatusIcon } from '@/components/StatusIcon';
-import { IconClock } from '@tabler/icons-react';
-import { Anchor } from '@mantine/core';
+import { IconCheck, IconX } from '@tabler/icons-react';
+import { Anchor, Text, Center, Stack } from '@mantine/core';
 
 const tableHeaders = [
+  'Fluxo',
   'Turma',
   'Status',
   'Data de Inscrição',
@@ -25,47 +27,77 @@ const tableHeaders = [
   'Modelo'
 ];
 
-export function EnrollmentsTable() {
+export function CertificationManagementTable() {
   const { query } = useCRUD();
   const { name } = useAuth();
   const updateFlowMutation = useEnrollmentFlowMutation();
   
-  const handleReturnToWaiting = useCallback((enrollment: Enrollment) => {
+  const handleCertify = useCallback((enrollment: Enrollment) => {
     updateFlowMutation.mutate({
       enrollmentId: enrollment.id,
-      status: EnrollmentStatus.WAITING,
+      status: EnrollmentStatus.CERTIFIED,
     });
   }, [updateFlowMutation]);
 
+  const handleMarkAsMissed = useCallback((enrollment: Enrollment) => {
+    updateFlowMutation.mutate({
+      enrollmentId: enrollment.id,
+      status: EnrollmentStatus.MISSED,
+    });
+  }, [updateFlowMutation]);
 
-  const canReturnToWaiting = useCallback((enrollment: Enrollment) => {
-    // Só pode voltar para lista de espera se:
-    // 1. Não estiver já em waiting
-    // 2. Não estiver certificado (situação final)
-    // 3. Não tiver faltado (situação final)
-    return enrollment.status !== EnrollmentStatus.WAITING &&
-           enrollment.status !== EnrollmentStatus.CERTIFIED &&
-           enrollment.status !== EnrollmentStatus.MISSED;
+  const canCertify = useCallback((enrollment: Enrollment) => {
+    // Só pode certificar se estiver confirmado
+    return enrollment.status === EnrollmentStatus.CONFIRMED;
+  }, []);
+
+  const canMarkAsMissed = useCallback((enrollment: Enrollment) => {
+    // Só pode marcar como faltou se estiver confirmado
+    return enrollment.status === EnrollmentStatus.CONFIRMED;
   }, []);
 
   const customActions = useMemo(() => [
     {
-      label: 'Voltar para Lista de Espera',
-      icon: IconClock,
-      onClick: handleReturnToWaiting,
-      isVisible: canReturnToWaiting,
+      label: 'Certificar',
+      icon: IconCheck,
+      onClick: handleCertify,
+      isVisible: canCertify,
       isLoading: updateFlowMutation.isPending,
       requiresConfirmation: true,
-      confirmationTitle: 'Confirmar Retorno para Lista de Espera',
+      confirmationTitle: 'Confirmar Certificação',
       confirmationMessage: (enrollment: Enrollment) => 
-        `Tem certeza que deseja mover ${enrollment.name} de volta para a Lista de Espera?`,
-      confirmationButtonText: 'Confirmar',
-      confirmationButtonColor: 'blue',
+        `Tem certeza que deseja certificar ${enrollment.name}?`,
+      confirmationButtonText: 'Certificar',
+      confirmationButtonColor: 'green',
     },
-  ], [handleReturnToWaiting, canReturnToWaiting, updateFlowMutation.isPending]);
+    {
+      label: 'Marcar como Faltou',
+      icon: IconX,
+      onClick: handleMarkAsMissed,
+      isVisible: canMarkAsMissed,
+      isLoading: updateFlowMutation.isPending,
+      requiresConfirmation: true,
+      confirmationTitle: 'Confirmar Falta',
+      confirmationMessage: (enrollment: Enrollment) => 
+        `Tem certeza que deseja marcar ${enrollment.name} como faltou?`,
+      confirmationButtonText: 'Confirmar Falta',
+      confirmationButtonColor: 'red',
+    },
+  ], [handleCertify, handleMarkAsMissed, canCertify, canMarkAsMissed, updateFlowMutation.isPending]);
 
   const columns = useMemo<MRT_ColumnDef<Enrollment>[]>(
     () => [
+      {
+        id: 'actions',
+        header: 'Fluxo',
+        Cell: ({ row }) => (
+          <EnrollmentStatusCertificationActions
+            enrollment={row.original}
+          />
+        ),
+        enableSorting: false,
+        enableColumnFilter: false,
+      },
       {
         accessorKey: 'class',
         header: 'Turma',
@@ -188,9 +220,18 @@ Deus abençoe grandemente.`;
     []
   );
 
+  // Filtrar dados para mostrar apenas inscrições confirmadas
+  const filteredData = useMemo(() => {
+    if (!query.data) return [];
+    
+    return (query.data as unknown as Enrollment[]).filter(enrollment => 
+      enrollment.status === EnrollmentStatus.CONFIRMED
+    );
+  }, [query.data]);
+
   const csvData = useMemo(
     () =>
-      query.data?.map(
+      filteredData?.map(
         ({
           name,
           phone,
@@ -205,6 +246,7 @@ Deus abençoe grandemente.`;
           enrollment_date,
           class: class_,
         }) => ({
+          Fluxo: '', // Fluxo não é exportado para CSV/PDF
           Turma: class_?.date ? (dateBR(class_.date) ?? '') : '',
           Status: status,
           'Data de Inscrição': enrollment_date,
@@ -219,7 +261,7 @@ Deus abençoe grandemente.`;
           Modelo: model
         })
       ) ?? [],
-    [query.data]
+    [filteredData]
   );
 
   const rowMapper = useCallback((row: MRT_Row<Enrollment>): string[] => {
@@ -238,6 +280,7 @@ Deus abençoe grandemente.`;
       enrollment_date,
     } = row.original;
     return [
+      '', // Fluxo não é exportado para CSV/PDF
       class_?.date ? (dateBR(class_.date) ?? '') : '',
       status,
       enrollment_date ? (dateBR(enrollment_date) ?? '') : '',
@@ -255,16 +298,30 @@ Deus abençoe grandemente.`;
 
   const pdfConfig = useMemo(() => ({ tableHeaders, rowMapper }), [rowMapper]);
 
+  // Se não há dados, mostrar mensagem informativa
+  if (filteredData.length === 0) {
+    return (
+      <Center h={400}>
+        <Stack align="center" gap="md">
+          <Text size="lg" c="dimmed">
+            Nenhuma inscrição confirmada encontrada
+          </Text>
+          <Text size="sm" c="dimmed">
+            As inscrições confirmadas aparecerão aqui para certificação
+          </Text>
+        </Stack>
+      </Center>
+    );
+  }
 
   return (
     <>
       <CRUDTable<Enrollment>
         columns={columns}
-        title="Visão Geral - Inscrições"
+        title="Gestão de Certificações"
         csvData={csvData}
         pdfConfig={pdfConfig}
         customActions={customActions}
-        enableEdit={true}
         columnVisibility={{
           cnh: false,
           email: false,
@@ -272,6 +329,7 @@ Deus abençoe grandemente.`;
           brand: false,
           model: false,
         }}
+        data={filteredData}
       />
     </>
   );

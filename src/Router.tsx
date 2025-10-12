@@ -1,6 +1,8 @@
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import { ClassesPage } from './pages/ClassesPage';
 import { EnrollmentsPage } from './pages/EnrollmentsPage';
+import { CallManagementPage } from './pages/CallManagementPage';
+import { CertificationManagementPage } from './pages/CertificationPage';
 import HomePage from './pages/HomePage';
 import { MainPage } from './pages/MainPage';
 import { MembersPage } from './pages/MembersPage';
@@ -24,8 +26,16 @@ const router = createBrowserRouter([
         element: <ClassesPage />,
       },
       {
-        path: '/inscricoes',
+        path: '/inscricoes/visao-geral',
         element: <EnrollmentsPage />,
+      },
+      {
+        path: '/inscricoes/gestao-chamadas',
+        element: <CallManagementPage />,
+      },
+      {
+        path: '/inscricoes/certificacoes',
+        element: <CertificationManagementPage />,
       },
       {
         path: '/usuarios',

@@ -8,9 +8,6 @@ import { Enrollment, EnrollmentDto, EnrollmentStatus } from '@/model/enrollment'
 import { Location } from '@/model/location';
 import useCRUDQuery from '@/queries/useCRUDQuery';
 
-// Tipo para criação de inscrição (sem status e class)
-type CreateEnrollmentDto = Omit<EnrollmentDto, 'status' | 'class'>;
-
 const INITIAL_VALUES = {
   name: '',
   phone: '',
@@ -33,16 +30,7 @@ const parseSelected = (enrollment: Enrollment): EnrollmentDto => {
   };
 };
 
-// Função para transformar dados antes do envio (remove status e class apenas para criação)
-const transformData = (data: EnrollmentDto, isCreate: boolean = false): CreateEnrollmentDto | EnrollmentDto => {
-  if (isCreate) {
-    const { status, class: classField, ...createData } = data;
-    return createData;
-  }
-  return data; // Para edição, retorna todos os dados
-};
-
-export function EnrollmentsForm() {
+export function CertificationManagementForm() {
   const classesQuery = useCRUDQuery<Class>('classes');
   const locationsQuery = useCRUDQuery<Location>('locations');
 
@@ -66,23 +54,18 @@ export function EnrollmentsForm() {
 
   const { query, action } = useCRUD();
   const { isPending } = query;
-  
-  // Desabilitar campos durante criação
-  const isCreating = action === 'create';
 
   const form = useForm<EnrollmentDto>({
     initialValues: INITIAL_VALUES,
   });
 
-
   return (
-    <CRUDForm<Enrollment, EnrollmentDto, CreateEnrollmentDto>
+    <CRUDForm<Enrollment, EnrollmentDto>
       baseValues={INITIAL_VALUES}
       parseSelected={parseSelected}
       form={form}
       endpoint="enrollments"
       modalProps={{ title: 'Cadastro de Inscrições', size: 'xl' }}
-      transformData={transformData}
     >
       <TextInput
         required
@@ -129,27 +112,23 @@ export function EnrollmentsForm() {
         searchable
         clearable
       />
-      {!isCreating && (
-        <Select
-          required
-          label="Status"
-          key={form.key('status')}
-          {...form.getInputProps('status')}
-          disabled={isPending || action === 'delete'}
-          data={Object.values(EnrollmentStatus).map((status) => ({ label: status, value: status }))}
-        />
-      )}
-      {!isCreating && (
-        <Select
-          label="Turma"
-          key={form.key('class')}
-          {...form.getInputProps('class')}
-          disabled={isPending || action === 'delete'}
-          data={classesOptions}
-          searchable
-          clearable
-        />
-      )}
+      <Select
+        required
+        label="Status"
+        key={form.key('status')}
+        {...form.getInputProps('status')}
+        disabled={isPending || action === 'delete'}
+        data={Object.values(EnrollmentStatus).map((status) => ({ label: status, value: status }))}
+      />
+      <Select
+        label="Turma"
+        key={form.key('class')}
+        {...form.getInputProps('class')}
+        disabled={isPending || action === 'delete'}
+        data={classesOptions}
+        searchable
+        clearable
+      />
     </CRUDForm>
   );
 }

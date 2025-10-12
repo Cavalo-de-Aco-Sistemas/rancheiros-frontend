@@ -64,6 +64,8 @@ export interface CRUDTableProps<T extends MRT_RowData> {
   };
   customActions?: CustomAction<T>[];
   columnVisibility?: Record<string, boolean>;
+  data?: T[];
+  enableEdit?: boolean;
 }
 
 const DEFAULT_PERMISSIONS = {
@@ -73,7 +75,7 @@ const DEFAULT_PERMISSIONS = {
 };
 
 export function CRUDTable<T extends MRT_RowData>(props: CRUDTableProps<T>) {
-  const { columns, title, csvData, pdfConfig, customActions = [], columnVisibility } = props;
+  const { columns, title, csvData, pdfConfig, customActions = [], columnVisibility, data: customData, enableEdit = false } = props;
   const { query, setSelected, setAction, open } = useCRUD();
   
   // Estados para modal de confirmação
@@ -167,7 +169,7 @@ export function CRUDTable<T extends MRT_RowData>(props: CRUDTableProps<T>) {
   // Memoize the table configuration to prevent unnecessary re-renders
   const tableConfig = useMemo(() => ({
     columns,
-    data: (data ?? []) as T[],
+    data: (customData ?? data ?? []) as T[],
     localization: MRT_Localization_PT_BR,
     initialState: {
       density: 'xs' as const,
@@ -190,7 +192,7 @@ export function CRUDTable<T extends MRT_RowData>(props: CRUDTableProps<T>) {
     enableRowVirtualization: true,
     mantineTableContainerProps: { style: { maxHeight: 'calc(100vh - 128px)' } },
     enableRowActions: true,
-  }), [columns, data, isError, error?.message, isLoading, isFetching, columnVisibility]);
+  }), [columns, customData, data, isError, error?.message, isLoading, isFetching, columnVisibility]);
 
   const handleExportDataCSV = useCallback(() => {
     const csv = generateCsv(csvConfig)(csvData ?? []);
@@ -212,11 +214,11 @@ export function CRUDTable<T extends MRT_RowData>(props: CRUDTableProps<T>) {
       
       return (
         <>
-          {update && (
+          {(update || enableEdit) && (
             <Menu.Item
               onClick={() => {
                 open();
-                setSelected(rowData);
+                setSelected(rowData as any);
                 setAction('update');
               }}
               leftSection={<IconEdit style={{ width: rem(16), height: rem(16) }} />}
@@ -247,7 +249,7 @@ export function CRUDTable<T extends MRT_RowData>(props: CRUDTableProps<T>) {
             <Menu.Item
               onClick={() => {
                 open();
-                setSelected(rowData);
+                setSelected(rowData as any);
                 setAction('delete');
               }}
               color="red"

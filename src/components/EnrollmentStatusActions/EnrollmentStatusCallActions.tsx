@@ -6,8 +6,6 @@ import {
   IconCheck,
   IconX,
   IconEyeOff,
-  IconCertificate,
-  IconUserX,
   IconArrowBack,
 } from '@tabler/icons-react';
 import { Enrollment, EnrollmentStatus } from '@/model/enrollment';
@@ -17,13 +15,12 @@ import useCRUDQuery from '@/queries/useCRUDQuery';
 import { Class } from '@/model/class';
 import { dateBR } from '@/utils/dates';
 
-interface EnrollmentStatusActionsProps {
+interface EnrollmentStatusCallActionsProps {
   enrollment: Enrollment;
   onRevertClick?: () => void;
-  disabledActions?: EnrollmentStatus[];
 }
 
-const STATUS_ACTIONS = [
+const CALL_STATUS_ACTIONS = [
   {
     status: EnrollmentStatus.CALLED,
     label: 'Chamar',
@@ -48,21 +45,9 @@ const STATUS_ACTIONS = [
     icon: IconEyeOff,
     color: 'gray',
   },
-  {
-    status: EnrollmentStatus.CERTIFIED,
-    label: 'Certificado',
-    icon: IconCertificate,
-    color: 'teal',
-  },
-  {
-    status: EnrollmentStatus.MISSED,
-    label: 'Faltou',
-    icon: IconUserX,
-    color: 'red',
-  },
 ];
 
-export function EnrollmentStatusActions({ enrollment, onRevertClick, disabledActions = [] }: EnrollmentStatusActionsProps) {
+export function EnrollmentStatusCallActions({ enrollment, onRevertClick }: EnrollmentStatusCallActionsProps) {
   const updateFlowMutation = useEnrollmentFlowMutation();
   const assignClassMutation = useEnrollmentAssignClassMutation();
   const classesQuery = useCRUDQuery<Class>('classes');
@@ -82,32 +67,28 @@ export function EnrollmentStatusActions({ enrollment, onRevertClick, disabledAct
   const handleAssignClass = useCallback((classId: string) => {
     assignClassMutation.mutate({
       enrollmentId: enrollment.id,
-      classId,
+      classId: classId,
     });
   }, [assignClassMutation, enrollment.id]);
 
-  const canRevertStatus = useCallback(() => {
-    const currentStatus = enrollment.status;
-    // Só pode reverter se estiver em certified ou missed
-    return currentStatus === EnrollmentStatus.CERTIFIED || currentStatus === EnrollmentStatus.MISSED;
-  }, [enrollment.status]);
+  const handleReturnToCalled = useCallback(() => {
+    updateFlowMutation.mutate({
+      enrollmentId: enrollment.id,
+      status: EnrollmentStatus.CALLED,
+    });
+  }, [updateFlowMutation, enrollment.id]);
 
   const handleRevertStatus = useCallback(() => {
     if (onRevertClick) {
       onRevertClick();
     } else {
-      open();
+      handleReturnToCalled();
     }
-  }, [onRevertClick, open]);
+  }, [onRevertClick, handleReturnToCalled]);
 
   const isActionEnabled = useCallback((actionStatus: EnrollmentStatus) => {
     const currentStatus = enrollment.status;
     const hasClass = !!enrollment.class;
-
-    // Verifica se a ação está desabilitada
-    if (disabledActions.includes(actionStatus)) {
-      return false;
-    }
 
     // Só permite ações de fluxo se tiver turma atribuída
     if (!hasClass) {
@@ -125,19 +106,22 @@ export function EnrollmentStatusActions({ enrollment, onRevertClick, disabledAct
         // Confirmado, Cancelado e Ignorado somente pode ser ativado se o status atual for called
         return currentStatus === EnrollmentStatus.CALLED;
       
-      case EnrollmentStatus.CERTIFIED:
-      case EnrollmentStatus.MISSED:
-        // Certificado e Faltou somente pode ser ativado se o status atual for confirmed
-        return currentStatus === EnrollmentStatus.CONFIRMED;
-      
       default:
         return false;
     }
-  }, [enrollment.status, enrollment.class, disabledActions]);
+  }, [enrollment.status, enrollment.class]);
+
+  // Verifica se pode retornar para called
+  const canReturnToCalled = useCallback(() => {
+    const currentStatus = enrollment.status;
+    return currentStatus === EnrollmentStatus.IGNORED || 
+           currentStatus === EnrollmentStatus.DROPPED || 
+           currentStatus === EnrollmentStatus.CONFIRMED;
+  }, [enrollment.status]);
 
   // Memoize enabled actions to prevent unnecessary re-renders
   const enabledActions = useMemo(() => {
-    return STATUS_ACTIONS.filter(({ status }) => isActionEnabled(status));
+    return CALL_STATUS_ACTIONS.filter(({ status }) => isActionEnabled(status));
   }, [isActionEnabled]);
 
   const handleStatusUpdate = useCallback((newStatus: EnrollmentStatus) => {
@@ -166,13 +150,31 @@ export function EnrollmentStatusActions({ enrollment, onRevertClick, disabledAct
     );
   }
 
-  // Se tem turma atribuída, mostra ações de fluxo
+  // Se não tem ações habilitadas, mostra botão de reverter
+  if (enabledActions.length === 0) {
+    return (
+      <Group gap="xs">
+        <Tooltip label="Voltar para chamado">
+          <ActionIcon
+            variant="light"
+            color="blue"
+            size="sm"
+            onClick={handleRevertStatus}
+            loading={updateFlowMutation.isPending}
+          >
+            <IconArrowBack size={16} />
+          </ActionIcon>
+        </Tooltip>
+      </Group>
+    );
+  }
+
   return (
     <Group gap="xs">
       {enabledActions.map(({ status, label, icon: Icon, color }) => (
-        <Tooltip key={status} label={label} position="top">
+        <Tooltip key={status} label={label}>
           <ActionIcon
-            variant="filled"
+            variant="light"
             color={color}
             size="sm"
             onClick={() => handleStatusUpdate(status)}
@@ -182,15 +184,13 @@ export function EnrollmentStatusActions({ enrollment, onRevertClick, disabledAct
           </ActionIcon>
         </Tooltip>
       ))}
-      
-      {/* Botão para reverter status de certified/missed */}
-      {canRevertStatus() && (
-        <Tooltip label="Reverter Status" position="top">
+      {canReturnToCalled() && (
+        <Tooltip label="Voltar para chamado">
           <ActionIcon
-            variant="filled"
-            color="orange"
+            variant="light"
+            color="blue"
             size="sm"
-            onClick={handleRevertStatus}
+            onClick={handleReturnToCalled}
             loading={updateFlowMutation.isPending}
           >
             <IconArrowBack size={16} />
@@ -198,65 +198,5 @@ export function EnrollmentStatusActions({ enrollment, onRevertClick, disabledAct
         </Tooltip>
       )}
     </Group>
-  );
-}
-
-export default function EnrollmentStatusActionsWithModal({ enrollment, onRevertClick, disabledActions = [] }: EnrollmentStatusActionsProps) {
-  const [opened, { open, close }] = useDisclosure(false);
-  const updateFlowMutation = useEnrollmentFlowMutation();
-
-  const confirmRevertStatus = useCallback(() => {
-    // Reverte para confirmed (estado anterior lógico)
-    updateFlowMutation.mutate({
-      enrollmentId: enrollment.id,
-      status: EnrollmentStatus.CONFIRMED,
-    });
-    close();
-  }, [updateFlowMutation, enrollment.id, close]);
-
-  const getStatusLabel = (status: EnrollmentStatus) => {
-    switch (status) {
-      case EnrollmentStatus.CERTIFIED:
-        return 'Certificado';
-      case EnrollmentStatus.MISSED:
-        return 'Faltou';
-      default:
-        return status;
-    }
-  };
-
-  return (
-    <>
-      <EnrollmentStatusActions enrollment={enrollment} onRevertClick={open} />
-      
-      <Modal
-        opened={opened}
-        onClose={close}
-        title="Confirmar Reversão de Status"
-        centered
-      >
-        <Text mb="md">
-          Tem certeza que deseja reverter o status de <strong>{enrollment.name}</strong> de 
-          <strong> {getStatusLabel(enrollment.status)}</strong> para <strong>Confirmado</strong>?
-        </Text>
-        
-        <Text size="sm" c="dimmed" mb="lg">
-          Esta ação permitirá que o aluno volte ao fluxo normal de confirmação.
-        </Text>
-
-        <Group justify="flex-end">
-          <Button variant="outline" onClick={close}>
-            Cancelar
-          </Button>
-          <Button 
-            color="orange" 
-            onClick={confirmRevertStatus}
-            loading={updateFlowMutation.isPending}
-          >
-            Confirmar Reversão
-          </Button>
-        </Group>
-      </Modal>
-    </>
   );
 }

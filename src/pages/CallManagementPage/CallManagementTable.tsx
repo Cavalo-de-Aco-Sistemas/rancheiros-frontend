@@ -5,12 +5,14 @@ import { useCRUD } from '@/contexts/CRUDContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { Enrollment, EnrollmentStatus } from '@/model/enrollment';
 import { dateBR } from '@/utils/dates';
+import { EnrollmentStatusCallActions } from '@/components/EnrollmentStatusActions/EnrollmentStatusCallActions';
 import { useEnrollmentFlowMutation } from '@/mutations/useEnrollmentFlowMutation';
 import { StatusIcon } from '@/components/StatusIcon';
 import { IconClock } from '@tabler/icons-react';
-import { Anchor } from '@mantine/core';
+import { Anchor, Text, Center, Stack } from '@mantine/core';
 
 const tableHeaders = [
+  'Fluxo',
   'Turma',
   'Status',
   'Data de Inscrição',
@@ -25,7 +27,7 @@ const tableHeaders = [
   'Modelo'
 ];
 
-export function EnrollmentsTable() {
+export function CallManagementTable() {
   const { query } = useCRUD();
   const { name } = useAuth();
   const updateFlowMutation = useEnrollmentFlowMutation();
@@ -36,7 +38,6 @@ export function EnrollmentsTable() {
       status: EnrollmentStatus.WAITING,
     });
   }, [updateFlowMutation]);
-
 
   const canReturnToWaiting = useCallback((enrollment: Enrollment) => {
     // Só pode voltar para lista de espera se:
@@ -66,6 +67,17 @@ export function EnrollmentsTable() {
 
   const columns = useMemo<MRT_ColumnDef<Enrollment>[]>(
     () => [
+      {
+        id: 'actions',
+        header: 'Fluxo',
+        Cell: ({ row }) => (
+          <EnrollmentStatusCallActions
+            enrollment={row.original}
+          />
+        ),
+        enableSorting: false,
+        enableColumnFilter: false,
+      },
       {
         accessorKey: 'class',
         header: 'Turma',
@@ -188,9 +200,22 @@ Deus abençoe grandemente.`;
     []
   );
 
+  // Filtrar dados para mostrar apenas status de gestão de chamadas
+  const filteredData = useMemo(() => {
+    if (!query.data) return [];
+    
+    return (query.data as unknown as Enrollment[]).filter(enrollment => 
+      enrollment.status === EnrollmentStatus.WAITING ||
+      enrollment.status === EnrollmentStatus.CALLED ||
+      enrollment.status === EnrollmentStatus.CONFIRMED ||
+      enrollment.status === EnrollmentStatus.IGNORED ||
+      enrollment.status === EnrollmentStatus.DROPPED
+    );
+  }, [query.data]);
+
   const csvData = useMemo(
     () =>
-      query.data?.map(
+      filteredData?.map(
         ({
           name,
           phone,
@@ -205,6 +230,7 @@ Deus abençoe grandemente.`;
           enrollment_date,
           class: class_,
         }) => ({
+          Fluxo: '', // Fluxo não é exportado para CSV/PDF
           Turma: class_?.date ? (dateBR(class_.date) ?? '') : '',
           Status: status,
           'Data de Inscrição': enrollment_date,
@@ -219,7 +245,7 @@ Deus abençoe grandemente.`;
           Modelo: model
         })
       ) ?? [],
-    [query.data]
+    [filteredData]
   );
 
   const rowMapper = useCallback((row: MRT_Row<Enrollment>): string[] => {
@@ -238,6 +264,7 @@ Deus abençoe grandemente.`;
       enrollment_date,
     } = row.original;
     return [
+      '', // Fluxo não é exportado para CSV/PDF
       class_?.date ? (dateBR(class_.date) ?? '') : '',
       status,
       enrollment_date ? (dateBR(enrollment_date) ?? '') : '',
@@ -255,16 +282,30 @@ Deus abençoe grandemente.`;
 
   const pdfConfig = useMemo(() => ({ tableHeaders, rowMapper }), [rowMapper]);
 
+  // Se não há dados, mostrar mensagem informativa
+  if (filteredData.length === 0) {
+    return (
+      <Center h={400}>
+        <Stack align="center" gap="md">
+          <Text size="lg" c="dimmed">
+            Nenhuma inscrição em processo de chamada encontrada
+          </Text>
+          <Text size="sm" c="dimmed">
+            As inscrições em lista de espera, chamadas, confirmadas, ignoradas ou desistências aparecerão aqui
+          </Text>
+        </Stack>
+      </Center>
+    );
+  }
 
   return (
     <>
       <CRUDTable<Enrollment>
         columns={columns}
-        title="Visão Geral - Inscrições"
+        title="Gestão de Chamadas"
         csvData={csvData}
         pdfConfig={pdfConfig}
         customActions={customActions}
-        enableEdit={true}
         columnVisibility={{
           cnh: false,
           email: false,
@@ -272,6 +313,7 @@ Deus abençoe grandemente.`;
           brand: false,
           model: false,
         }}
+        data={filteredData}
       />
     </>
   );
