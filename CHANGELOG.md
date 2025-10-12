@@ -7,6 +7,72 @@ e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR
 
 ## [Unreleased]
 
+## [1.2.0] - 2025-01-09
+
+### Added
+- **EnrollmentsTable**: Implementado link do WhatsApp na coluna Telefone
+  - Link clicável que abre WhatsApp com número do aluno
+  - Detecção automática de dispositivo móvel (usa `whatsapp://` ou `https://wa.me/`)
+  - Formatação automática do telefone no padrão brasileiro (XX) XXXXX-XXXX
+  - Mensagem personalizada com parâmetros da turma (nome do aluno, data, local, cidade)
+  - Inclui nome do admin logado na mensagem para identificação pessoal
+  - Mensagem completa com instruções do treinamento e recomendações de segurança
+
+- **User Model**: Adicionado campo `name` ao modelo de usuários
+  - Interface `User` e `UserDto` atualizadas com campo `name`
+  - Campo obrigatório para identificação pessoal dos usuários
+  - Separação entre `username` (login) e `name` (exibição)
+
+- **AuthContext**: Expandido contexto de autenticação
+  - Adicionado campo `name` ao `AuthContextType` e `LoginProps`
+  - Armazenamento do nome do usuário no localStorage
+  - Disponibilização do nome em toda a aplicação via contexto
+
+- **UsersForm**: Atualizado formulário de usuários
+  - Novo campo "Nome" obrigatório no formulário de criação/edição
+  - Validação e persistência do campo `name`
+  - Interface atualizada para gerenciar nome e username separadamente
+
+- **UsersTable**: Expandida tabela de usuários
+  - Nova coluna "Nome" na tabela de usuários
+  - Exportação CSV/PDF inclui o nome dos usuários
+  - Interface mais informativa com identificação completa
+
+### Changed
+- **Backend AuthService**: Atualizado serviço de autenticação
+  - Método `validateUser()` retorna campo `name` do usuário
+  - Método `login()` inclui `name` na resposta de autenticação
+  - Documentação da API atualizada com campo `name`
+
+- **Backend AuthController**: Expandido controller de autenticação
+  - `LoginResponseDto` inclui campo `name` na documentação Swagger
+  - Resposta de login contém informações completas do usuário
+
+- **Backend User Entity**: Atualizada entidade de usuário
+  - Adicionada coluna `name` na entidade `User`
+  - DTOs `CreateUserDto` e `UserResponseDto` atualizados
+  - Validações e documentação da API expandidas
+
+- **WhatsApp Integration**: Melhorada integração com WhatsApp
+  - Mensagem personalizada com nome real do admin em vez de username
+  - Comunicação mais profissional e pessoal
+  - Identificação clara de quem está entrando em contato
+
+### Fixed
+- **UsersForm**: Corrigido erro de validação no formulário de usuários
+  - Implementada função `transformData` para remover `repeatPassword` antes do envio à API
+  - Campo `repeatPassword` mantido para validação no frontend, removido apenas no envio
+  - Campo `password` vazio removido durante edições para evitar erro de validação
+  - Resolvido erro "property repeatPassword should not exist" e "password should not be empty"
+  - Formulário agora funciona corretamente para criação e edição de usuários
+
+### Technical Details
+- **Database Schema**: Preparado para migração com nova coluna `name`
+- **API Compatibility**: Mantida compatibilidade com sistema existente
+- **Type Safety**: Tipos TypeScript atualizados em todo o sistema
+- **Validation**: Validações de backend e frontend sincronizadas
+- **Data Transformation**: Implementada transformação de dados no CRUDForm para limpeza antes do envio
+
 ## [1.1.0] - 2025-01-09
 
 ### Fixed
