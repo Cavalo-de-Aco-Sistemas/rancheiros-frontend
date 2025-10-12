@@ -13,7 +13,7 @@ const INITIAL_VALUES = {
   phone: '',
   cnh: '',
   uf_cnh: '',
-  preferred_city: '',
+  preferred_city: null,
   email: '',
   motorcycle_usage: '',
   brand: '',
@@ -58,6 +58,7 @@ export function EnrollmentsForm() {
   const form = useForm<EnrollmentDto>({
     initialValues: INITIAL_VALUES,
   });
+
 
   return (
     <CRUDForm<Enrollment, EnrollmentDto>
