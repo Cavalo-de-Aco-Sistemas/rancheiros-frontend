@@ -7,6 +7,8 @@ e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR
 
 ## [Unreleased]
 
+## [1.3.0] - 2025-01-12
+
 ### Added
 - **CRUDTable**: Implementado sistema de controle de visibilidade de colunas
   - Novo parâmetro `columnVisibility?: Record<string, boolean>` para definir colunas visíveis por padrão
@@ -270,6 +272,13 @@ e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR
   - **Impact**: Interface mais intuitiva - switch clicável para ativar/desativar turmas
   - **UX**: Ativação/desativação imediata sem necessidade de confirmação
   - **Technical**: Switch com estado de loading e cor verde para melhor feedback visual
+
+### Pull Requests
+- **PR #26**: Sistema de Gestão de Inscrições com Páginas Especializadas
+  - **URL**: https://github.com/Cavalo-de-Aco-Sistemas/rancheiros-frontend/pull/26
+  - **Base**: develop ← mpv
+  - **Status**: Aberto para revisão
+  - **Relacionado**: Backend PR #47
 
 ### Technical Details
 - **Column Management**: Utilização do sistema nativo de visibilidade do MantineReactTable
