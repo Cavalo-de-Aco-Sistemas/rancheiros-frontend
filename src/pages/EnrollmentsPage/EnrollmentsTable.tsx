@@ -188,23 +188,25 @@ Deus abençoe grandemente.`;
     []
   );
 
-  const csvData = useMemo(
-    () =>
-      query.data?.map(
-        ({
-          name,
-          phone,
-          cnh,
-          uf_cnh,
-          preferred_city,
-          email,
-          motorcycle_usage,
-          brand,
-          model,
-          status,
-          enrollment_date,
-          class: class_,
-        }) => ({
+  const csvData = useMemo(() => {
+    // Handle both array and paginated data
+    const data = Array.isArray(query.data) ? query.data : query.data?.data || [];
+    
+    return data.map(
+      ({
+        name,
+        phone,
+        cnh,
+        uf_cnh,
+        preferred_city,
+        email,
+        motorcycle_usage,
+        brand,
+        model,
+        status,
+        enrollment_date,
+        class: class_,
+      }) => ({
           Turma: class_?.date ? (dateBR(class_.date) ?? '') : '',
           Status: status,
           'Data de Inscrição': enrollment_date,
@@ -218,9 +220,8 @@ Deus abençoe grandemente.`;
           Marca: brand,
           Modelo: model
         })
-      ) ?? [],
-    [query.data]
-  );
+      );
+  }, [query.data]);
 
   const rowMapper = useCallback((row: MRT_Row<Enrollment>): string[] => {
     const {
@@ -255,6 +256,8 @@ Deus abençoe grandemente.`;
 
   const pdfConfig = useMemo(() => ({ tableHeaders, rowMapper }), [rowMapper]);
 
+  // Extrair dados corretamente (pode ser array ou paginado)
+  const data = (Array.isArray(query.data) ? query.data : query.data?.data || []) as unknown as Enrollment[];
 
   return (
     <>
@@ -265,6 +268,7 @@ Deus abençoe grandemente.`;
         pdfConfig={pdfConfig}
         customActions={customActions}
         enableEdit={true}
+        data={data}
         columnVisibility={{
           cnh: false,
           email: false,

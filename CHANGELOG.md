@@ -220,6 +220,37 @@ e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR
   - **Impact**: Registros confirmados não podem mais ser marcados como dropped
   - **Business Logic**: Alinhamento com regras de negócio que impedem cancelamento de confirmados
 
+- **EnrollmentsTable Data Handling Fix**: Correção no tratamento de dados na página Visão Geral
+  - **Problem**: Erro "query.data?.map is not a function" na página de Visão Geral e dados não aparecendo na tabela
+  - **Solution**: Atualizado `csvData` e `data` para lidar com dados paginados e não paginados
+  - **Impact**: Página de Visão Geral funciona corretamente com diferentes formatos de dados
+  - **Robustness**: Suporte a dados simples (array) e paginados (objeto com propriedade `data`)
+  - **Data Flow**: Dados extraídos corretamente e passados para o `CRUDTable` via prop `data`
+
+- **Call Management IGNORED Status Fix**: Correção na exibição de ações para status IGNORED
+  - **Problem**: Status IGNORED estava mostrando seleção de turmas em vez do botão de retorno
+  - **Solution**: Adicionada verificação prioritária para `canReturnToCalled()` antes de mostrar ações normais
+  - **Impact**: Status IGNORED, CONFIRMED e DROPPED agora mostram corretamente o botão "Voltar para chamado"
+  - **Logic Flow**: Prioridade: Seleção de turma → Botão de retorno → Ações normais → Botão de retorno alternativo
+
+- **Call Management Class Selection Logic Improvement**: Melhoria na lógica de seleção de turmas
+  - **Problem**: Seleção de turma aparecia para qualquer status sem turma atribuída
+  - **Solution**: Seleção de turma agora só aparece quando status é WAITING e não tem turma atribuída
+  - **Impact**: Interface mais intuitiva - só permite atribuir turma quando aluno está em lista de espera
+  - **Business Logic**: Alinhamento com fluxo de negócio - turma só é atribuída na fase de waiting
+
+- **Call Management IGNORED Status Logic Fix**: Correção na lógica de retorno para CALLED
+  - **Problem**: Status IGNORED estava permitindo retorno para CALLED, mas já tem turma atribuída
+  - **Solution**: Removido IGNORED da função `canReturnToCalled()` - apenas CONFIRMED e DROPPED podem retornar
+  - **Impact**: Status IGNORED agora não mostra botão de retorno, mantendo consistência com turma já atribuída
+  - **Business Logic**: IGNORED é um status final para a turma específica - não pode retornar para CALLED
+
+- **Call Management IGNORED Status Logic Revert**: Reversão da lógica de retorno para CALLED
+  - **Problem**: Funcionalidade de retorno de IGNORED para CALLED foi removida
+  - **Solution**: Restaurado IGNORED na função `canReturnToCalled()` - mantém funcionalidade de retorno
+  - **Impact**: Status IGNORED, CONFIRMED e DROPPED podem retornar para CALLED conforme necessário
+  - **Business Logic**: Flexibilidade no fluxo de chamadas - permite reativar alunos ignorados/cancelados
+
 ### Technical Details
 - **Column Management**: Utilização do sistema nativo de visibilidade do MantineReactTable
 - **Export Compatibility**: CSV e PDF mantêm compatibilidade com nova ordem de colunas

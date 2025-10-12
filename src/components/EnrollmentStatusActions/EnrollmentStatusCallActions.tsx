@@ -120,7 +120,7 @@ export function EnrollmentStatusCallActions({ enrollment, onRevertClick }: Enrol
     return currentStatus === EnrollmentStatus.IGNORED || 
            currentStatus === EnrollmentStatus.CONFIRMED ||
            currentStatus === EnrollmentStatus.DROPPED;
-    // Permitido DROPPED voltar para CALLED conforme regras de negócio
+    // Permitido IGNORED e DROPPED voltar para CALLED conforme regras de negócio
   }, [enrollment.status]);
 
   // Memoize enabled actions to prevent unnecessary re-renders
@@ -135,8 +135,8 @@ export function EnrollmentStatusCallActions({ enrollment, onRevertClick }: Enrol
     });
   }, [updateFlowMutation, enrollment.id]);
 
-  // Se não tem turma atribuída, mostra seleção de turma
-  if (!enrollment.class) {
+  // Se não tem turma atribuída E está em waiting, mostra seleção de turma
+  if (!enrollment.class && enrollment.status === EnrollmentStatus.WAITING) {
     return (
       <Select
         placeholder="Selecionar turma"
@@ -151,6 +151,25 @@ export function EnrollmentStatusCallActions({ enrollment, onRevertClick }: Enrol
         size="xs"
         w={200}
       />
+    );
+  }
+
+  // Se pode retornar para called (IGNORED, CONFIRMED, DROPPED), mostra botão de retorno
+  if (canReturnToCalled()) {
+    return (
+      <Group gap="xs">
+        <Tooltip label="Voltar para chamado">
+          <ActionIcon
+            variant="light"
+            color="blue"
+            size="sm"
+            onClick={handleReturnToCalled}
+            loading={updateFlowMutation.isPending}
+          >
+            <IconArrowBack size={16} />
+          </ActionIcon>
+        </Tooltip>
+      </Group>
     );
   }
 
