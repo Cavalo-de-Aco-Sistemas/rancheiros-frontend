@@ -15,6 +15,7 @@ import { CRUDTable } from '@/components/CRUDTable';
 import { useCRUD } from '@/contexts/CRUDContext';
 import { Ranch } from '@/model/ranch';
 import { Permissions, User } from '@/model/user';
+import { extractData } from '@/utils/dataUtils';
 
 function PermissionRow({ permission }: { permission: Permissions | undefined }) {
   if (!permission) {
@@ -27,7 +28,7 @@ function PermissionRow({ permission }: { permission: Permissions | undefined }) 
       </Group>
     );
   }
-  
+
   return (
     <Group>
       {permission.create ? <IconStar stroke={1.5} /> : <IconStarOff stroke={1} color="gray" />}
@@ -72,8 +73,8 @@ export function UsersTable() {
         accessorKey: 'super_admin',
         header: 'Super Admin',
         Cell: ({ row }) => (
-          <Badge 
-            color={row.original.super_admin ? 'green' : 'gray'} 
+          <Badge
+            color={row.original.super_admin ? 'green' : 'gray'}
             variant={row.original.super_admin ? 'filled' : 'light'}
           >
             {row.original.super_admin ? 'Sim' : 'Não'}
@@ -140,7 +141,7 @@ export function UsersTable() {
 
   const csvData = useMemo(
     () =>
-      query.data?.map(({ username, name, super_admin, permissions, ranches }) => ({
+      extractData(query.data).map(({ username, name, super_admin, permissions, ranches }: any) => ({
         Usuário: username,
         Nome: name,
         'Super Admin': super_admin ? 'Sim' : 'Não',
@@ -151,7 +152,7 @@ export function UsersTable() {
         Ranchos: permissionsToString(permissions.ranches),
         Fluxo: permissionsToString(permissions.flow),
         Filtros: ranches.map((ranch: Ranch) => ranch.name).join(', '),
-      })) ?? [],
+      })),
     [query.data]
   );
 

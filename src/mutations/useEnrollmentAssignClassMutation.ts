@@ -2,9 +2,9 @@ import { useMutation } from '@tanstack/react-query';
 import { AxiosError } from 'axios';
 import { notifications } from '@mantine/notifications';
 import { useAuth } from '@/contexts/AuthContext';
-import { BACKEND_ADDRESS } from '@/utils/constants';
-import { Enrollment, Class } from '@/model/enrollment';
 import { useOptimizedQueries } from '@/hooks/useOptimizedQueries';
+import { Class, Enrollment } from '@/model/enrollment';
+import { BACKEND_ADDRESS } from '@/utils/constants';
 
 interface AssignClassParams {
   enrollmentId: string;
@@ -17,9 +17,12 @@ export function useEnrollmentAssignClassMutation() {
 
   return useMutation({
     mutationFn: async ({ enrollmentId, classId }: AssignClassParams) => {
-      const response = await axiosInstance.patch(`${BACKEND_ADDRESS}/enrollments/${enrollmentId}/assign-class`, {
-        classId,
-      });
+      const response = await axiosInstance.patch(
+        `${BACKEND_ADDRESS}/enrollments/${enrollmentId}/assign-class`,
+        {
+          classId,
+        }
+      );
       return { enrollmentId, classId, updatedEnrollment: response.data };
     },
     onMutate: async ({ enrollmentId, classId }) => {
@@ -31,7 +34,7 @@ export function useEnrollmentAssignClassMutation() {
 
       // Get the class data for optimistic update
       const classes = getQueryData<Class>('classes');
-      const assignedClass = classes?.find(cls => cls.id === classId);
+      const assignedClass = classes?.find((cls) => cls.id === classId);
 
       // Optimistically update the enrollment with the assigned class
       updateQueryData<Enrollment>('enrollments', (old) => {
@@ -53,7 +56,7 @@ export function useEnrollmentAssignClassMutation() {
         message: 'Turma atribuída com sucesso!',
         color: 'green',
       });
-      
+
       // Only invalidate enrollments query - classes data doesn't change when assigning
       invalidateQuery('enrollments');
     },
@@ -62,9 +65,8 @@ export function useEnrollmentAssignClassMutation() {
       if (context?.previousEnrollments) {
         updateQueryData<Enrollment>('enrollments', () => context.previousEnrollments!);
       }
-      
-      const errorMessage =
-        (error.response?.data as any)?.message || 'Erro ao atribuir turma.';
+
+      const errorMessage = (error.response?.data as any)?.message || 'Erro ao atribuir turma.';
       notifications.show({
         title: 'Erro',
         message: errorMessage,

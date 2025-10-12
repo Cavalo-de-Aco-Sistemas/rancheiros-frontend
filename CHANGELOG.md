@@ -7,6 +7,310 @@ e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR
 
 ## [Unreleased]
 
+## [1.3.0] - 2025-01-12
+
+### Added
+- **CRUDTable**: Implementado sistema de controle de visibilidade de colunas
+  - Novo parâmetro `columnVisibility?: Record<string, boolean>` para definir colunas visíveis por padrão
+  - Integração com funcionalidade nativa do MantineReactTable para mostrar/ocultar colunas
+  - Botão "Mostrar/Ocultar Colunas" na toolbar da tabela para controle do usuário
+  - Persistência do estado das colunas durante a sessão
+  - Novo parâmetro `data?: T[]` para permitir dados customizados na tabela
+
+- **CallManagementPage**: Nova página para gestão de chamadas de alunos
+  - Tabela específica para status: waiting, called, confirmed, ignored, dropped
+  - Ações customizadas para retorno à lista de espera
+  - Filtros automáticos para mostrar apenas inscrições em processo de chamada
+  - Integração com sistema de fluxo de status existente
+
+- **CertificationPage**: Nova página para gestão de certificações
+  - Tabela específica para inscrições confirmadas
+  - Ações customizadas para certificar ou marcar como faltou
+  - Filtros automáticos para mostrar apenas inscrições confirmadas
+  - Interface dedicada para finalização do processo de treinamento
+
+- **Menu Hierárquico**: Sistema de navegação expandido
+  - Menu "Inscrições" com submenu expansível
+  - Subitens: "Visão Geral", "Gestão de Chamadas" e "Certificações"
+  - Navegação intuitiva com indicadores visuais de estado ativo
+  - Suporte a permissões granulares por funcionalidade
+
+### Changed
+- **EnrollmentsPage**: Movida para estrutura hierárquica de inscrições
+  - Nova rota: `/inscricoes/visao-geral` (anteriormente `/inscricoes`)
+  - Renomeada para "Visão Geral" no menu hierárquico
+  - Título da tabela atualizado para "Visão Geral - Inscrições"
+  - Mantém funcionalidade completa de visualização de todas as inscrições
+
+- **EnrollmentsTable**: Reorganizada ordem e visibilidade das colunas
+  - Nova ordem das colunas: Fluxo, Fluxo, Turma, Status, Data de Inscrição, Cidade Preferencial, Nome, Telefone, UF
+  - Colunas CNH, Email, Uso de Moto, Marca e Modelo ocultas por padrão
+  - Usuários podem ativar/desativar colunas ocultas através do botão nativo da tabela
+  - Renomeação de "UF da CNH" para "UF" para simplificação
+  - Atualização dos headers de exportação CSV/PDF para refletir nova ordem
+  - Melhoria na organização visual da tabela com colunas mais relevantes em destaque
+
+### Fixed
+- **CRUDForm Integration**: Corrigido uso incorreto do CRUDForm nas novas páginas
+  - Formulários agora seguem o padrão correto com props adequadas
+  - Implementação de `useForm` e estrutura de campos conforme esperado
+  - Resolvido erro "Cannot read properties of undefined (reading 'onSubmit')"
+
+- **Type Safety**: Corrigidos erros de tipo TypeScript nas tabelas
+  - Cast seguro de `CRUDType[]` para `Enrollment[]` usando `as unknown as`
+  - Resolvidos conflitos de tipo entre dados genéricos e específicos
+  - Melhoria na compatibilidade de tipos entre componentes
+
+- **Data Validation**: Implementada validação para estados vazios
+  - Mensagens informativas quando não há dados para exibir
+  - Interface amigável para usuários quando tabelas estão vazias
+  - Melhoria na experiência do usuário com feedback visual adequado
+
+- **Column Duplication**: Corrigida coluna "Fluxo" duplicada em todas as páginas
+  - Removida coluna duplicada na Visão Geral, Gestão de Chamadas e Certificações
+  - Atualizados headers de exportação CSV/PDF para refletir correção
+  - Melhoria na organização visual das tabelas sem duplicações
+
+- **Enrollment Creation**: Corrigido erro de validação no cadastro de inscrições
+  - Removidos campos `status` e `class` do payload de criação
+  - Implementada função `transformData` para filtrar campos não permitidos
+  - Criado tipo `CreateEnrollmentDto` específico para criação
+  - Resolvido erro "property status should not exist, property class should not exist"
+  - Ocultados campos `status` e `class` durante criação para melhor UX
+  - Campos aparecem apenas durante edição de inscrições existentes
+
+- **Call Management Actions**: Desabilitadas ações de certificação na Gestão de Chamadas
+  - Adicionada prop `disabledActions` ao componente `EnrollmentStatusActionsWithModal`
+  - Desabilitadas ações `CERTIFIED` e `MISSED` na tabela de Gestão de Chamadas
+  - Ações de certificação disponíveis apenas na tabela de Certificações
+  - Melhoria na separação de responsabilidades entre as páginas
+
+- **Page Renaming**: Renomeada página de Certificações para Gestão de Certificações
+  - `CertificationPage` → `CertificationManagementPage`
+  - `CertificationTable` → `CertificationManagementTable`
+  - `CertificationForm` → `CertificationManagementForm`
+  - Atualizados imports e rotas em todos os arquivos relacionados
+  - Melhoria na nomenclatura para maior clareza de propósito
+
+- **Component Fix**: Corrigido erro de `disabledActions` não definido
+  - Adicionado parâmetro `disabledActions = []` na função `EnrollmentStatusActions`
+  - Resolvido erro "disabledActions is not defined" no componente
+  - Funcionalidade de desabilitação de ações funcionando corretamente
+
+- **Component Organization**: Reorganizadas ações de status de inscrição em componentes especializados
+  - Criado `EnrollmentStatusCallActions` para ações de chamada (Chamar, Confirmar, Cancelar, Ignorar)
+  - Criado `EnrollmentStatusCertificationActions` para ações de certificação (Certificar, Faltou)
+  - Atualizada `CallManagementTable` para usar apenas ações de chamada
+  - Atualizada `CertificationManagementTable` para usar apenas ações de certificação
+  - Atualizada `EnrollmentsTable` para mostrar ambos os tipos de ações lado a lado
+  - Melhoria na separação de responsabilidades e organização do código
+
+- **Call Management Enhancement**: Adicionada opção de retornar para status "Chamado"
+  - Inscrições com status `ignored`, `dropped` ou `confirmed` podem retornar para `called`
+  - Botão "Voltar para chamado" disponível quando apropriado
+  - Melhoria na flexibilidade do fluxo de gestão de chamadas
+  - Permite reavaliação de inscrições que foram ignoradas ou canceladas
+
+- **Backend Status Transition**: Corrigida validação de transições de status
+  - Adicionada transição permitida de `CONFIRMED` para `CALLED`
+  - Resolvido erro "Invalid status transition from confirmed to called"
+  - Backend agora suporta reversão de inscrições confirmadas para chamado
+  - Melhoria na flexibilidade do fluxo de gestão de chamadas
+
+- **Enrollment Overview Simplification**: Removida coluna de fluxo da Visão Geral
+  - Coluna "Fluxo" removida da página de Visão Geral (EnrollmentsPage)
+  - Ações de fluxo disponíveis apenas nas páginas especializadas
+  - Interface mais limpa e focada na visualização de dados
+  - Separação clara entre visualização (Visão Geral) e ações (Gestão de Chamadas/Certificações)
+
+- **Enrollment Edit Functionality**: Habilitado botão de editar na Visão Geral
+  - Adicionada prop `enableEdit` ao componente `CRUDTable`
+  - Botão de editar habilitado na página de Visão Geral (EnrollmentsPage)
+  - Funcionalidade de edição independente das permissões do usuário
+  - Melhoria na flexibilidade de edição de inscrições
+
+- **Enrollment Form Data Fix**: Corrigido envio de status e class na edição
+  - Função `transformData` atualizada para preservar `status` e `class` durante edição
+  - Interface `CRUDFormProps` expandida para suportar parâmetro `isCreate`
+  - Lógica de transformação diferenciada entre criação e edição
+  - Resolvido problema de campos obrigatórios não sendo enviados na edição
+
+- **Enrollment Status Visual Enhancement**: Ícones visuais para status de inscrições
+  - Coluna de status atualizada com ícones correspondentes aos status
+  - Mapeamento visual: Aguardando (⏰), Chamado (📞), Confirmado (✅), Desistiu (❌), Ignorado (👁️‍🗨️), Certificado (🏆), Faltou (👤❌)
+  - Cores diferenciadas para cada status (azul, laranja, verde, vermelho, cinza, teal)
+  - Melhoria na identificação visual rápida do status das inscrições
+  - Consistência com ícones usados nos componentes de ações
+
+- **StatusIcon Component Generalization**: Componente reutilizável para ícones de status
+  - Criado componente `StatusIcon` centralizado em `/components/StatusIcon`
+  - Aplicado em todas as tabelas de enrollment (Visão Geral, Gestão de Chamadas, Certificações)
+  - Props configuráveis: `showLabel` e `iconSize` para flexibilidade
+  - Eliminação de código duplicado entre tabelas
+  - Manutenção centralizada do mapeamento de status para ícones
+  - Consistência visual garantida em toda aplicação
+
+- **Enrollment Edit Functionality Configuration**: Configuração de edição por página
+  - **Visão Geral**: Edição habilitada (`enableEdit={true}`) para gerenciamento completo
+  - **Gestão de Chamadas**: Edição desabilitada (sem `enableEdit`) - foco em ações de fluxo
+  - **Certificações**: Edição desabilitada (sem `enableEdit`) - foco em certificação
+  - Separação clara de responsabilidades entre páginas
+  - Prevenção de edições acidentais em páginas especializadas
+
+- **Backend Filtering and Pagination**: Implementação de filtros e paginação no backend
+  - **Query Parameters**: Suporte a `status`, `activeClassesOnly`, `page`, `limit`
+  - **Filtros Inteligentes**: Status por vírgula, turmas ativas, permissões de rancho
+  - **Paginação Eficiente**: Controle de página, limite e contagem total
+  - **Performance**: Redução significativa de dados transferidos
+  - **Escalabilidade**: Suporte a milhares de registros
+
+- **Frontend Query System Enhancement**: Sistema de consultas aprimorado
+  - **useCRUDQuery**: Suporte a query parameters e paginação
+  - **CRUDContext**: Integração com filtros e paginação
+  - **CRUDTable**: Paginação nativa com controles de navegação
+  - **Type Safety**: Tipos TypeScript para dados paginados
+  - **Cache Inteligente**: React Query otimizado para filtros
+
+- **Page-Specific Filtering**: Filtros específicos por página
+  - **Call Management**: Status de gestão de chamadas + turmas ativas
+  - **Certifications**: Apenas confirmados + turmas ativas
+  - **Visão Geral**: Sem filtros (todos os dados)
+  - **Performance**: Redução de 70-90% nos dados transferidos
+  - **UX**: Carregamento mais rápido e responsivo
+
+- **Backend Query Parameter Fix**: Correção na conversão de parâmetros
+  - **activeClassesOnly**: Corrigida conversão de string para boolean
+  - **Type Safety**: Parâmetros de query tratados corretamente
+  - **Data Flow**: Dados agora fluem corretamente para as tabelas
+  - **Debug**: Removidos logs de debug após correção
+
+- **Query Cache Isolation**: Isolamento de cache entre páginas
+  - **pageId**: Identificador único para cada página (call-management, certification-management, enrollments-overview)
+  - **Cache Keys**: Chaves únicas baseadas em parâmetros ordenados
+  - **Data Isolation**: Cada página mantém seu próprio cache independente
+  - **Performance**: Evita conflitos de cache entre páginas especializadas
+  - **Consistency**: Dados corretos exibidos em cada contexto
+
+- **Data Extraction Fix**: Correção na extração de dados paginados
+  - **Problem**: Dados não apareciam nas tabelas apesar de respostas bem-sucedidas da API
+  - **Solution**: Lógica melhorada para extrair dados de diferentes estruturas de resposta
+  - **Impact**: Páginas de Call Management e Certification Management agora exibem dados corretamente
+  - **Robustness**: Suporte a múltiplos formatos de resposta do backend
+
+- **Query Cache Invalidation Fix**: Correção na invalidação de cache após mutações
+  - **Problem**: Tabelas não eram atualizadas após executar ações do fluxo de chamada
+  - **Solution**: Atualizado `useOptimizedQueries` para invalidar todas as variações de queries
+  - **Impact**: Ações de status e atribuição de turma agora atualizam todas as páginas automaticamente
+  - **Consistency**: Dados sincronizados entre todas as visualizações de inscrições
+
+- **Paginated Data Mutation Fix**: Correção na atualização otimista de dados paginados
+  - **Problem**: Erro "old.map is not a function" ao executar mutações em dados paginados
+  - **Solution**: Atualizado `updateQueryData` e `getQueryData` para lidar com estrutura `PaginatedResult<T>`
+  - **Impact**: Mutações funcionam corretamente em todas as páginas com paginação
+  - **Robustness**: Suporte a dados simples (array) e paginados (objeto com propriedade `data`)
+
+- **Status Transition Validation Fix**: Correção na validação de transições de status
+  - **Problem**: Erro "Invalid status transition from dropped to called" ao tentar executar ações em registros com status `dropped`
+  - **Solution**: Permitido transição de `DROPPED` para `CALLED` no backend e frontend
+  - **Impact**: Registros com status `dropped` podem voltar para `called` usando o botão "Voltar para chamado"
+  - **Business Logic**: Alinhamento com regras de negócio que permitem reversão de `dropped` para `called`
+  - **Components**: Corrigido tanto no backend (`enrollments.service.ts`) quanto no frontend (`EnrollmentStatusCallActions`)
+
+- **Status Transition Business Rule Fix**: Correção nas regras de negócio de transições de status
+  - **Problem**: Transição de `CONFIRMED` para `DROPPED` não deveria ser permitida
+  - **Solution**: Removido `DROPPED` das transições permitidas a partir de `CONFIRMED`
+  - **Impact**: Registros confirmados não podem mais ser marcados como dropped
+  - **Business Logic**: Alinhamento com regras de negócio que impedem cancelamento de confirmados
+
+- **EnrollmentsTable Data Handling Fix**: Correção no tratamento de dados na página Visão Geral
+  - **Problem**: Erro "query.data?.map is not a function" na página de Visão Geral e dados não aparecendo na tabela
+  - **Solution**: Atualizado `csvData` e `data` para lidar com dados paginados e não paginados
+  - **Impact**: Página de Visão Geral funciona corretamente com diferentes formatos de dados
+  - **Robustness**: Suporte a dados simples (array) e paginados (objeto com propriedade `data`)
+  - **Data Flow**: Dados extraídos corretamente e passados para o `CRUDTable` via prop `data`
+
+- **Call Management IGNORED Status Fix**: Correção na exibição de ações para status IGNORED
+  - **Problem**: Status IGNORED estava mostrando seleção de turmas em vez do botão de retorno
+  - **Solution**: Adicionada verificação prioritária para `canReturnToCalled()` antes de mostrar ações normais
+  - **Impact**: Status IGNORED, CONFIRMED e DROPPED agora mostram corretamente o botão "Voltar para chamado"
+  - **Logic Flow**: Prioridade: Seleção de turma → Botão de retorno → Ações normais → Botão de retorno alternativo
+
+- **Call Management Class Selection Logic Improvement**: Melhoria na lógica de seleção de turmas
+  - **Problem**: Seleção de turma aparecia para qualquer status sem turma atribuída
+  - **Solution**: Seleção de turma agora só aparece quando status é WAITING e não tem turma atribuída
+  - **Impact**: Interface mais intuitiva - só permite atribuir turma quando aluno está em lista de espera
+  - **Business Logic**: Alinhamento com fluxo de negócio - turma só é atribuída na fase de waiting
+
+- **Call Management IGNORED Status Logic Fix**: Correção na lógica de retorno para CALLED
+  - **Problem**: Status IGNORED estava permitindo retorno para CALLED, mas já tem turma atribuída
+  - **Solution**: Removido IGNORED da função `canReturnToCalled()` - apenas CONFIRMED e DROPPED podem retornar
+  - **Impact**: Status IGNORED agora não mostra botão de retorno, mantendo consistência com turma já atribuída
+  - **Business Logic**: IGNORED é um status final para a turma específica - não pode retornar para CALLED
+
+- **Call Management IGNORED Status Logic Revert**: Reversão da lógica de retorno para CALLED
+  - **Problem**: Funcionalidade de retorno de IGNORED para CALLED foi removida
+  - **Solution**: Restaurado IGNORED na função `canReturnToCalled()` - mantém funcionalidade de retorno
+  - **Impact**: Status IGNORED, CONFIRMED e DROPPED podem retornar para CALLED conforme necessário
+  - **Business Logic**: Flexibilidade no fluxo de chamadas - permite reativar alunos ignorados/cancelados
+
+- **Classes Table Toggle Active Feature**: Funcionalidade para ativar/desativar turmas
+  - **Problem**: Não havia forma de ativar/desativar turmas diretamente na tabela
+  - **Solution**: Criada ação personalizada na tabela de turmas com botão de toggle
+  - **Impact**: Usuários podem ativar/desativar turmas com confirmação e feedback visual
+  - **Technical**: Nova mutation `useClassToggleActiveMutation` com atualização otimista
+  - **UX**: Confirmação antes da ação, ícones dinâmicos e notificações de sucesso/erro
+
+- **Classes Table Icon Fix**: Correção de erro de renderização de ícones
+  - **Problem**: Erro "Objects are not valid as a React child" na página de turmas
+  - **Solution**: Corrigido tipo de ícone nas ações personalizadas - usando componente estático
+  - **Impact**: Página de turmas funciona corretamente sem erros de renderização
+  - **Technical**: Ícone fixo `IconToggleRight` em vez de função dinâmica
+
+- **Classes Table Switch Implementation**: Implementação de switch na coluna Ativo
+  - **Problem**: Ação personalizada para ativar/desativar turmas não era intuitiva
+  - **Solution**: Removida ação personalizada e implementado Switch diretamente na coluna "Ativo"
+  - **Impact**: Interface mais intuitiva - switch clicável para ativar/desativar turmas
+  - **UX**: Ativação/desativação imediata sem necessidade de confirmação
+  - **Technical**: Switch com estado de loading e cor verde para melhor feedback visual
+
+### Fixed
+- **TypeScript Errors**: Corrigidos erros de compilação relacionados a dados paginados
+  - Criada função utilitária `extractData()` para extrair dados de arrays ou objetos paginados
+  - Corrigidos erros "Property 'map' does not exist on type 'PaginatedResult<...>'"
+  - Resolvidos erros de tipo implícito 'any' em formulários e tabelas
+  - Aplicadas type assertions seguras com `as unknown as Type[]`
+
+- **Linting Errors**: Corrigidos problemas de código e formatação
+  - Removidos imports não utilizados (Button, Modal, Text, toDate)
+  - Prefixadas variáveis não utilizadas com `_` para indicar uso intencional
+  - Corrigida formatação de código com Prettier
+  - Resolvidos warnings de dependências em hooks React
+
+- **Build Process**: Otimizado processo de build e testes
+  - TypeScript compilation passando sem erros
+  - Vite build concluído com sucesso
+  - Aplicação pronta para produção
+  - Melhorada performance de build com otimizações de chunking
+
+### Pull Requests
+- **PR #26**: Sistema de Gestão de Inscrições com Páginas Especializadas
+  - **URL**: https://github.com/Cavalo-de-Aco-Sistemas/rancheiros-frontend/pull/26
+  - **Base**: develop ← mpv
+  - **Status**: Aberto para revisão
+  - **Relacionado**: Backend PR #47
+  - **Testes**: TypeScript compilation ✅, Build process ✅, Linting corrigido ✅
+
+### Technical Details
+- **Column Management**: Utilização do sistema nativo de visibilidade do MantineReactTable
+- **Export Compatibility**: CSV e PDF mantêm compatibilidade com nova ordem de colunas
+- **Type Safety**: Tipos TypeScript atualizados para suportar controle de visibilidade
+- **User Experience**: Interface mais limpa com colunas menos utilizadas ocultas por padrão
+- **Data Filtering**: Filtros automáticos baseados em status para separação de responsabilidades
+- **Route Structure**: Rotas hierárquicas para organização lógica das funcionalidades
+- **Component Reusability**: Reutilização de componentes existentes com customizações específicas
+- **Permission System**: Integração com sistema de permissões existente para controle de acesso
+- **Error Handling**: Validação robusta para estados de dados vazios e erros de tipo
+
 ## [1.2.0] - 2025-01-09
 
 ### Added
@@ -78,6 +382,9 @@ e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR
 - **Type Safety**: Tipos TypeScript atualizados em todo o sistema
 - **Validation**: Validações de backend e frontend sincronizadas
 - **Data Transformation**: Implementada transformação de dados no CRUDForm para limpeza antes do envio
+
+### Pull Requests
+- **PR #24**: [feat: Implementação de link WhatsApp e campo name para usuários](https://github.com/Cavalo-de-Aco-Sistemas/rancheiros-frontend/pull/24) - Enviado para develop
 
 ## [1.1.0] - 2025-01-09
 

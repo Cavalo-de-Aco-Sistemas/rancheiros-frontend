@@ -4,10 +4,10 @@ import { DateInput } from '@mantine/dates';
 import { useForm } from '@mantine/form';
 import { CRUDForm } from '@/components/CRUDForm';
 import { useCRUD } from '@/contexts/CRUDContext';
-import { Class, ClassDto, ClassCreateDto } from '@/model/class';
+import { Class, ClassCreateDto, ClassDto } from '@/model/class';
 import { Location } from '@/model/location';
 import useCRUDQuery from '@/queries/useCRUDQuery';
-import { toDate } from '@/utils/dates';
+import { extractData } from '@/utils/dataUtils';
 
 const INITIAL_VALUES = { location: null, date: null, mapsLink: '', active: true };
 
@@ -28,7 +28,7 @@ export function ClassesForm() {
 
   const locationsOptions = useMemo(
     () =>
-      locationsQuery.data?.map((location: Location) => ({
+      (extractData(locationsQuery.data) as unknown as Location[]).map((location) => ({
         label: location.name,
         value: location.id.toString(),
       })),

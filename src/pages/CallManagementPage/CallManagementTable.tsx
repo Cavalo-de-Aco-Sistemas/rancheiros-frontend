@@ -1,8 +1,9 @@
 import { useCallback, useMemo } from 'react';
 import { IconClock } from '@tabler/icons-react';
 import { MRT_ColumnDef, MRT_Row } from 'mantine-react-table';
-import { Anchor } from '@mantine/core';
+import { Anchor, Center, Stack, Text } from '@mantine/core';
 import { CRUDTable } from '@/components/CRUDTable';
+import { EnrollmentStatusCallActions } from '@/components/EnrollmentStatusActions/EnrollmentStatusCallActions';
 import { StatusIcon } from '@/components/StatusIcon';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCRUD } from '@/contexts/CRUDContext';
@@ -11,6 +12,7 @@ import { useEnrollmentFlowMutation } from '@/mutations/useEnrollmentFlowMutation
 import { dateBR } from '@/utils/dates';
 
 const tableHeaders = [
+  'Fluxo',
   'Turma',
   'Status',
   'Data de Inscrição',
@@ -25,7 +27,17 @@ const tableHeaders = [
   'Modelo',
 ];
 
-export function EnrollmentsTable() {
+interface CallManagementTableProps {
+  onPageChange?: (page: number) => void;
+  currentPage?: number;
+  pageSize?: number;
+}
+
+export function CallManagementTable({
+  onPageChange,
+  currentPage: _currentPage,
+  pageSize: _pageSize,
+}: CallManagementTableProps) {
   const { query } = useCRUD();
   const { name } = useAuth();
   const updateFlowMutation = useEnrollmentFlowMutation();
@@ -45,10 +57,12 @@ export function EnrollmentsTable() {
     // 1. Não estiver já em waiting
     // 2. Não estiver certificado (situação final)
     // 3. Não tiver faltado (situação final)
+    // 4. Não estiver dropped (situação final)
     return (
       enrollment.status !== EnrollmentStatus.WAITING &&
       enrollment.status !== EnrollmentStatus.CERTIFIED &&
-      enrollment.status !== EnrollmentStatus.MISSED
+      enrollment.status !== EnrollmentStatus.MISSED &&
+      enrollment.status !== EnrollmentStatus.DROPPED
     );
   }, []);
 
@@ -73,6 +87,13 @@ export function EnrollmentsTable() {
 
   const columns = useMemo<MRT_ColumnDef<Enrollment>[]>(
     () => [
+      {
+        id: 'actions',
+        header: 'Fluxo',
+        Cell: ({ row }) => <EnrollmentStatusCallActions enrollment={row.original} />,
+        enableSorting: false,
+        enableColumnFilter: false,
+      },
       {
         accessorKey: 'class',
         header: 'Turma',
@@ -188,40 +209,64 @@ Deus abençoe grandemente.`;
     []
   );
 
-  const csvData = useMemo(() => {
-    // Handle both array and paginated data
-    const data = Array.isArray(query.data) ? query.data : query.data?.data || [];
+  // Dados já filtrados pelo backend
+  const paginatedData = query.data as any;
 
-    return data.map(
-      ({
-        name,
-        phone,
-        cnh,
-        uf_cnh,
-        preferred_city,
-        email,
-        motorcycle_usage,
-        brand,
-        model,
-        status,
-        enrollment_date,
-        class: class_,
-      }) => ({
-        Turma: class_?.date ? (dateBR(class_.date) ?? '') : '',
-        Status: status,
-        'Data de Inscrição': enrollment_date,
-        'Cidade Preferencial': preferred_city?.name ?? '',
-        Nome: name,
-        Telefone: phone,
-        UF: uf_cnh,
-        CNH: cnh,
-        Email: email,
-        'Uso de Moto': motorcycle_usage,
-        Marca: brand,
-        Modelo: model,
-      })
-    );
-  }, [query.data]);
+  // Tentar diferentes formas de extrair os dados
+  let data = [];
+  if (paginatedData?.data && Array.isArray(paginatedData.data)) {
+    data = paginatedData.data;
+  } else if (Array.isArray(paginatedData)) {
+    data = paginatedData;
+  } else if (paginatedData && typeof paginatedData === 'object') {
+    // Se não tem propriedade 'data', talvez os dados estejam diretamente no objeto
+    data = Object.values(paginatedData).find((value) => Array.isArray(value)) || [];
+  }
+
+  const pagination =
+    paginatedData && !Array.isArray(paginatedData)
+      ? {
+          page: paginatedData.page,
+          limit: paginatedData.limit,
+          total: paginatedData.total,
+          totalPages: paginatedData.totalPages,
+        }
+      : undefined;
+
+  const csvData = useMemo(
+    () =>
+      data?.map(
+        ({
+          name,
+          phone,
+          cnh,
+          uf_cnh,
+          preferred_city,
+          email,
+          motorcycle_usage,
+          brand,
+          model,
+          status,
+          enrollment_date,
+          class: class_,
+        }: Enrollment) => ({
+          Fluxo: '', // Fluxo não é exportado para CSV/PDF
+          Turma: class_?.date ? (dateBR(class_.date) ?? '') : '',
+          Status: status,
+          'Data de Inscrição': enrollment_date,
+          'Cidade Preferencial': preferred_city?.name ?? '',
+          Nome: name,
+          Telefone: phone,
+          UF: uf_cnh,
+          CNH: cnh,
+          Email: email,
+          'Uso de Moto': motorcycle_usage,
+          Marca: brand,
+          Modelo: model,
+        })
+      ) ?? [],
+    [data]
+  );
 
   const rowMapper = useCallback((row: MRT_Row<Enrollment>): string[] => {
     const {
@@ -239,6 +284,7 @@ Deus abençoe grandemente.`;
       enrollment_date,
     } = row.original;
     return [
+      '', // Fluxo não é exportado para CSV/PDF
       class_?.date ? (dateBR(class_.date) ?? '') : '',
       status,
       enrollment_date ? (dateBR(enrollment_date) ?? '') : '',
@@ -256,21 +302,31 @@ Deus abençoe grandemente.`;
 
   const pdfConfig = useMemo(() => ({ tableHeaders, rowMapper }), [rowMapper]);
 
-  // Extrair dados corretamente (pode ser array ou paginado)
-  const data = (Array.isArray(query.data)
-    ? query.data
-    : query.data?.data || []) as unknown as Enrollment[];
+  // Se não há dados, mostrar mensagem informativa
+  if (data.length === 0) {
+    return (
+      <Center h={400}>
+        <Stack align="center" gap="md">
+          <Text size="lg" c="dimmed">
+            Nenhuma inscrição em processo de chamada encontrada
+          </Text>
+          <Text size="sm" c="dimmed">
+            As inscrições em lista de espera, chamadas, confirmadas, ignoradas ou desistências
+            aparecerão aqui
+          </Text>
+        </Stack>
+      </Center>
+    );
+  }
 
   return (
     <>
       <CRUDTable<Enrollment>
         columns={columns}
-        title="Visão Geral - Inscrições"
+        title="Gestão de Chamadas"
         csvData={csvData}
         pdfConfig={pdfConfig}
         customActions={customActions}
-        enableEdit
-        data={data}
         columnVisibility={{
           cnh: false,
           email: false,
@@ -278,6 +334,9 @@ Deus abençoe grandemente.`;
           brand: false,
           model: false,
         }}
+        data={data}
+        pagination={pagination}
+        onPageChange={onPageChange}
       />
     </>
   );

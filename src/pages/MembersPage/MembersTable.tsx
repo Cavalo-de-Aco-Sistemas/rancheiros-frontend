@@ -4,6 +4,7 @@ import { Anchor, Badge } from '@mantine/core';
 import { CRUDTable } from '@/components/CRUDTable';
 import { useCRUD } from '@/contexts/CRUDContext';
 import { Member } from '@/model/member';
+import { extractData } from '@/utils/dataUtils';
 import { dateBR } from '@/utils/dates';
 import { phasesOptions } from './MembersForm';
 
@@ -127,7 +128,7 @@ export function MembersTable() {
 
   const csvData = useMemo(
     () =>
-      query.data?.map(
+      extractData(query.data).map(
         ({
           name,
           patch,
@@ -143,7 +144,7 @@ export function MembersTable() {
           dateFullPatch,
           spouse,
           godfather,
-        }) => ({
+        }: any) => ({
           Nome: name,
           'Nome no Patch': patch ?? '',
           'Tipo sanguíneo': blood ?? '',
@@ -159,7 +160,7 @@ export function MembersTable() {
           Cônjuge: spouse?.name ?? '',
           Padrinho: godfather?.name ?? '',
         })
-      ) ?? [],
+      ),
     [query.data]
   );
 

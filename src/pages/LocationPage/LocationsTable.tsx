@@ -1,9 +1,10 @@
 import { useCallback, useMemo } from 'react';
 import { MRT_ColumnDef, MRT_Row } from 'mantine-react-table';
+import { Badge } from '@mantine/core';
 import { CRUDTable } from '@/components/CRUDTable';
 import { useCRUD } from '@/contexts/CRUDContext';
 import { Location } from '@/model/location';
-import { Badge } from '@mantine/core';
+import { extractData } from '@/utils/dataUtils';
 
 const tableHeaders = ['Nome', 'Rancho'];
 
@@ -32,17 +33,16 @@ export function LocationsTable() {
 
   const csvData = useMemo(
     () =>
-      query.data?.map(({ name, ranch }) => ({
+      extractData(query.data).map(({ name, ranch }: any) => ({
         Nome: name,
         Rancho: ranch?.name ?? '',
-      })) ?? [],
+      })),
     [query.data]
   );
 
   const rowMapper = useCallback((row: MRT_Row<Location>): string[] => {
     const { name, ranch } = row.original;
-    return [name,
-      ranch?.name ?? ''];
+    return [name, ranch?.name ?? ''];
   }, []);
 
   const pdfConfig = useMemo(() => ({ tableHeaders, rowMapper }), [rowMapper]);

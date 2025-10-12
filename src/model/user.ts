@@ -1,4 +1,4 @@
-import { Ranch } from "./ranch";
+import { Ranch } from './ranch';
 
 export interface Permissions {
   create: boolean;
