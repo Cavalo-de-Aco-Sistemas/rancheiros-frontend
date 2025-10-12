@@ -1,11 +1,7 @@
 import { useCallback, useMemo } from 'react';
-import { ActionIcon, Group, Tooltip, Modal, Text, Button } from '@mantine/core';
+import { IconArrowBack, IconCertificate, IconUserX } from '@tabler/icons-react';
+import { ActionIcon, Button, Group, Modal, Text, Tooltip } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
-import {
-  IconCertificate,
-  IconUserX,
-  IconArrowBack,
-} from '@tabler/icons-react';
 import { Enrollment, EnrollmentStatus } from '@/model/enrollment';
 import { useEnrollmentFlowMutation } from '@/mutations/useEnrollmentFlowMutation';
 
@@ -29,7 +25,10 @@ const CERTIFICATION_STATUS_ACTIONS = [
   },
 ];
 
-export function EnrollmentStatusCertificationActions({ enrollment, onRevertClick }: EnrollmentStatusCertificationActionsProps) {
+export function EnrollmentStatusCertificationActions({
+  enrollment,
+  onRevertClick,
+}: EnrollmentStatusCertificationActionsProps) {
   const updateFlowMutation = useEnrollmentFlowMutation();
   const [opened, { open, close }] = useDisclosure(false);
 
@@ -41,31 +40,37 @@ export function EnrollmentStatusCertificationActions({ enrollment, onRevertClick
     }
   }, [onRevertClick, open]);
 
-  const isActionEnabled = useCallback((actionStatus: EnrollmentStatus) => {
-    const currentStatus = enrollment.status;
+  const isActionEnabled = useCallback(
+    (actionStatus: EnrollmentStatus) => {
+      const currentStatus = enrollment.status;
 
-    switch (actionStatus) {
-      case EnrollmentStatus.CERTIFIED:
-      case EnrollmentStatus.MISSED:
-        // Certificado e Faltou somente pode ser ativado se o status atual for confirmed
-        return currentStatus === EnrollmentStatus.CONFIRMED;
-      
-      default:
-        return false;
-    }
-  }, [enrollment.status]);
+      switch (actionStatus) {
+        case EnrollmentStatus.CERTIFIED:
+        case EnrollmentStatus.MISSED:
+          // Certificado e Faltou somente pode ser ativado se o status atual for confirmed
+          return currentStatus === EnrollmentStatus.CONFIRMED;
+
+        default:
+          return false;
+      }
+    },
+    [enrollment.status]
+  );
 
   // Memoize enabled actions to prevent unnecessary re-renders
   const enabledActions = useMemo(() => {
     return CERTIFICATION_STATUS_ACTIONS.filter(({ status }) => isActionEnabled(status));
   }, [isActionEnabled]);
 
-  const handleStatusUpdate = useCallback((newStatus: EnrollmentStatus) => {
-    updateFlowMutation.mutate({
-      enrollmentId: enrollment.id,
-      status: newStatus,
-    });
-  }, [updateFlowMutation, enrollment.id]);
+  const handleStatusUpdate = useCallback(
+    (newStatus: EnrollmentStatus) => {
+      updateFlowMutation.mutate({
+        enrollmentId: enrollment.id,
+        status: newStatus,
+      });
+    },
+    [updateFlowMutation, enrollment.id]
+  );
 
   const confirmRevertStatus = useCallback(() => {
     // Reverte para confirmed (estado anterior lógico)

@@ -1,11 +1,11 @@
-import { 
-  IconClock, 
-  IconPhone, 
-  IconCheck, 
-  IconX, 
-  IconEyeOff, 
-  IconCertificate, 
-  IconUserX 
+import {
+  IconCertificate,
+  IconCheck,
+  IconClock,
+  IconEyeOff,
+  IconPhone,
+  IconUserX,
+  IconX,
 } from '@tabler/icons-react';
 import { Group, Text } from '@mantine/core';
 import { EnrollmentStatus } from '@/model/enrollment';
@@ -43,20 +43,12 @@ export function StatusIcon({ status, showLabel = true, iconSize = 16 }: StatusIc
   const IconComponent = statusInfo.icon;
 
   if (!showLabel) {
-    return (
-      <IconComponent 
-        size={iconSize} 
-        color={`var(--mantine-color-${statusInfo.color}-6)`} 
-      />
-    );
+    return <IconComponent size={iconSize} color={`var(--mantine-color-${statusInfo.color}-6)`} />;
   }
 
   return (
     <Group gap="xs">
-      <IconComponent 
-        size={iconSize} 
-        color={`var(--mantine-color-${statusInfo.color}-6)`} 
-      />
+      <IconComponent size={iconSize} color={`var(--mantine-color-${statusInfo.color}-6)`} />
       <Text size="sm">{statusInfo.label}</Text>
     </Group>
   );

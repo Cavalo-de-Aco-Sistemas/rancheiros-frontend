@@ -4,6 +4,7 @@ import { Badge } from '@mantine/core';
 import { CRUDTable } from '@/components/CRUDTable';
 import { useCRUD } from '@/contexts/CRUDContext';
 import { Ranch } from '@/model/ranch';
+import { extractData } from '@/utils/dataUtils';
 
 const tableHeaders = ['Nome'];
 
@@ -28,9 +29,9 @@ export function RanchesTable() {
 
   const csvData = useMemo(
     () =>
-      query.data?.map(({ name }) => ({
+      extractData(query.data).map(({ name }: any) => ({
         Nome: name,
-      })) ?? [],
+      })),
     [query.data]
   );
 

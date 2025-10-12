@@ -7,6 +7,7 @@ import { Class } from '@/model/class';
 import { Enrollment, EnrollmentDto, EnrollmentStatus } from '@/model/enrollment';
 import { Location } from '@/model/location';
 import useCRUDQuery from '@/queries/useCRUDQuery';
+import { extractData } from '@/utils/dataUtils';
 
 // Tipo para criação de inscrição (sem status e class)
 type CreateEnrollmentDto = Omit<EnrollmentDto, 'status' | 'class'>;
@@ -34,7 +35,10 @@ const parseSelected = (enrollment: Enrollment): EnrollmentDto => {
 };
 
 // Função para transformar dados antes do envio (remove status e class apenas para criação)
-const transformData = (data: EnrollmentDto, isCreate: boolean = false): CreateEnrollmentDto | EnrollmentDto => {
+const transformData = (
+  data: EnrollmentDto,
+  isCreate: boolean = false
+): CreateEnrollmentDto | EnrollmentDto => {
   if (isCreate) {
     const { status, class: classField, ...createData } = data;
     return createData;
@@ -48,7 +52,7 @@ export function EnrollmentsForm() {
 
   const classesOptions = useMemo(
     () =>
-      classesQuery.data?.map((classs) => ({
+      (extractData(classesQuery.data) as unknown as Class[]).map((classs) => ({
         label: classs.location?.name ?? '',
         value: classs.id.toString(),
       })),
@@ -57,7 +61,7 @@ export function EnrollmentsForm() {
 
   const locationsOptions = useMemo(
     () =>
-      locationsQuery.data?.map((location: Location) => ({
+      (extractData(locationsQuery.data) as unknown as Location[]).map((location) => ({
         label: location.name,
         value: location.id.toString(),
       })),
@@ -66,14 +70,13 @@ export function EnrollmentsForm() {
 
   const { query, action } = useCRUD();
   const { isPending } = query;
-  
+
   // Desabilitar campos durante criação
   const isCreating = action === 'create';
 
   const form = useForm<EnrollmentDto>({
     initialValues: INITIAL_VALUES,
   });
-
 
   return (
     <CRUDForm<Enrollment, EnrollmentDto, CreateEnrollmentDto>

@@ -1,15 +1,15 @@
 import { useCallback, useMemo } from 'react';
-import { MRT_ColumnDef, MRT_Row } from 'mantine-react-table';
-import { CRUDTable } from '@/components/CRUDTable';
-import { useCRUD } from '@/contexts/CRUDContext';
-import { useAuth } from '@/contexts/AuthContext';
-import { Enrollment, EnrollmentStatus } from '@/model/enrollment';
-import { dateBR } from '@/utils/dates';
-import { EnrollmentStatusCertificationActions } from '@/components/EnrollmentStatusActions/EnrollmentStatusCertificationActions';
-import { useEnrollmentFlowMutation } from '@/mutations/useEnrollmentFlowMutation';
-import { StatusIcon } from '@/components/StatusIcon';
 import { IconCheck, IconX } from '@tabler/icons-react';
-import { Anchor, Text, Center, Stack } from '@mantine/core';
+import { MRT_ColumnDef, MRT_Row } from 'mantine-react-table';
+import { Anchor, Center, Stack, Text } from '@mantine/core';
+import { CRUDTable } from '@/components/CRUDTable';
+import { EnrollmentStatusCertificationActions } from '@/components/EnrollmentStatusActions/EnrollmentStatusCertificationActions';
+import { StatusIcon } from '@/components/StatusIcon';
+import { useAuth } from '@/contexts/AuthContext';
+import { useCRUD } from '@/contexts/CRUDContext';
+import { Enrollment, EnrollmentStatus } from '@/model/enrollment';
+import { useEnrollmentFlowMutation } from '@/mutations/useEnrollmentFlowMutation';
+import { dateBR } from '@/utils/dates';
 
 const tableHeaders = [
   'Fluxo',
@@ -24,7 +24,7 @@ const tableHeaders = [
   'Email',
   'Uso de Moto',
   'Marca',
-  'Modelo'
+  'Modelo',
 ];
 
 interface CertificationManagementTableProps {
@@ -33,24 +33,34 @@ interface CertificationManagementTableProps {
   pageSize?: number;
 }
 
-export function CertificationManagementTable({ onPageChange, currentPage, pageSize }: CertificationManagementTableProps) {
+export function CertificationManagementTable({
+  onPageChange,
+  currentPage: _currentPage,
+  pageSize: _pageSize,
+}: CertificationManagementTableProps) {
   const { query } = useCRUD();
   const { name } = useAuth();
   const updateFlowMutation = useEnrollmentFlowMutation();
-  
-  const handleCertify = useCallback((enrollment: Enrollment) => {
-    updateFlowMutation.mutate({
-      enrollmentId: enrollment.id,
-      status: EnrollmentStatus.CERTIFIED,
-    });
-  }, [updateFlowMutation]);
 
-  const handleMarkAsMissed = useCallback((enrollment: Enrollment) => {
-    updateFlowMutation.mutate({
-      enrollmentId: enrollment.id,
-      status: EnrollmentStatus.MISSED,
-    });
-  }, [updateFlowMutation]);
+  const handleCertify = useCallback(
+    (enrollment: Enrollment) => {
+      updateFlowMutation.mutate({
+        enrollmentId: enrollment.id,
+        status: EnrollmentStatus.CERTIFIED,
+      });
+    },
+    [updateFlowMutation]
+  );
+
+  const handleMarkAsMissed = useCallback(
+    (enrollment: Enrollment) => {
+      updateFlowMutation.mutate({
+        enrollmentId: enrollment.id,
+        status: EnrollmentStatus.MISSED,
+      });
+    },
+    [updateFlowMutation]
+  );
 
   const canCertify = useCallback((enrollment: Enrollment) => {
     // Só pode certificar se estiver confirmado
@@ -62,45 +72,44 @@ export function CertificationManagementTable({ onPageChange, currentPage, pageSi
     return enrollment.status === EnrollmentStatus.CONFIRMED;
   }, []);
 
-  const customActions = useMemo(() => [
-    {
-      label: 'Certificar',
-      icon: IconCheck,
-      onClick: handleCertify,
-      isVisible: canCertify,
-      isLoading: updateFlowMutation.isPending,
-      requiresConfirmation: true,
-      confirmationTitle: 'Confirmar Certificação',
-      confirmationMessage: (enrollment: Enrollment) => 
-        `Tem certeza que deseja certificar ${enrollment.name}?`,
-      confirmationButtonText: 'Certificar',
-      confirmationButtonColor: 'green',
-    },
-    {
-      label: 'Marcar como Faltou',
-      icon: IconX,
-      onClick: handleMarkAsMissed,
-      isVisible: canMarkAsMissed,
-      isLoading: updateFlowMutation.isPending,
-      requiresConfirmation: true,
-      confirmationTitle: 'Confirmar Falta',
-      confirmationMessage: (enrollment: Enrollment) => 
-        `Tem certeza que deseja marcar ${enrollment.name} como faltou?`,
-      confirmationButtonText: 'Confirmar Falta',
-      confirmationButtonColor: 'red',
-    },
-  ], [handleCertify, handleMarkAsMissed, canCertify, canMarkAsMissed, updateFlowMutation.isPending]);
+  const customActions = useMemo(
+    () => [
+      {
+        label: 'Certificar',
+        icon: IconCheck,
+        onClick: handleCertify,
+        isVisible: canCertify,
+        isLoading: updateFlowMutation.isPending,
+        requiresConfirmation: true,
+        confirmationTitle: 'Confirmar Certificação',
+        confirmationMessage: (enrollment: Enrollment) =>
+          `Tem certeza que deseja certificar ${enrollment.name}?`,
+        confirmationButtonText: 'Certificar',
+        confirmationButtonColor: 'green',
+      },
+      {
+        label: 'Marcar como Faltou',
+        icon: IconX,
+        onClick: handleMarkAsMissed,
+        isVisible: canMarkAsMissed,
+        isLoading: updateFlowMutation.isPending,
+        requiresConfirmation: true,
+        confirmationTitle: 'Confirmar Falta',
+        confirmationMessage: (enrollment: Enrollment) =>
+          `Tem certeza que deseja marcar ${enrollment.name} como faltou?`,
+        confirmationButtonText: 'Confirmar Falta',
+        confirmationButtonColor: 'red',
+      },
+    ],
+    [handleCertify, handleMarkAsMissed, canCertify, canMarkAsMissed, updateFlowMutation.isPending]
+  );
 
   const columns = useMemo<MRT_ColumnDef<Enrollment>[]>(
     () => [
       {
         id: 'actions',
         header: 'Fluxo',
-        Cell: ({ row }) => (
-          <EnrollmentStatusCertificationActions
-            enrollment={row.original}
-          />
-        ),
+        Cell: ({ row }) => <EnrollmentStatusCertificationActions enrollment={row.original} />,
         enableSorting: false,
         enableColumnFilter: false,
       },
@@ -112,10 +121,10 @@ export function CertificationManagementTable({ onPageChange, currentPage, pageSi
           if (!classData) {
             return '';
           }
-          
+
           const date = classData.date ? (dateBR(classData.date) ?? '') : '';
           const location = classData.location?.name ?? '';
-          
+
           if (location && date) {
             return `${location} - ${date}`;
           } else if (location) {
@@ -123,7 +132,7 @@ export function CertificationManagementTable({ onPageChange, currentPage, pageSi
           } else if (date) {
             return date;
           }
-          
+
           return '';
         },
       },
@@ -145,34 +154,29 @@ export function CertificationManagementTable({ onPageChange, currentPage, pageSi
         Cell: ({ row }) => {
           const phone = row.original.phone;
           const enrollment = row.original;
-          if (!phone) return '';
-          
+          if (!phone) {return '';}
+
           // Regex para extrair apenas números do telefone
           const regex = /\d/g;
           const phoneNumbers = phone.match(regex)?.join('');
-          
-          if (!phoneNumbers) return phone;
-          
+
+          if (!phoneNumbers) {return phone;}
+
           // Formatar telefone para exibição (XX) XXXXX-XXXX
-          const formattedPhone = phone.replace(
-            /^(\d{2})(\d{5})(\d{4}).*/,
-            "($1) $2-$3"
-          );
-          
+          const formattedPhone = phone.replace(/^(\d{2})(\d{5})(\d{4}).*/, '($1) $2-$3');
+
           // Detectar se é dispositivo móvel
-          const isMobile = /Android|webOS|iPhone|iPad|iPod|Opera Mini/i.test(
-            navigator.userAgent
-          );
-          
+          const isMobile = /Android|webOS|iPhone|iPad|iPod|Opera Mini/i.test(navigator.userAgent);
+
           // Criar mensagem padrão com parâmetros da turma
           const createWhatsAppMessage = () => {
-            const studentName = enrollment.name ? enrollment.name.split(" ")[0] : "";
-            const adminName = name ? name.split(" ")[0] : "";
+            const studentName = enrollment.name ? enrollment.name.split(' ')[0] : '';
+            const adminName = name ? name.split(' ')[0] : '';
             const className = enrollment.class;
-            const classDate = className?.date ? dateBR(className.date) : "";
-            const classLocation = className?.location?.name || "";
-            const classCity = enrollment.preferred_city?.name || "";
-            
+            const classDate = className?.date ? dateBR(className.date) : '';
+            const classLocation = className?.location?.name || '';
+            const classCity = enrollment.preferred_city?.name || '';
+
             const message = `Olá ${studentName},
 Aqui é ${adminName} - Rancheiros Moto Clube, tudo certo?
 https://www.rancheirosmc.com.br
@@ -197,19 +201,17 @@ Deus abençoe grandemente.`;
 
             return encodeURIComponent(message);
           };
-          
+
           // URL do WhatsApp com mensagem
-          const whatsappUrl = (isMobile ? "whatsapp://wa.me/55" : "https://wa.me/55") + 
-            phoneNumbers + 
-            "?text=" + createWhatsAppMessage() + 
-            "&type=phone_number&app_absent=0";
-          
+          const whatsappUrl =
+            `${(isMobile ? 'whatsapp://wa.me/55' : 'https://wa.me/55') +
+            phoneNumbers 
+            }?text=${ 
+            createWhatsAppMessage() 
+            }&type=phone_number&app_absent=0`;
+
           return (
-            <Anchor
-              href={whatsappUrl}
-              target="_blank"
-              rel="noreferrer"
-            >
+            <Anchor href={whatsappUrl} target="_blank" rel="noreferrer">
               {formattedPhone}
             </Anchor>
           );
@@ -228,8 +230,7 @@ Deus abençoe grandemente.`;
 
   // Dados já filtrados pelo backend
   const paginatedData = query.data as any;
-  
-  
+
   // Tentar diferentes formas de extrair os dados
   let data = [];
   if (paginatedData?.data && Array.isArray(paginatedData.data)) {
@@ -238,16 +239,18 @@ Deus abençoe grandemente.`;
     data = paginatedData;
   } else if (paginatedData && typeof paginatedData === 'object') {
     // Se não tem propriedade 'data', talvez os dados estejam diretamente no objeto
-    data = Object.values(paginatedData).find(value => Array.isArray(value)) || [];
+    data = Object.values(paginatedData).find((value) => Array.isArray(value)) || [];
   }
 
-  
-  const pagination = paginatedData && !Array.isArray(paginatedData) ? {
-    page: paginatedData.page,
-    limit: paginatedData.limit,
-    total: paginatedData.total,
-    totalPages: paginatedData.totalPages,
-  } : undefined;
+  const pagination =
+    paginatedData && !Array.isArray(paginatedData)
+      ? {
+          page: paginatedData.page,
+          limit: paginatedData.limit,
+          total: paginatedData.total,
+          totalPages: paginatedData.totalPages,
+        }
+      : undefined;
 
   const csvData = useMemo(
     () =>
@@ -278,7 +281,7 @@ Deus abençoe grandemente.`;
           Email: email,
           'Uso de Moto': motorcycle_usage,
           Marca: brand,
-          Modelo: model
+          Modelo: model,
         })
       ) ?? [],
     [data]
@@ -312,7 +315,7 @@ Deus abençoe grandemente.`;
       email ?? '',
       motorcycle_usage ?? '',
       brand ?? '',
-      model ?? ''
+      model ?? '',
     ];
   }, []);
 

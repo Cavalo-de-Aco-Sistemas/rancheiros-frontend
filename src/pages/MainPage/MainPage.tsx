@@ -26,15 +26,30 @@ export const ROUTES_MAP = new Map([
   ['/ranchos', { link: '/ranchos', label: 'Ranchos', icon: IconHome, entity: 'ranches' }],
   [
     '/inscricoes/visao-geral',
-    { link: '/inscricoes/visao-geral', label: 'Visão Geral', icon: IconMail, entity: 'enrollments' },
+    {
+      link: '/inscricoes/visao-geral',
+      label: 'Visão Geral',
+      icon: IconMail,
+      entity: 'enrollments',
+    },
   ],
   [
     '/inscricoes/gestao-chamadas',
-    { link: '/inscricoes/gestao-chamadas', label: 'Gestão de Chamadas', icon: IconMail, entity: 'enrollments' },
+    {
+      link: '/inscricoes/gestao-chamadas',
+      label: 'Gestão de Chamadas',
+      icon: IconMail,
+      entity: 'enrollments',
+    },
   ],
   [
     '/inscricoes/certificacoes',
-    { link: '/inscricoes/certificacoes', label: 'Certificações', icon: IconMail, entity: 'enrollments' },
+    {
+      link: '/inscricoes/certificacoes',
+      label: 'Certificações',
+      icon: IconMail,
+      entity: 'enrollments',
+    },
   ],
   ['/turmas', { link: '/turmas', label: 'Turmas', icon: IconSchool, entity: 'classes' }],
   [

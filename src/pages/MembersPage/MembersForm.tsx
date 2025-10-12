@@ -8,6 +8,7 @@ import { useCRUD } from '@/contexts/CRUDContext';
 import { Member, MemberDto } from '@/model/member';
 import { Ranch } from '@/model/ranch';
 import useCRUDQuery from '@/queries/useCRUDQuery';
+import { extractData } from '@/utils/dataUtils';
 import { toDate } from '@/utils/dates';
 
 export const phasesOptions = [
@@ -74,7 +75,11 @@ export default function MembersForm() {
   const { ranches } = useAuth();
 
   const membersOptions = useMemo(
-    () => membersQuery.data?.map((member) => ({ label: member.name, value: member.id.toString() })),
+    () =>
+      (extractData(membersQuery.data) as unknown as Member[]).map((member) => ({
+        label: member.name,
+        value: member.id.toString(),
+      })),
     [membersQuery.data]
   );
 

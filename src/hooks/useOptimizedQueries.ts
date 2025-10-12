@@ -30,11 +30,11 @@ export function useOptimizedQueries() {
       queryKey: [authToken, endpoint],
       exact: false,
     });
-    
+
     // Update each query's data
-    queries.forEach(query => {
+    queries.forEach((query) => {
       const currentData = queryClient.getQueryData(query.queryKey);
-      
+
       // Check if data is paginated or simple array
       if (currentData && typeof currentData === 'object' && 'data' in currentData) {
         // Paginated data
@@ -42,7 +42,7 @@ export function useOptimizedQueries() {
         const updatedData = updater(paginatedData.data);
         queryClient.setQueryData(query.queryKey, {
           ...paginatedData,
-          data: updatedData
+          data: updatedData,
         });
       } else {
         // Simple array data
@@ -60,18 +60,18 @@ export function useOptimizedQueries() {
       queryKey: [authToken, endpoint],
       exact: false,
     });
-    
+
     if (queries.length > 0) {
       const currentData = queryClient.getQueryData(queries[0].queryKey);
-      
+
       // Check if data is paginated or simple array
       if (currentData && typeof currentData === 'object' && 'data' in currentData) {
         // Paginated data - return the data array
         return (currentData as any).data;
-      } else {
+      } 
         // Simple array data
         return currentData as T[];
-      }
+      
     }
     return undefined;
   };
@@ -80,7 +80,7 @@ export function useOptimizedQueries() {
    * Cancel ongoing queries to prevent race conditions
    */
   const cancelQueries = (endpoint: string) => {
-    return queryClient.cancelQueries({ 
+    return queryClient.cancelQueries({
       queryKey: [authToken, endpoint],
       exact: false,
     });

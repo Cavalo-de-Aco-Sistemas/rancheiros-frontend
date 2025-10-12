@@ -7,6 +7,7 @@ import { Class } from '@/model/class';
 import { Enrollment, EnrollmentDto, EnrollmentStatus } from '@/model/enrollment';
 import { Location } from '@/model/location';
 import useCRUDQuery from '@/queries/useCRUDQuery';
+import { extractData } from '@/utils/dataUtils';
 
 const INITIAL_VALUES = {
   name: '',
@@ -36,7 +37,7 @@ export function CallManagementForm() {
 
   const classesOptions = useMemo(
     () =>
-      classesQuery.data?.map((classs) => ({
+      (extractData(classesQuery.data) as unknown as Class[]).map((classs) => ({
         label: classs.location?.name ?? '',
         value: classs.id.toString(),
       })),
@@ -45,7 +46,7 @@ export function CallManagementForm() {
 
   const locationsOptions = useMemo(
     () =>
-      locationsQuery.data?.map((location: Location) => ({
+      (extractData(locationsQuery.data) as unknown as Location[]).map((location) => ({
         label: location.name,
         value: location.id.toString(),
       })),

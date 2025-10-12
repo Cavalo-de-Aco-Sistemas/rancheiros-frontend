@@ -34,9 +34,7 @@ export function useClassToggleActiveMutation() {
           return [];
         }
         return old.map((classItem) =>
-          classItem.id === classId
-            ? { ...classItem, active }
-            : classItem
+          classItem.id === classId ? { ...classItem, active } : classItem
         );
       });
 
@@ -48,19 +46,19 @@ export function useClassToggleActiveMutation() {
         message: `Turma ${active ? 'ativada' : 'desativada'} com sucesso`,
         color: 'green',
       });
-      
+
       // Invalidate classes query to ensure data consistency
       invalidateQuery('classes');
     },
     onError: (error: any, { classId }, context) => {
       // Revert optimistic update on error
       if (context?.previousClasses) {
-        updateQueryData<Class>('classes', () => context.previousClasses);
+        updateQueryData<Class>('classes', () => context.previousClasses || []);
       }
 
       notifications.show({
         title: 'Erro',
-        message: `Erro ao ${active ? 'ativar' : 'desativar'} turma: ${error.response?.data?.message || error.message}`,
+        message: `Erro ao ${classId ? 'ativar' : 'desativar'} turma: ${error.response?.data?.message || error.message}`,
         color: 'red',
       });
     },

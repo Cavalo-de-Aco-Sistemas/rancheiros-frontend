@@ -1,10 +1,10 @@
+import { useMemo } from 'react';
 import { Select, TextInput } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { CRUDForm } from '@/components/CRUDForm';
+import { useAuth } from '@/contexts/AuthContext';
 import { useCRUD } from '@/contexts/CRUDContext';
 import { Location, LocationDto } from '@/model/location';
-import { useAuth } from '@/contexts/AuthContext';
-import { useMemo } from 'react';
 import { Ranch } from '@/model/ranch';
 
 const INITIAL_VALUES = { name: '' };

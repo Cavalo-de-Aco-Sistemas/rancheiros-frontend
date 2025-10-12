@@ -2,9 +2,9 @@ import { useMutation } from '@tanstack/react-query';
 import { AxiosError } from 'axios';
 import { notifications } from '@mantine/notifications';
 import { useAuth } from '@/contexts/AuthContext';
-import { BACKEND_ADDRESS } from '@/utils/constants';
-import { EnrollmentStatus, Enrollment } from '@/model/enrollment';
 import { useOptimizedQueries } from '@/hooks/useOptimizedQueries';
+import { Enrollment, EnrollmentStatus } from '@/model/enrollment';
+import { BACKEND_ADDRESS } from '@/utils/constants';
 
 interface UpdateEnrollmentFlowParams {
   enrollmentId: string;
@@ -27,9 +27,12 @@ export function useEnrollmentFlowMutation() {
 
   return useMutation({
     mutationFn: async ({ enrollmentId, status }: UpdateEnrollmentFlowParams) => {
-      const response = await axiosInstance.patch(`${BACKEND_ADDRESS}/enrollments/${enrollmentId}/status`, {
-        status,
-      });
+      const response = await axiosInstance.patch(
+        `${BACKEND_ADDRESS}/enrollments/${enrollmentId}/status`,
+        {
+          status,
+        }
+      );
       return { enrollmentId, status, updatedEnrollment: response.data };
     },
     onMutate: async ({ enrollmentId, status }) => {
@@ -45,9 +48,7 @@ export function useEnrollmentFlowMutation() {
           return [];
         }
         return old.map((enrollment) =>
-          enrollment.id === enrollmentId
-            ? { ...enrollment, status }
-            : enrollment
+          enrollment.id === enrollmentId ? { ...enrollment, status } : enrollment
         );
       });
 
@@ -59,7 +60,7 @@ export function useEnrollmentFlowMutation() {
         message: `Status alterado para ${STATUS_LABELS[status]}`,
         color: 'green',
       });
-      
+
       // Only invalidate enrollments query - classes don't need to be refetched for status changes
       invalidateQuery('enrollments');
     },
@@ -68,8 +69,7 @@ export function useEnrollmentFlowMutation() {
       if (context?.previousEnrollments) {
         updateQueryData<Enrollment>('enrollments', () => context.previousEnrollments!);
       }
-      
-      
+
       const errorMessage =
         (error.response?.data as any)?.message || 'Erro ao atualizar status da inscrição.';
       notifications.show({

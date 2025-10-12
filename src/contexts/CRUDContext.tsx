@@ -42,18 +42,23 @@ interface CRUDProviderProps {
   pageId?: string; // Identificador único para a página
 }
 
-export const CRUDProvider = ({ children, endpoint, params, usePagination = false, pageId }: PropsWithChildren<CRUDProviderProps>) => {
+export const CRUDProvider = ({
+  children,
+  endpoint,
+  params,
+  usePagination = false,
+  pageId,
+}: PropsWithChildren<CRUDProviderProps>) => {
   const [selected, setSelected] = useState<CRUDType | undefined>(undefined);
   const [action, setAction] = useState<'create' | 'update' | 'delete'>('create');
   const [opened, setOpened] = useState(false);
-  
+
   // Criar parâmetros únicos incluindo o pageId
   const uniqueParams = useMemo(() => {
-    if (!pageId) return params;
+    if (!pageId) {return params;}
     return { ...params, _pageId: pageId };
   }, [params, pageId]);
-  
-  
+
   const query = useCRUDQuery<CRUDType>(endpoint, uniqueParams, { usePagination });
 
   const open = useCallback(() => setOpened(true), []);

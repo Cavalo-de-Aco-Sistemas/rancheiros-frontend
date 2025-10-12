@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
-import { IconLogout, IconChevronDown, IconChevronRight, IconMail } from '@tabler/icons-react';
+import { IconChevronDown, IconChevronRight, IconLogout, IconMail } from '@tabler/icons-react';
 import { Link, useLocation } from 'react-router-dom';
-import { Divider, Stack, Collapse, UnstyledButton, Group, Text } from '@mantine/core';
+import { Collapse, Divider, Group, Stack, Text, UnstyledButton } from '@mantine/core';
 import { useAuth } from '@/contexts/AuthContext';
 import { ROUTES_MAP } from '@/pages/MainPage/MainPage';
 import classes from './NavLinks.module.css';
@@ -21,12 +21,12 @@ export default function NavLinks({ toggleMobile }: { toggleMobile: () => void })
 
   // Separar itens principais dos subitens de inscrições
   const mainItems = useMemo(
-    () => items.filter(item => !item.link.startsWith('/inscricoes/')),
+    () => items.filter((item) => !item.link.startsWith('/inscricoes/')),
     [items]
   );
 
   const enrollmentItems = useMemo(
-    () => items.filter(item => item.link.startsWith('/inscricoes/')),
+    () => items.filter((item) => item.link.startsWith('/inscricoes/')),
     [items]
   );
 
@@ -49,7 +49,7 @@ export default function NavLinks({ toggleMobile }: { toggleMobile: () => void })
           <span>{item.label}</span>
         </Link>
       ))}
-      
+
       {/* Menu hierárquico para Inscrições */}
       {enrollmentItems.length > 0 && (
         <>
@@ -61,14 +61,10 @@ export default function NavLinks({ toggleMobile }: { toggleMobile: () => void })
             <Group gap="xs">
               <IconMail className={classes.linkIcon} stroke={1.5} />
               <Text>Inscrições</Text>
-              {enrollmentsOpened ? (
-                <IconChevronDown size={16} />
-              ) : (
-                <IconChevronRight size={16} />
-              )}
+              {enrollmentsOpened ? <IconChevronDown size={16} /> : <IconChevronRight size={16} />}
             </Group>
           </UnstyledButton>
-          
+
           <Collapse in={enrollmentsOpened}>
             <Stack gap="xs" pl="md">
               {enrollmentItems.map((item) => (
@@ -87,7 +83,7 @@ export default function NavLinks({ toggleMobile }: { toggleMobile: () => void })
           </Collapse>
         </>
       )}
-      
+
       <Divider />
       <a
         className={classes.link}

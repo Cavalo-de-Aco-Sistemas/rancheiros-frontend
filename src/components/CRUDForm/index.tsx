@@ -19,8 +19,17 @@ export interface CRUDFormProps<T extends { id: string }, D, API = D> {
 export function CRUDForm<T extends { id: string }, D, API = D>(
   props: PropsWithChildren<CRUDFormProps<T, D, API>>
 ) {
-  const { baseValues, parseSelected, form, endpoint, handleError, modalProps, children, validate, transformData } =
-    props;
+  const {
+    baseValues,
+    parseSelected,
+    form,
+    endpoint,
+    handleError,
+    modalProps,
+    children,
+    validate,
+    transformData,
+  } = props;
   const { opened, close, selected, action, query } = useCRUD();
   const { refetch } = query;
   const [error, setError] = useState('');

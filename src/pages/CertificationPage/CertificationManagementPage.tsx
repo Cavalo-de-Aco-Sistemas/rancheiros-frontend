@@ -1,13 +1,13 @@
 import { useState } from 'react';
 import { CRUDProvider } from '@/contexts/CRUDContext';
-import { CertificationManagementTable, CertificationManagementForm } from './index';
+import { CertificationManagementForm, CertificationManagementTable } from './index';
 
 export function CertificationManagementPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 50;
 
   return (
-    <CRUDProvider 
+    <CRUDProvider
       endpoint="enrollments"
       params={{
         status: 'confirmed',
@@ -15,10 +15,10 @@ export function CertificationManagementPage() {
         page: currentPage,
         limit: pageSize,
       }}
-      usePagination={true}
+      usePagination
       pageId="certification-management"
     >
-      <CertificationManagementTable 
+      <CertificationManagementTable
         onPageChange={setCurrentPage}
         currentPage={currentPage}
         pageSize={pageSize}

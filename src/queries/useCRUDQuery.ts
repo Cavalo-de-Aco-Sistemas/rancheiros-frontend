@@ -16,7 +16,7 @@ interface PaginatedResult<T> {
 }
 
 export default function useCRUDQuery<T>(
-  endpoint: string, 
+  endpoint: string,
   params?: QueryParams,
   options?: {
     usePagination?: boolean;
@@ -25,7 +25,11 @@ export default function useCRUDQuery<T>(
   }
 ) {
   const { axiosInstance, authToken } = useAuth();
-  const { usePagination = false, staleTime = 5 * 60 * 1000, gcTime = 10 * 60 * 1000 } = options || {};
+  const {
+    usePagination = false,
+    staleTime = 5 * 60 * 1000,
+    gcTime = 10 * 60 * 1000,
+  } = options || {};
 
   const queryFn = useCallback(async () => {
     const searchParams = new URLSearchParams();
@@ -36,44 +40,46 @@ export default function useCRUDQuery<T>(
         }
       });
     }
-    
+
     const url = `${BACKEND_ADDRESS}/${endpoint}${searchParams.toString() ? `?${searchParams.toString()}` : ''}`;
-    
+
     const response = await axiosInstance.get(url);
-    
+
     if (usePagination) {
       return response.data as PaginatedResult<T>;
     }
-    
+
     return response.data as T[];
   }, [axiosInstance, endpoint, params, usePagination]);
 
   // Criar chave única baseada nos parâmetros para isolar cache por página
   const queryKey = useMemo(() => {
     const key = [authToken, endpoint];
-    
+
     if (params) {
       // Ordenar parâmetros para garantir consistência
       const sortedParams = Object.keys(params)
         .sort()
-        .reduce((result, key) => {
-          result[key] = params[key];
-          return result;
-        }, {} as Record<string, any>);
-      
-      key.push(sortedParams);
+        .reduce(
+          (result, key) => {
+            result[key] = params[key];
+            return result;
+          },
+          {} as Record<string, any>
+        );
+
+      key.push(JSON.stringify(sortedParams));
     }
-    
+
     if (usePagination) {
       key.push('paginated');
     }
-    
+
     return key;
   }, [authToken, endpoint, params, usePagination]);
 
-
-  return useQuery({ 
-    queryKey, 
+  return useQuery({
+    queryKey,
     queryFn,
     staleTime,
     gcTime,

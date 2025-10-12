@@ -1,14 +1,14 @@
 import { useCallback, useMemo } from 'react';
-import { MRT_ColumnDef, MRT_Row } from 'mantine-react-table';
-import { CRUDTable } from '@/components/CRUDTable';
-import { useCRUD } from '@/contexts/CRUDContext';
-import { useAuth } from '@/contexts/AuthContext';
-import { Enrollment, EnrollmentStatus } from '@/model/enrollment';
-import { dateBR } from '@/utils/dates';
-import { useEnrollmentFlowMutation } from '@/mutations/useEnrollmentFlowMutation';
-import { StatusIcon } from '@/components/StatusIcon';
 import { IconClock } from '@tabler/icons-react';
+import { MRT_ColumnDef, MRT_Row } from 'mantine-react-table';
 import { Anchor } from '@mantine/core';
+import { CRUDTable } from '@/components/CRUDTable';
+import { StatusIcon } from '@/components/StatusIcon';
+import { useAuth } from '@/contexts/AuthContext';
+import { useCRUD } from '@/contexts/CRUDContext';
+import { Enrollment, EnrollmentStatus } from '@/model/enrollment';
+import { useEnrollmentFlowMutation } from '@/mutations/useEnrollmentFlowMutation';
+import { dateBR } from '@/utils/dates';
 
 const tableHeaders = [
   'Turma',
@@ -22,47 +22,54 @@ const tableHeaders = [
   'Email',
   'Uso de Moto',
   'Marca',
-  'Modelo'
+  'Modelo',
 ];
 
 export function EnrollmentsTable() {
   const { query } = useCRUD();
   const { name } = useAuth();
   const updateFlowMutation = useEnrollmentFlowMutation();
-  
-  const handleReturnToWaiting = useCallback((enrollment: Enrollment) => {
-    updateFlowMutation.mutate({
-      enrollmentId: enrollment.id,
-      status: EnrollmentStatus.WAITING,
-    });
-  }, [updateFlowMutation]);
 
+  const handleReturnToWaiting = useCallback(
+    (enrollment: Enrollment) => {
+      updateFlowMutation.mutate({
+        enrollmentId: enrollment.id,
+        status: EnrollmentStatus.WAITING,
+      });
+    },
+    [updateFlowMutation]
+  );
 
   const canReturnToWaiting = useCallback((enrollment: Enrollment) => {
     // Só pode voltar para lista de espera se:
     // 1. Não estiver já em waiting
     // 2. Não estiver certificado (situação final)
     // 3. Não tiver faltado (situação final)
-    return enrollment.status !== EnrollmentStatus.WAITING &&
-           enrollment.status !== EnrollmentStatus.CERTIFIED &&
-           enrollment.status !== EnrollmentStatus.MISSED;
+    return (
+      enrollment.status !== EnrollmentStatus.WAITING &&
+      enrollment.status !== EnrollmentStatus.CERTIFIED &&
+      enrollment.status !== EnrollmentStatus.MISSED
+    );
   }, []);
 
-  const customActions = useMemo(() => [
-    {
-      label: 'Voltar para Lista de Espera',
-      icon: IconClock,
-      onClick: handleReturnToWaiting,
-      isVisible: canReturnToWaiting,
-      isLoading: updateFlowMutation.isPending,
-      requiresConfirmation: true,
-      confirmationTitle: 'Confirmar Retorno para Lista de Espera',
-      confirmationMessage: (enrollment: Enrollment) => 
-        `Tem certeza que deseja mover ${enrollment.name} de volta para a Lista de Espera?`,
-      confirmationButtonText: 'Confirmar',
-      confirmationButtonColor: 'blue',
-    },
-  ], [handleReturnToWaiting, canReturnToWaiting, updateFlowMutation.isPending]);
+  const customActions = useMemo(
+    () => [
+      {
+        label: 'Voltar para Lista de Espera',
+        icon: IconClock,
+        onClick: handleReturnToWaiting,
+        isVisible: canReturnToWaiting,
+        isLoading: updateFlowMutation.isPending,
+        requiresConfirmation: true,
+        confirmationTitle: 'Confirmar Retorno para Lista de Espera',
+        confirmationMessage: (enrollment: Enrollment) =>
+          `Tem certeza que deseja mover ${enrollment.name} de volta para a Lista de Espera?`,
+        confirmationButtonText: 'Confirmar',
+        confirmationButtonColor: 'blue',
+      },
+    ],
+    [handleReturnToWaiting, canReturnToWaiting, updateFlowMutation.isPending]
+  );
 
   const columns = useMemo<MRT_ColumnDef<Enrollment>[]>(
     () => [
@@ -74,10 +81,10 @@ export function EnrollmentsTable() {
           if (!classData) {
             return '';
           }
-          
+
           const date = classData.date ? (dateBR(classData.date) ?? '') : '';
           const location = classData.location?.name ?? '';
-          
+
           if (location && date) {
             return `${location} - ${date}`;
           } else if (location) {
@@ -85,7 +92,7 @@ export function EnrollmentsTable() {
           } else if (date) {
             return date;
           }
-          
+
           return '';
         },
       },
@@ -107,34 +114,29 @@ export function EnrollmentsTable() {
         Cell: ({ row }) => {
           const phone = row.original.phone;
           const enrollment = row.original;
-          if (!phone) return '';
-          
+          if (!phone) {return '';}
+
           // Regex para extrair apenas números do telefone
           const regex = /\d/g;
           const phoneNumbers = phone.match(regex)?.join('');
-          
-          if (!phoneNumbers) return phone;
-          
+
+          if (!phoneNumbers) {return phone;}
+
           // Formatar telefone para exibição (XX) XXXXX-XXXX
-          const formattedPhone = phone.replace(
-            /^(\d{2})(\d{5})(\d{4}).*/,
-            "($1) $2-$3"
-          );
-          
+          const formattedPhone = phone.replace(/^(\d{2})(\d{5})(\d{4}).*/, '($1) $2-$3');
+
           // Detectar se é dispositivo móvel
-          const isMobile = /Android|webOS|iPhone|iPad|iPod|Opera Mini/i.test(
-            navigator.userAgent
-          );
-          
+          const isMobile = /Android|webOS|iPhone|iPad|iPod|Opera Mini/i.test(navigator.userAgent);
+
           // Criar mensagem padrão com parâmetros da turma
           const createWhatsAppMessage = () => {
-            const studentName = enrollment.name ? enrollment.name.split(" ")[0] : "";
-            const adminName = name ? name.split(" ")[0] : "";
+            const studentName = enrollment.name ? enrollment.name.split(' ')[0] : '';
+            const adminName = name ? name.split(' ')[0] : '';
             const className = enrollment.class;
-            const classDate = className?.date ? dateBR(className.date) : "";
-            const classLocation = className?.location?.name || "";
-            const classCity = enrollment.preferred_city?.name || "";
-            
+            const classDate = className?.date ? dateBR(className.date) : '';
+            const classLocation = className?.location?.name || '';
+            const classCity = enrollment.preferred_city?.name || '';
+
             const message = `Olá ${studentName},
 Aqui é ${adminName} - Rancheiros Moto Clube, tudo certo?
 https://www.rancheirosmc.com.br
@@ -159,19 +161,17 @@ Deus abençoe grandemente.`;
 
             return encodeURIComponent(message);
           };
-          
+
           // URL do WhatsApp com mensagem
-          const whatsappUrl = (isMobile ? "whatsapp://wa.me/55" : "https://wa.me/55") + 
-            phoneNumbers + 
-            "?text=" + createWhatsAppMessage() + 
-            "&type=phone_number&app_absent=0";
-          
+          const whatsappUrl =
+            `${(isMobile ? 'whatsapp://wa.me/55' : 'https://wa.me/55') +
+            phoneNumbers 
+            }?text=${ 
+            createWhatsAppMessage() 
+            }&type=phone_number&app_absent=0`;
+
           return (
-            <Anchor
-              href={whatsappUrl}
-              target="_blank"
-              rel="noreferrer"
-            >
+            <Anchor href={whatsappUrl} target="_blank" rel="noreferrer">
               {formattedPhone}
             </Anchor>
           );
@@ -191,7 +191,7 @@ Deus abençoe grandemente.`;
   const csvData = useMemo(() => {
     // Handle both array and paginated data
     const data = Array.isArray(query.data) ? query.data : query.data?.data || [];
-    
+
     return data.map(
       ({
         name,
@@ -207,20 +207,20 @@ Deus abençoe grandemente.`;
         enrollment_date,
         class: class_,
       }) => ({
-          Turma: class_?.date ? (dateBR(class_.date) ?? '') : '',
-          Status: status,
-          'Data de Inscrição': enrollment_date,
-          'Cidade Preferencial': preferred_city?.name ?? '',
-          Nome: name,
-          Telefone: phone,
-          UF: uf_cnh,
-          CNH: cnh,
-          Email: email,
-          'Uso de Moto': motorcycle_usage,
-          Marca: brand,
-          Modelo: model
-        })
-      );
+        Turma: class_?.date ? (dateBR(class_.date) ?? '') : '',
+        Status: status,
+        'Data de Inscrição': enrollment_date,
+        'Cidade Preferencial': preferred_city?.name ?? '',
+        Nome: name,
+        Telefone: phone,
+        UF: uf_cnh,
+        CNH: cnh,
+        Email: email,
+        'Uso de Moto': motorcycle_usage,
+        Marca: brand,
+        Modelo: model,
+      })
+    );
   }, [query.data]);
 
   const rowMapper = useCallback((row: MRT_Row<Enrollment>): string[] => {
@@ -250,14 +250,16 @@ Deus abençoe grandemente.`;
       email ?? '',
       motorcycle_usage ?? '',
       brand ?? '',
-      model ?? ''
+      model ?? '',
     ];
   }, []);
 
   const pdfConfig = useMemo(() => ({ tableHeaders, rowMapper }), [rowMapper]);
 
   // Extrair dados corretamente (pode ser array ou paginado)
-  const data = (Array.isArray(query.data) ? query.data : query.data?.data || []) as unknown as Enrollment[];
+  const data = (Array.isArray(query.data)
+    ? query.data
+    : query.data?.data || []) as unknown as Enrollment[];
 
   return (
     <>
@@ -267,7 +269,7 @@ Deus abençoe grandemente.`;
         csvData={csvData}
         pdfConfig={pdfConfig}
         customActions={customActions}
-        enableEdit={true}
+        enableEdit
         data={data}
         columnVisibility={{
           cnh: false,

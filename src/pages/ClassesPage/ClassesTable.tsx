@@ -1,12 +1,13 @@
 import { useCallback, useMemo } from 'react';
-import { MRT_ColumnDef, MRT_Row } from 'mantine-react-table';
-import { ActionIcon, Tooltip, Switch } from '@mantine/core';
 import { IconMapPin } from '@tabler/icons-react';
+import { MRT_ColumnDef, MRT_Row } from 'mantine-react-table';
+import { ActionIcon, Switch, Tooltip } from '@mantine/core';
 import { CRUDTable } from '@/components/CRUDTable';
 import { useCRUD } from '@/contexts/CRUDContext';
 import { Class } from '@/model/class';
-import { dateBR } from '@/utils/dates';
 import { useClassToggleActiveMutation } from '@/mutations/useClassToggleActiveMutation';
+import { extractData } from '@/utils/dataUtils';
+import { dateBR } from '@/utils/dates';
 
 const tableHeaders = ['Local do MPV', 'Data', 'Link do Maps', 'Ativo'];
 
@@ -14,12 +15,15 @@ export function ClassesTable() {
   const { query } = useCRUD();
   const toggleActiveMutation = useClassToggleActiveMutation();
 
-  const handleToggleActive = useCallback((classItem: Class) => {
-    toggleActiveMutation.mutate({
-      classId: classItem.id,
-      active: !classItem.active,
-    });
-  }, [toggleActiveMutation]);
+  const handleToggleActive = useCallback(
+    (classItem: Class) => {
+      toggleActiveMutation.mutate({
+        classId: classItem.id,
+        active: !classItem.active,
+      });
+    },
+    [toggleActiveMutation]
+  );
 
   const columns = useMemo<MRT_ColumnDef<Class>[]>(
     () => [
@@ -34,8 +38,8 @@ export function ClassesTable() {
         header: 'Link do Maps',
         Cell: ({ row }) => {
           const mapsLink = row.original.mapsLink;
-          if (!mapsLink) return null;
-          
+          if (!mapsLink) {return null;}
+
           return (
             <Tooltip label="Abrir no Google Maps" position="top">
               <ActionIcon
@@ -69,12 +73,14 @@ export function ClassesTable() {
 
   const csvData = useMemo(
     () =>
-      query.data?.map(({ location, date, mapsLink, active }) => ({
-        'Local do MPV': location?.name,
-        Data: date,
-        'Link do Maps': mapsLink,
-        Ativo: active,
-      })) ?? [],
+      (extractData(query.data) as unknown as Class[]).map(
+        ({ location, date, mapsLink, active }) => ({
+          'Local do MPV': location?.name,
+          Data: date,
+          'Link do Maps': mapsLink,
+          Ativo: active,
+        })
+      ),
     [query.data]
   );
 
@@ -85,12 +91,5 @@ export function ClassesTable() {
 
   const pdfConfig = useMemo(() => ({ tableHeaders, rowMapper }), [rowMapper]);
 
-  return (
-    <CRUDTable 
-      columns={columns} 
-      title="Turmas" 
-      csvData={csvData} 
-      pdfConfig={pdfConfig}
-    />
-  );
+  return <CRUDTable columns={columns} title="Turmas" csvData={csvData} pdfConfig={pdfConfig} />;
 }

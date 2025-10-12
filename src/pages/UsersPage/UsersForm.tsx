@@ -18,6 +18,7 @@ import { useCRUD } from '@/contexts/CRUDContext';
 import { Ranch } from '@/model/ranch';
 import { User, UserDto, UserPermissions } from '@/model/user';
 import useCRUDQuery from '@/queries/useCRUDQuery';
+import { extractData } from '@/utils/dataUtils';
 
 const INITIAL_VALUES = {
   username: '',
@@ -170,12 +171,15 @@ export function UsersForm() {
   const { isPending } = query;
   const [passwordStrength, setPasswordStrength] = useState(0);
   const { super_admin: currentUserIsSuperAdmin } = useAuth();
-  
 
   const ranchesQuery = useCRUDQuery<Ranch>('ranches');
 
   const ranchesOptions = useMemo(
-    () => ranchesQuery.data?.map((ranch) => ({ label: ranch.name, value: ranch.id.toString() })),
+    () =>
+      (extractData(ranchesQuery.data) as unknown as Ranch[]).map((ranch) => ({
+        label: ranch.name,
+        value: ranch.id.toString(),
+      })),
     [ranchesQuery.data]
   );
 
@@ -199,18 +203,21 @@ export function UsersForm() {
     [passwordStrength, action]
   );
 
-  const transformData = useCallback((data: UserDto) => {
-    // Remove repeatPassword (usado apenas para validação no frontend)
-    const { repeatPassword, ...rest } = data;
-    
-    // Se for edição e não há senha, remove o campo password
-    if (action === 'update' && !data.password) {
-      const { password, ...dataWithoutPassword } = rest;
-      return dataWithoutPassword;
-    }
-    
-    return rest;
-  }, [action]);
+  const transformData = useCallback(
+    (data: UserDto) => {
+      // Remove repeatPassword (usado apenas para validação no frontend)
+      const { repeatPassword, ...rest } = data;
+
+      // Se for edição e não há senha, remove o campo password
+      if (action === 'update' && !data.password) {
+        const { password, ...dataWithoutPassword } = rest;
+        return dataWithoutPassword;
+      }
+
+      return rest;
+    },
+    [action]
+  );
 
   return (
     <CRUDForm<User, UserDto>

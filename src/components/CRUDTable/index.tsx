@@ -1,5 +1,6 @@
 import { useCallback, useMemo, useState } from 'react';
 import { IconCsv, IconEdit, IconPdf, IconPlus, IconTrash } from '@tabler/icons-react';
+import { download, generateCsv, mkConfig } from 'export-to-csv';
 import jsPDF from 'jspdf';
 import autoTable, { RowInput } from 'jspdf-autotable';
 import {
@@ -16,11 +17,10 @@ import {
 } from 'mantine-react-table';
 import { MRT_Localization_PT_BR } from 'mantine-react-table/locales/pt-BR/index.cjs';
 import { useLocation } from 'react-router-dom';
-import { ActionIcon, Group, Menu, rem, Title, Modal, Text, Button } from '@mantine/core';
+import { ActionIcon, Button, Group, Menu, Modal, rem, Text, Title } from '@mantine/core';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCRUD } from '@/contexts/CRUDContext';
 import { ROUTES_MAP } from '@/pages/MainPage/MainPage';
-import { download, generateCsv, mkConfig } from "export-to-csv";
 
 type AcceptedData = number | string | boolean | null | undefined;
 
@@ -31,13 +31,13 @@ type CSVData = {
 
 export function slugify(str: string): string {
   return str
-    .normalize("NFD") // Decompose accented characters
-    .replace(/[\u0300-\u036f]/g, "") // Remove diacritics
+    .normalize('NFD') // Decompose accented characters
+    .replace(/[\u0300-\u036f]/g, '') // Remove diacritics
     .toLowerCase() // Convert to lowercase
-    .replace(/[^a-z0-9-]+/g, "-") // Replace non-alphanumerics/dashes with dashes
-    .replace(/-+/g, "-") // Collapse multiple dashes
-    .replace(/^-+/, "") // Trim leading dashes
-    .replace(/-+$/, ""); // Trim trailing dashes
+    .replace(/[^a-z0-9-]+/g, '-') // Replace non-alphanumerics/dashes with dashes
+    .replace(/-+/g, '-') // Collapse multiple dashes
+    .replace(/^-+/, '') // Trim leading dashes
+    .replace(/-+$/, ''); // Trim trailing dashes
 }
 
 export interface CustomAction<T extends MRT_RowData> {
@@ -84,9 +84,20 @@ const DEFAULT_PERMISSIONS = {
 };
 
 export function CRUDTable<T extends MRT_RowData>(props: CRUDTableProps<T>) {
-  const { columns, title, csvData, pdfConfig, customActions = [], columnVisibility, data: customData, enableEdit = false, pagination, onPageChange } = props;
+  const {
+    columns,
+    title,
+    csvData,
+    pdfConfig,
+    customActions = [],
+    columnVisibility,
+    data: customData,
+    enableEdit = false,
+    pagination,
+    onPageChange,
+  } = props;
   const { query, setSelected, setAction, open } = useCRUD();
-  
+
   // Estados para modal de confirmação
   const [confirmationModal, setConfirmationModal] = useState<{
     opened: boolean;
@@ -151,7 +162,7 @@ export function CRUDTable<T extends MRT_RowData>(props: CRUDTableProps<T>) {
   const handleExportRowsPDF = useCallback(
     (rows: MRT_Row<T>[]) => {
       const doc = new jsPDF({
-        orientation: 'landscape'
+        orientation: 'landscape',
       });
       const tableData = rows.map(rowMapper);
       autoTable(doc, {
@@ -167,56 +178,77 @@ export function CRUDTable<T extends MRT_RowData>(props: CRUDTableProps<T>) {
   const csvConfig = useMemo(
     () =>
       mkConfig({
-        fieldSeparator: ",",
-        decimalSeparator: ".",
+        fieldSeparator: ',',
+        decimalSeparator: '.',
         useKeysAsHeaders: true,
         filename,
       }),
     [filename]
   );
 
-
   // Memoize the table configuration to prevent unnecessary re-renders
-  const tableConfig = useMemo(() => ({
-    columns,
-    data: (customData ?? data ?? []) as T[],
-    localization: MRT_Localization_PT_BR,
-    initialState: {
-      density: 'xs' as const,
-      columnVisibility: columnVisibility || {},
-    },
-    mantineToolbarAlertBannerProps: isError
-      ? {
-          color: 'red' as const,
-          children: error?.message ?? 'Error loading data',
-        }
-      : undefined,
-    state: { isLoading, showAlertBanner: isError, showProgressBars: isFetching },
-    mantinePaperProps: {
-      style: {
-        border: 'none',
+  const tableConfig = useMemo(
+    () => ({
+      columns,
+      data: (customData ?? data ?? []) as T[],
+      localization: MRT_Localization_PT_BR,
+      initialState: {
+        density: 'xs' as const,
+        columnVisibility: columnVisibility || {},
       },
-    },
-    enableBottomToolbar: false,
-    enablePagination: !!pagination,
-    enableRowVirtualization: !pagination,
-    mantineTableContainerProps: { style: { maxHeight: 'calc(100vh - 128px)' } },
-    enableRowActions: true,
-    pagination: pagination ? {
-      pageIndex: pagination.page - 1,
-      pageSize: pagination.limit,
-    } : undefined,
-    pageCount: pagination?.totalPages,
-    manualPagination: !!pagination,
-    onPaginationChange: pagination && onPageChange ? (updater: any) => {
-      if (typeof updater === 'function') {
-        const newPagination = updater({ pageIndex: pagination.page - 1, pageSize: pagination.limit });
-        onPageChange(newPagination.pageIndex + 1);
-      } else {
-        onPageChange(updater.pageIndex + 1);
-      }
-    } : undefined,
-  }), [columns, customData, data, isError, error?.message, isLoading, isFetching, columnVisibility, pagination, onPageChange]);
+      mantineToolbarAlertBannerProps: isError
+        ? {
+            color: 'red' as const,
+            children: error?.message ?? 'Error loading data',
+          }
+        : undefined,
+      state: { isLoading, showAlertBanner: isError, showProgressBars: isFetching },
+      mantinePaperProps: {
+        style: {
+          border: 'none',
+        },
+      },
+      enableBottomToolbar: false,
+      enablePagination: !!pagination,
+      enableRowVirtualization: !pagination,
+      mantineTableContainerProps: { style: { maxHeight: 'calc(100vh - 128px)' } },
+      enableRowActions: true,
+      pagination: pagination
+        ? {
+            pageIndex: pagination.page - 1,
+            pageSize: pagination.limit,
+          }
+        : undefined,
+      pageCount: pagination?.totalPages,
+      manualPagination: !!pagination,
+      onPaginationChange:
+        pagination && onPageChange
+          ? (updater: any) => {
+              if (typeof updater === 'function') {
+                const newPagination = updater({
+                  pageIndex: pagination.page - 1,
+                  pageSize: pagination.limit,
+                });
+                onPageChange(newPagination.pageIndex + 1);
+              } else {
+                onPageChange(updater.pageIndex + 1);
+              }
+            }
+          : undefined,
+    }),
+    [
+      columns,
+      customData,
+      data,
+      isError,
+      error?.message,
+      isLoading,
+      isFetching,
+      columnVisibility,
+      pagination,
+      onPageChange,
+    ]
+  );
 
   const handleExportDataCSV = useCallback(() => {
     const csv = generateCsv(csvConfig)(csvData ?? []);
@@ -236,7 +268,7 @@ export function CRUDTable<T extends MRT_RowData>(props: CRUDTableProps<T>) {
       if (!rowData) {
         return null;
       }
-      
+
       return (
         <>
           {(update || enableEdit) && (
@@ -256,7 +288,7 @@ export function CRUDTable<T extends MRT_RowData>(props: CRUDTableProps<T>) {
             if (!isVisible) {
               return null;
             }
-            
+
             const IconComponent = action.icon;
             return (
               <Menu.Item
@@ -324,7 +356,7 @@ export function CRUDTable<T extends MRT_RowData>(props: CRUDTableProps<T>) {
   return (
     <>
       <MantineReactTable table={table} />
-      
+
       {/* Modal de confirmação genérico */}
       <Modal
         opened={confirmationModal.opened}
@@ -342,7 +374,7 @@ export function CRUDTable<T extends MRT_RowData>(props: CRUDTableProps<T>) {
           <Button variant="outline" onClick={cancelConfirmation}>
             Cancelar
           </Button>
-          <Button 
+          <Button
             color={confirmationModal.action?.confirmationButtonColor || 'blue'}
             onClick={confirmAction}
             loading={confirmationModal.action?.isLoading}

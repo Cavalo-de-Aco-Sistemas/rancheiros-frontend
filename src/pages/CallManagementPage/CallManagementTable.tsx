@@ -1,15 +1,15 @@
 import { useCallback, useMemo } from 'react';
-import { MRT_ColumnDef, MRT_Row } from 'mantine-react-table';
-import { CRUDTable } from '@/components/CRUDTable';
-import { useCRUD } from '@/contexts/CRUDContext';
-import { useAuth } from '@/contexts/AuthContext';
-import { Enrollment, EnrollmentStatus } from '@/model/enrollment';
-import { dateBR } from '@/utils/dates';
-import { EnrollmentStatusCallActions } from '@/components/EnrollmentStatusActions/EnrollmentStatusCallActions';
-import { useEnrollmentFlowMutation } from '@/mutations/useEnrollmentFlowMutation';
-import { StatusIcon } from '@/components/StatusIcon';
 import { IconClock } from '@tabler/icons-react';
-import { Anchor, Text, Center, Stack } from '@mantine/core';
+import { MRT_ColumnDef, MRT_Row } from 'mantine-react-table';
+import { Anchor, Center, Stack, Text } from '@mantine/core';
+import { CRUDTable } from '@/components/CRUDTable';
+import { EnrollmentStatusCallActions } from '@/components/EnrollmentStatusActions/EnrollmentStatusCallActions';
+import { StatusIcon } from '@/components/StatusIcon';
+import { useAuth } from '@/contexts/AuthContext';
+import { useCRUD } from '@/contexts/CRUDContext';
+import { Enrollment, EnrollmentStatus } from '@/model/enrollment';
+import { useEnrollmentFlowMutation } from '@/mutations/useEnrollmentFlowMutation';
+import { dateBR } from '@/utils/dates';
 
 const tableHeaders = [
   'Fluxo',
@@ -24,7 +24,7 @@ const tableHeaders = [
   'Email',
   'Uso de Moto',
   'Marca',
-  'Modelo'
+  'Modelo',
 ];
 
 interface CallManagementTableProps {
@@ -33,17 +33,24 @@ interface CallManagementTableProps {
   pageSize?: number;
 }
 
-export function CallManagementTable({ onPageChange, currentPage, pageSize }: CallManagementTableProps) {
+export function CallManagementTable({
+  onPageChange,
+  currentPage: _currentPage,
+  pageSize: _pageSize,
+}: CallManagementTableProps) {
   const { query } = useCRUD();
   const { name } = useAuth();
   const updateFlowMutation = useEnrollmentFlowMutation();
-  
-  const handleReturnToWaiting = useCallback((enrollment: Enrollment) => {
-    updateFlowMutation.mutate({
-      enrollmentId: enrollment.id,
-      status: EnrollmentStatus.WAITING,
-    });
-  }, [updateFlowMutation]);
+
+  const handleReturnToWaiting = useCallback(
+    (enrollment: Enrollment) => {
+      updateFlowMutation.mutate({
+        enrollmentId: enrollment.id,
+        status: EnrollmentStatus.WAITING,
+      });
+    },
+    [updateFlowMutation]
+  );
 
   const canReturnToWaiting = useCallback((enrollment: Enrollment) => {
     // Só pode voltar para lista de espera se:
@@ -51,38 +58,39 @@ export function CallManagementTable({ onPageChange, currentPage, pageSize }: Cal
     // 2. Não estiver certificado (situação final)
     // 3. Não tiver faltado (situação final)
     // 4. Não estiver dropped (situação final)
-    return enrollment.status !== EnrollmentStatus.WAITING &&
-           enrollment.status !== EnrollmentStatus.CERTIFIED &&
-           enrollment.status !== EnrollmentStatus.MISSED &&
-           enrollment.status !== EnrollmentStatus.DROPPED;
+    return (
+      enrollment.status !== EnrollmentStatus.WAITING &&
+      enrollment.status !== EnrollmentStatus.CERTIFIED &&
+      enrollment.status !== EnrollmentStatus.MISSED &&
+      enrollment.status !== EnrollmentStatus.DROPPED
+    );
   }, []);
 
-  const customActions = useMemo(() => [
-    {
-      label: 'Voltar para Lista de Espera',
-      icon: IconClock,
-      onClick: handleReturnToWaiting,
-      isVisible: canReturnToWaiting,
-      isLoading: updateFlowMutation.isPending,
-      requiresConfirmation: true,
-      confirmationTitle: 'Confirmar Retorno para Lista de Espera',
-      confirmationMessage: (enrollment: Enrollment) => 
-        `Tem certeza que deseja mover ${enrollment.name} de volta para a Lista de Espera?`,
-      confirmationButtonText: 'Confirmar',
-      confirmationButtonColor: 'blue',
-    },
-  ], [handleReturnToWaiting, canReturnToWaiting, updateFlowMutation.isPending]);
+  const customActions = useMemo(
+    () => [
+      {
+        label: 'Voltar para Lista de Espera',
+        icon: IconClock,
+        onClick: handleReturnToWaiting,
+        isVisible: canReturnToWaiting,
+        isLoading: updateFlowMutation.isPending,
+        requiresConfirmation: true,
+        confirmationTitle: 'Confirmar Retorno para Lista de Espera',
+        confirmationMessage: (enrollment: Enrollment) =>
+          `Tem certeza que deseja mover ${enrollment.name} de volta para a Lista de Espera?`,
+        confirmationButtonText: 'Confirmar',
+        confirmationButtonColor: 'blue',
+      },
+    ],
+    [handleReturnToWaiting, canReturnToWaiting, updateFlowMutation.isPending]
+  );
 
   const columns = useMemo<MRT_ColumnDef<Enrollment>[]>(
     () => [
       {
         id: 'actions',
         header: 'Fluxo',
-        Cell: ({ row }) => (
-          <EnrollmentStatusCallActions
-            enrollment={row.original}
-          />
-        ),
+        Cell: ({ row }) => <EnrollmentStatusCallActions enrollment={row.original} />,
         enableSorting: false,
         enableColumnFilter: false,
       },
@@ -94,10 +102,10 @@ export function CallManagementTable({ onPageChange, currentPage, pageSize }: Cal
           if (!classData) {
             return '';
           }
-          
+
           const date = classData.date ? (dateBR(classData.date) ?? '') : '';
           const location = classData.location?.name ?? '';
-          
+
           if (location && date) {
             return `${location} - ${date}`;
           } else if (location) {
@@ -105,7 +113,7 @@ export function CallManagementTable({ onPageChange, currentPage, pageSize }: Cal
           } else if (date) {
             return date;
           }
-          
+
           return '';
         },
       },
@@ -127,34 +135,29 @@ export function CallManagementTable({ onPageChange, currentPage, pageSize }: Cal
         Cell: ({ row }) => {
           const phone = row.original.phone;
           const enrollment = row.original;
-          if (!phone) return '';
-          
+          if (!phone) {return '';}
+
           // Regex para extrair apenas números do telefone
           const regex = /\d/g;
           const phoneNumbers = phone.match(regex)?.join('');
-          
-          if (!phoneNumbers) return phone;
-          
+
+          if (!phoneNumbers) {return phone;}
+
           // Formatar telefone para exibição (XX) XXXXX-XXXX
-          const formattedPhone = phone.replace(
-            /^(\d{2})(\d{5})(\d{4}).*/,
-            "($1) $2-$3"
-          );
-          
+          const formattedPhone = phone.replace(/^(\d{2})(\d{5})(\d{4}).*/, '($1) $2-$3');
+
           // Detectar se é dispositivo móvel
-          const isMobile = /Android|webOS|iPhone|iPad|iPod|Opera Mini/i.test(
-            navigator.userAgent
-          );
-          
+          const isMobile = /Android|webOS|iPhone|iPad|iPod|Opera Mini/i.test(navigator.userAgent);
+
           // Criar mensagem padrão com parâmetros da turma
           const createWhatsAppMessage = () => {
-            const studentName = enrollment.name ? enrollment.name.split(" ")[0] : "";
-            const adminName = name ? name.split(" ")[0] : "";
+            const studentName = enrollment.name ? enrollment.name.split(' ')[0] : '';
+            const adminName = name ? name.split(' ')[0] : '';
             const className = enrollment.class;
-            const classDate = className?.date ? dateBR(className.date) : "";
-            const classLocation = className?.location?.name || "";
-            const classCity = enrollment.preferred_city?.name || "";
-            
+            const classDate = className?.date ? dateBR(className.date) : '';
+            const classLocation = className?.location?.name || '';
+            const classCity = enrollment.preferred_city?.name || '';
+
             const message = `Olá ${studentName},
 Aqui é ${adminName} - Rancheiros Moto Clube, tudo certo?
 https://www.rancheirosmc.com.br
@@ -179,19 +182,17 @@ Deus abençoe grandemente.`;
 
             return encodeURIComponent(message);
           };
-          
+
           // URL do WhatsApp com mensagem
-          const whatsappUrl = (isMobile ? "whatsapp://wa.me/55" : "https://wa.me/55") + 
-            phoneNumbers + 
-            "?text=" + createWhatsAppMessage() + 
-            "&type=phone_number&app_absent=0";
-          
+          const whatsappUrl =
+            `${(isMobile ? 'whatsapp://wa.me/55' : 'https://wa.me/55') +
+            phoneNumbers 
+            }?text=${ 
+            createWhatsAppMessage() 
+            }&type=phone_number&app_absent=0`;
+
           return (
-            <Anchor
-              href={whatsappUrl}
-              target="_blank"
-              rel="noreferrer"
-            >
+            <Anchor href={whatsappUrl} target="_blank" rel="noreferrer">
               {formattedPhone}
             </Anchor>
           );
@@ -210,8 +211,7 @@ Deus abençoe grandemente.`;
 
   // Dados já filtrados pelo backend
   const paginatedData = query.data as any;
-  
-  
+
   // Tentar diferentes formas de extrair os dados
   let data = [];
   if (paginatedData?.data && Array.isArray(paginatedData.data)) {
@@ -220,17 +220,18 @@ Deus abençoe grandemente.`;
     data = paginatedData;
   } else if (paginatedData && typeof paginatedData === 'object') {
     // Se não tem propriedade 'data', talvez os dados estejam diretamente no objeto
-    data = Object.values(paginatedData).find(value => Array.isArray(value)) || [];
+    data = Object.values(paginatedData).find((value) => Array.isArray(value)) || [];
   }
-  
-  const pagination = paginatedData && !Array.isArray(paginatedData) ? {
-    page: paginatedData.page,
-    limit: paginatedData.limit,
-    total: paginatedData.total,
-    totalPages: paginatedData.totalPages,
-  } : undefined;
 
-
+  const pagination =
+    paginatedData && !Array.isArray(paginatedData)
+      ? {
+          page: paginatedData.page,
+          limit: paginatedData.limit,
+          total: paginatedData.total,
+          totalPages: paginatedData.totalPages,
+        }
+      : undefined;
 
   const csvData = useMemo(
     () =>
@@ -261,7 +262,7 @@ Deus abençoe grandemente.`;
           Email: email,
           'Uso de Moto': motorcycle_usage,
           Marca: brand,
-          Modelo: model
+          Modelo: model,
         })
       ) ?? [],
     [data]
@@ -295,7 +296,7 @@ Deus abençoe grandemente.`;
       email ?? '',
       motorcycle_usage ?? '',
       brand ?? '',
-      model ?? ''
+      model ?? '',
     ];
   }, []);
 
@@ -310,7 +311,8 @@ Deus abençoe grandemente.`;
             Nenhuma inscrição em processo de chamada encontrada
           </Text>
           <Text size="sm" c="dimmed">
-            As inscrições em lista de espera, chamadas, confirmadas, ignoradas ou desistências aparecerão aqui
+            As inscrições em lista de espera, chamadas, confirmadas, ignoradas ou desistências
+            aparecerão aqui
           </Text>
         </Stack>
       </Center>
