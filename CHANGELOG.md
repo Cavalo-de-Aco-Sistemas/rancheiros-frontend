@@ -66,6 +66,12 @@ e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR
   - Resolvido erro "property repeatPassword should not exist" e "password should not be empty"
   - Formulário agora funciona corretamente para criação e edição de usuários
 
+- **EnrollmentsForm**: Removida função `transformData` do formulário de enrollments
+  - Formulário agora envia dados diretamente para a API sem transformação
+  - Backend atualizado para aceitar todos os campos enviados pelo frontend
+  - Simplificação do código removendo lógica de transformação desnecessária
+  - Melhor compatibilidade entre frontend e backend
+
 ### Technical Details
 - **Database Schema**: Preparado para migração com nova coluna `name`
 - **API Compatibility**: Mantida compatibilidade com sistema existente
