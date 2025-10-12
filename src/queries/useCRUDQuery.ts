@@ -39,21 +39,7 @@ export default function useCRUDQuery<T>(
     
     const url = `${BACKEND_ADDRESS}/${endpoint}${searchParams.toString() ? `?${searchParams.toString()}` : ''}`;
     
-    // Debug: verificar requisição
-    console.log('useCRUDQuery - Making request:', {
-      endpoint,
-      params,
-      url,
-      usePagination
-    });
-    
     const response = await axiosInstance.get(url);
-    
-    console.log('useCRUDQuery - Response:', {
-      status: response.status,
-      data: response.data,
-      dataLength: Array.isArray(response.data) ? response.data.length : response.data?.data?.length
-    });
     
     if (usePagination) {
       return response.data as PaginatedResult<T>;
@@ -85,8 +71,6 @@ export default function useCRUDQuery<T>(
     return key;
   }, [authToken, endpoint, params, usePagination]);
 
-  // Debug: verificar query key
-  console.log('useCRUDQuery - Query Key:', queryKey);
 
   return useQuery({ 
     queryKey, 

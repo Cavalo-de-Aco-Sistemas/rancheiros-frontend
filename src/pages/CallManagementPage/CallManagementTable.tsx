@@ -50,9 +50,11 @@ export function CallManagementTable({ onPageChange, currentPage, pageSize }: Cal
     // 1. Não estiver já em waiting
     // 2. Não estiver certificado (situação final)
     // 3. Não tiver faltado (situação final)
+    // 4. Não estiver dropped (situação final)
     return enrollment.status !== EnrollmentStatus.WAITING &&
            enrollment.status !== EnrollmentStatus.CERTIFIED &&
-           enrollment.status !== EnrollmentStatus.MISSED;
+           enrollment.status !== EnrollmentStatus.MISSED &&
+           enrollment.status !== EnrollmentStatus.DROPPED;
   }, []);
 
   const customActions = useMemo(() => [
@@ -208,24 +210,26 @@ Deus abençoe grandemente.`;
 
   // Dados já filtrados pelo backend
   const paginatedData = query.data as any;
-  const data = paginatedData?.data || [];
-  const pagination = paginatedData ? {
+  
+  
+  // Tentar diferentes formas de extrair os dados
+  let data = [];
+  if (paginatedData?.data && Array.isArray(paginatedData.data)) {
+    data = paginatedData.data;
+  } else if (Array.isArray(paginatedData)) {
+    data = paginatedData;
+  } else if (paginatedData && typeof paginatedData === 'object') {
+    // Se não tem propriedade 'data', talvez os dados estejam diretamente no objeto
+    data = Object.values(paginatedData).find(value => Array.isArray(value)) || [];
+  }
+  
+  const pagination = paginatedData && !Array.isArray(paginatedData) ? {
     page: paginatedData.page,
     limit: paginatedData.limit,
     total: paginatedData.total,
     totalPages: paginatedData.totalPages,
   } : undefined;
 
-  // Debug: verificar estado da query
-  console.log('CallManagementTable Debug:', {
-    isLoading: query.isLoading,
-    isError: query.isError,
-    error: query.error,
-    data: query.data,
-    paginatedData,
-    dataLength: data.length,
-    pagination
-  });
 
 
   const csvData = useMemo(

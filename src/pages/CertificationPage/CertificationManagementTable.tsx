@@ -228,8 +228,21 @@ Deus abençoe grandemente.`;
 
   // Dados já filtrados pelo backend
   const paginatedData = query.data as any;
-  const data = paginatedData?.data || [];
-  const pagination = paginatedData ? {
+  
+  
+  // Tentar diferentes formas de extrair os dados
+  let data = [];
+  if (paginatedData?.data && Array.isArray(paginatedData.data)) {
+    data = paginatedData.data;
+  } else if (Array.isArray(paginatedData)) {
+    data = paginatedData;
+  } else if (paginatedData && typeof paginatedData === 'object') {
+    // Se não tem propriedade 'data', talvez os dados estejam diretamente no objeto
+    data = Object.values(paginatedData).find(value => Array.isArray(value)) || [];
+  }
+
+  
+  const pagination = paginatedData && !Array.isArray(paginatedData) ? {
     page: paginatedData.page,
     limit: paginatedData.limit,
     total: paginatedData.total,

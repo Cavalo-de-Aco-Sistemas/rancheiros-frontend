@@ -69,6 +69,7 @@ export function useEnrollmentFlowMutation() {
         updateQueryData<Enrollment>('enrollments', () => context.previousEnrollments!);
       }
       
+      
       const errorMessage =
         (error.response?.data as any)?.message || 'Erro ao atualizar status da inscrição.';
       notifications.show({

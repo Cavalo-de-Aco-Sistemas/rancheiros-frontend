@@ -58,7 +58,10 @@ export function EnrollmentStatusCallActions({ enrollment, onRevertClick }: Enrol
       return [];
     }
     
-    return classesQuery.data.map((classItem) => ({
+    // Handle both array and paginated data
+    const classesData = Array.isArray(classesQuery.data) ? classesQuery.data : classesQuery.data.data || [];
+    
+    return classesData.map((classItem: Class) => ({
       value: classItem.id,
       label: `${classItem.location?.name ?? 'Sem local'} - ${classItem.date ? dateBR(classItem.date) : 'Sem data'}`,
     }));
@@ -115,8 +118,9 @@ export function EnrollmentStatusCallActions({ enrollment, onRevertClick }: Enrol
   const canReturnToCalled = useCallback(() => {
     const currentStatus = enrollment.status;
     return currentStatus === EnrollmentStatus.IGNORED || 
-           currentStatus === EnrollmentStatus.DROPPED || 
-           currentStatus === EnrollmentStatus.CONFIRMED;
+           currentStatus === EnrollmentStatus.CONFIRMED ||
+           currentStatus === EnrollmentStatus.DROPPED;
+    // Permitido DROPPED voltar para CALLED conforme regras de negócio
   }, [enrollment.status]);
 
   // Memoize enabled actions to prevent unnecessary re-renders

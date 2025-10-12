@@ -175,6 +175,7 @@ export function CRUDTable<T extends MRT_RowData>(props: CRUDTableProps<T>) {
     [filename]
   );
 
+
   // Memoize the table configuration to prevent unnecessary re-renders
   const tableConfig = useMemo(() => ({
     columns,

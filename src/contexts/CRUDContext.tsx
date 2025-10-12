@@ -53,14 +53,6 @@ export const CRUDProvider = ({ children, endpoint, params, usePagination = false
     return { ...params, _pageId: pageId };
   }, [params, pageId]);
   
-  // Debug: verificar parâmetros
-  console.log('CRUDProvider Debug:', {
-    endpoint,
-    params,
-    pageId,
-    uniqueParams,
-    usePagination
-  });
   
   const query = useCRUDQuery<CRUDType>(endpoint, uniqueParams, { usePagination });
 

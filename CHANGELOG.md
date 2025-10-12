@@ -189,6 +189,37 @@ e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR
   - **Performance**: Evita conflitos de cache entre páginas especializadas
   - **Consistency**: Dados corretos exibidos em cada contexto
 
+- **Data Extraction Fix**: Correção na extração de dados paginados
+  - **Problem**: Dados não apareciam nas tabelas apesar de respostas bem-sucedidas da API
+  - **Solution**: Lógica melhorada para extrair dados de diferentes estruturas de resposta
+  - **Impact**: Páginas de Call Management e Certification Management agora exibem dados corretamente
+  - **Robustness**: Suporte a múltiplos formatos de resposta do backend
+
+- **Query Cache Invalidation Fix**: Correção na invalidação de cache após mutações
+  - **Problem**: Tabelas não eram atualizadas após executar ações do fluxo de chamada
+  - **Solution**: Atualizado `useOptimizedQueries` para invalidar todas as variações de queries
+  - **Impact**: Ações de status e atribuição de turma agora atualizam todas as páginas automaticamente
+  - **Consistency**: Dados sincronizados entre todas as visualizações de inscrições
+
+- **Paginated Data Mutation Fix**: Correção na atualização otimista de dados paginados
+  - **Problem**: Erro "old.map is not a function" ao executar mutações em dados paginados
+  - **Solution**: Atualizado `updateQueryData` e `getQueryData` para lidar com estrutura `PaginatedResult<T>`
+  - **Impact**: Mutações funcionam corretamente em todas as páginas com paginação
+  - **Robustness**: Suporte a dados simples (array) e paginados (objeto com propriedade `data`)
+
+- **Status Transition Validation Fix**: Correção na validação de transições de status
+  - **Problem**: Erro "Invalid status transition from dropped to called" ao tentar executar ações em registros com status `dropped`
+  - **Solution**: Permitido transição de `DROPPED` para `CALLED` no backend e frontend
+  - **Impact**: Registros com status `dropped` podem voltar para `called` usando o botão "Voltar para chamado"
+  - **Business Logic**: Alinhamento com regras de negócio que permitem reversão de `dropped` para `called`
+  - **Components**: Corrigido tanto no backend (`enrollments.service.ts`) quanto no frontend (`EnrollmentStatusCallActions`)
+
+- **Status Transition Business Rule Fix**: Correção nas regras de negócio de transições de status
+  - **Problem**: Transição de `CONFIRMED` para `DROPPED` não deveria ser permitida
+  - **Solution**: Removido `DROPPED` das transições permitidas a partir de `CONFIRMED`
+  - **Impact**: Registros confirmados não podem mais ser marcados como dropped
+  - **Business Logic**: Alinhamento com regras de negócio que impedem cancelamento de confirmados
+
 ### Technical Details
 - **Column Management**: Utilização do sistema nativo de visibilidade do MantineReactTable
 - **Export Compatibility**: CSV e PDF mantêm compatibilidade com nova ordem de colunas
