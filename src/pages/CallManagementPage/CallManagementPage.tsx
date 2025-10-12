@@ -1,10 +1,28 @@
+import { useState } from 'react';
 import { CRUDProvider } from '@/contexts/CRUDContext';
 import { CallManagementTable, CallManagementForm } from './index';
 
 export function CallManagementPage() {
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 50;
+
   return (
-    <CRUDProvider endpoint="enrollments">
-      <CallManagementTable />
+    <CRUDProvider 
+      endpoint="enrollments"
+      params={{
+        status: 'waiting,called,confirmed,ignored,dropped',
+        activeClassesOnly: true,
+        page: currentPage,
+        limit: pageSize,
+      }}
+      usePagination={true}
+      pageId="call-management"
+    >
+      <CallManagementTable 
+        onPageChange={setCurrentPage}
+        currentPage={currentPage}
+        pageSize={pageSize}
+      />
       <CallManagementForm />
     </CRUDProvider>
   );

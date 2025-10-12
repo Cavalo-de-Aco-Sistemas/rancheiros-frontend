@@ -27,7 +27,13 @@ const tableHeaders = [
   'Modelo'
 ];
 
-export function CertificationManagementTable() {
+interface CertificationManagementTableProps {
+  onPageChange?: (page: number) => void;
+  currentPage?: number;
+  pageSize?: number;
+}
+
+export function CertificationManagementTable({ onPageChange, currentPage, pageSize }: CertificationManagementTableProps) {
   const { query } = useCRUD();
   const { name } = useAuth();
   const updateFlowMutation = useEnrollmentFlowMutation();
@@ -220,18 +226,19 @@ Deus abençoe grandemente.`;
     []
   );
 
-  // Filtrar dados para mostrar apenas inscrições confirmadas
-  const filteredData = useMemo(() => {
-    if (!query.data) return [];
-    
-    return (query.data as unknown as Enrollment[]).filter(enrollment => 
-      enrollment.status === EnrollmentStatus.CONFIRMED
-    );
-  }, [query.data]);
+  // Dados já filtrados pelo backend
+  const paginatedData = query.data as any;
+  const data = paginatedData?.data || [];
+  const pagination = paginatedData ? {
+    page: paginatedData.page,
+    limit: paginatedData.limit,
+    total: paginatedData.total,
+    totalPages: paginatedData.totalPages,
+  } : undefined;
 
   const csvData = useMemo(
     () =>
-      filteredData?.map(
+      data?.map(
         ({
           name,
           phone,
@@ -245,7 +252,7 @@ Deus abençoe grandemente.`;
           status,
           enrollment_date,
           class: class_,
-        }) => ({
+        }: Enrollment) => ({
           Fluxo: '', // Fluxo não é exportado para CSV/PDF
           Turma: class_?.date ? (dateBR(class_.date) ?? '') : '',
           Status: status,
@@ -261,7 +268,7 @@ Deus abençoe grandemente.`;
           Modelo: model
         })
       ) ?? [],
-    [filteredData]
+    [data]
   );
 
   const rowMapper = useCallback((row: MRT_Row<Enrollment>): string[] => {
@@ -299,7 +306,7 @@ Deus abençoe grandemente.`;
   const pdfConfig = useMemo(() => ({ tableHeaders, rowMapper }), [rowMapper]);
 
   // Se não há dados, mostrar mensagem informativa
-  if (filteredData.length === 0) {
+  if (data.length === 0) {
     return (
       <Center h={400}>
         <Stack align="center" gap="md">
@@ -329,7 +336,9 @@ Deus abençoe grandemente.`;
           brand: false,
           model: false,
         }}
-        data={filteredData}
+        data={data}
+        pagination={pagination}
+        onPageChange={onPageChange}
       />
     </>
   );

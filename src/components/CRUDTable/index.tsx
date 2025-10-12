@@ -54,6 +54,13 @@ export interface CustomAction<T extends MRT_RowData> {
   confirmationButtonColor?: string;
 }
 
+interface PaginationInfo {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+}
+
 export interface CRUDTableProps<T extends MRT_RowData> {
   columns: MRT_ColumnDef<T>[];
   title: string;
@@ -66,6 +73,8 @@ export interface CRUDTableProps<T extends MRT_RowData> {
   columnVisibility?: Record<string, boolean>;
   data?: T[];
   enableEdit?: boolean;
+  pagination?: PaginationInfo;
+  onPageChange?: (page: number) => void;
 }
 
 const DEFAULT_PERMISSIONS = {
@@ -75,7 +84,7 @@ const DEFAULT_PERMISSIONS = {
 };
 
 export function CRUDTable<T extends MRT_RowData>(props: CRUDTableProps<T>) {
-  const { columns, title, csvData, pdfConfig, customActions = [], columnVisibility, data: customData, enableEdit = false } = props;
+  const { columns, title, csvData, pdfConfig, customActions = [], columnVisibility, data: customData, enableEdit = false, pagination, onPageChange } = props;
   const { query, setSelected, setAction, open } = useCRUD();
   
   // Estados para modal de confirmação
@@ -188,11 +197,25 @@ export function CRUDTable<T extends MRT_RowData>(props: CRUDTableProps<T>) {
       },
     },
     enableBottomToolbar: false,
-    enablePagination: false,
-    enableRowVirtualization: true,
+    enablePagination: !!pagination,
+    enableRowVirtualization: !pagination,
     mantineTableContainerProps: { style: { maxHeight: 'calc(100vh - 128px)' } },
     enableRowActions: true,
-  }), [columns, customData, data, isError, error?.message, isLoading, isFetching, columnVisibility]);
+    pagination: pagination ? {
+      pageIndex: pagination.page - 1,
+      pageSize: pagination.limit,
+    } : undefined,
+    pageCount: pagination?.totalPages,
+    manualPagination: !!pagination,
+    onPaginationChange: pagination && onPageChange ? (updater: any) => {
+      if (typeof updater === 'function') {
+        const newPagination = updater({ pageIndex: pagination.page - 1, pageSize: pagination.limit });
+        onPageChange(newPagination.pageIndex + 1);
+      } else {
+        onPageChange(updater.pageIndex + 1);
+      }
+    } : undefined,
+  }), [columns, customData, data, isError, error?.message, isLoading, isFetching, columnVisibility, pagination, onPageChange]);
 
   const handleExportDataCSV = useCallback(() => {
     const csv = generateCsv(csvConfig)(csvData ?? []);
@@ -207,7 +230,8 @@ export function CRUDTable<T extends MRT_RowData>(props: CRUDTableProps<T>) {
       </Title>
     ),
     renderRowActionMenuItems: ({ row }) => {
-      const rowData = data?.[row.index];
+      const actualData = Array.isArray(data) ? data : data?.data || [];
+      const rowData = actualData[row.index];
       if (!rowData) {
         return null;
       }

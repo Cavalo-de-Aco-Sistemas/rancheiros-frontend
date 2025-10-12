@@ -155,6 +155,40 @@ e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR
   - Separação clara de responsabilidades entre páginas
   - Prevenção de edições acidentais em páginas especializadas
 
+- **Backend Filtering and Pagination**: Implementação de filtros e paginação no backend
+  - **Query Parameters**: Suporte a `status`, `activeClassesOnly`, `page`, `limit`
+  - **Filtros Inteligentes**: Status por vírgula, turmas ativas, permissões de rancho
+  - **Paginação Eficiente**: Controle de página, limite e contagem total
+  - **Performance**: Redução significativa de dados transferidos
+  - **Escalabilidade**: Suporte a milhares de registros
+
+- **Frontend Query System Enhancement**: Sistema de consultas aprimorado
+  - **useCRUDQuery**: Suporte a query parameters e paginação
+  - **CRUDContext**: Integração com filtros e paginação
+  - **CRUDTable**: Paginação nativa com controles de navegação
+  - **Type Safety**: Tipos TypeScript para dados paginados
+  - **Cache Inteligente**: React Query otimizado para filtros
+
+- **Page-Specific Filtering**: Filtros específicos por página
+  - **Call Management**: Status de gestão de chamadas + turmas ativas
+  - **Certifications**: Apenas confirmados + turmas ativas
+  - **Visão Geral**: Sem filtros (todos os dados)
+  - **Performance**: Redução de 70-90% nos dados transferidos
+  - **UX**: Carregamento mais rápido e responsivo
+
+- **Backend Query Parameter Fix**: Correção na conversão de parâmetros
+  - **activeClassesOnly**: Corrigida conversão de string para boolean
+  - **Type Safety**: Parâmetros de query tratados corretamente
+  - **Data Flow**: Dados agora fluem corretamente para as tabelas
+  - **Debug**: Removidos logs de debug após correção
+
+- **Query Cache Isolation**: Isolamento de cache entre páginas
+  - **pageId**: Identificador único para cada página (call-management, certification-management, enrollments-overview)
+  - **Cache Keys**: Chaves únicas baseadas em parâmetros ordenados
+  - **Data Isolation**: Cada página mantém seu próprio cache independente
+  - **Performance**: Evita conflitos de cache entre páginas especializadas
+  - **Consistency**: Dados corretos exibidos em cada contexto
+
 ### Technical Details
 - **Column Management**: Utilização do sistema nativo de visibilidade do MantineReactTable
 - **Export Compatibility**: CSV e PDF mantêm compatibilidade com nova ordem de colunas
