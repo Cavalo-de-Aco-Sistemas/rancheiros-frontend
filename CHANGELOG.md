@@ -48,6 +48,13 @@ e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR
   - Cálculo correto do total de páginas baseado no `rowCount`
   - Configuração adequada de `pageCount` e `manualPagination`
 
+- **Formatação de Data de Inscrição**: Correção de timezone
+  - Resolvido problema de formatação incorreta com timezone UTC
+  - Corrigida exibição "12T00:00:00.000Z/10/2025" para "08/10/2025"
+  - Implementada conversão segura de ISO string para Date object
+  - Formatação brasileira DD/MM/YYYY em todas as tabelas
+  - Try/catch para proteção contra datas inválidas
+
 ### Enhanced
 - **CRUDTable**: Melhorias na experiência de paginação
   - **Estado Controlado**: Sincronização perfeita entre frontend e backend
@@ -55,6 +62,13 @@ e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR
   - **Fallbacks Seguros**: Valores padrão para evitar erros durante carregamento
   - **Reset de Página**: Volta para página 1 quando muda tamanho da página
   - **Feedback Visual**: Loading states durante mudanças de paginação
+
+- **CertificationManagementTable**: Otimização de visibilidade de colunas
+  - **Interface Limpa**: Colunas ocultas por padrão para melhor experiência
+  - **Colunas Ocultas por Padrão**: Status, Data de Inscrição, Cidade Preferencial, UF
+  - **Flexibilidade**: Usuário pode mostrar/ocultar colunas conforme necessário
+  - **Foco no Essencial**: Página carrega com colunas mais relevantes visíveis
+  - **Controle Total**: Menu "Mostrar/Ocultar Colunas" funcional para todas as colunas
 
 ### Technical
 - **CRUDTable**: Configuração otimizada de paginação
@@ -71,6 +85,13 @@ e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR
   - Cálculo: `(pageIndex * pageSize) + rowIndex + 1`
   - Memoização para performance otimizada
   - Integração transparente com colunas existentes
+
+- **Formatação de Data**: Implementação robusta para timezone
+  - Conversão segura de ISO string para Date object
+  - Formatação brasileira DD/MM/YYYY com padStart
+  - Tratamento de timezone UTC do banco de dados
+  - Try/catch para proteção contra datas inválidas
+  - Aplicação em todas as tabelas de enrollment
 
 ## [1.4.0] - 2025-01-12
 
