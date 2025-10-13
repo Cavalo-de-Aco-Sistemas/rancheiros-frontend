@@ -15,7 +15,19 @@ import { generateEnrollmentCSV, generateEnrollmentPDF } from '@/utils/enrollment
 
 const tableHeaders = ['Local do MPV', 'Data', 'Link do Maps', 'Ativo'];
 
-export function ClassesTable() {
+interface ClassesTableProps {
+  onPageChange?: (page: number) => void;
+  onPageSizeChange?: (pageSize: number) => void;
+  currentPage?: number;
+  pageSize?: number;
+}
+
+export function ClassesTable({
+  onPageChange,
+  onPageSizeChange,
+  currentPage = 1,
+  pageSize = 10,
+}: ClassesTableProps = {}) {
   const { query } = useCRUD();
   const { axiosInstance } = useAuth();
   const toggleActiveMutation = useClassToggleActiveMutation();
@@ -156,6 +168,24 @@ export function ClassesTable() {
 
   const pdfConfig = useMemo(() => ({ tableHeaders, rowMapper }), [rowMapper]);
 
+  // Paginação client-side
+  const allData = useMemo(() => {
+    return extractData(query.data) as unknown as Class[];
+  }, [query.data]);
+
+  const paginatedData = useMemo(() => {
+    const startIndex = (currentPage - 1) * pageSize;
+    const endIndex = startIndex + pageSize;
+    return allData.slice(startIndex, endIndex);
+  }, [allData, currentPage, pageSize]);
+
+  const pagination = useMemo(() => ({
+    page: currentPage,
+    limit: pageSize,
+    total: allData.length,
+    totalPages: Math.ceil(allData.length / pageSize),
+  }), [allData.length, currentPage, pageSize]);
+
   const customActions: CustomAction<Class>[] = useMemo(() => [
     {
       label: 'Baixar Lista de Confirmados (PDF)',
@@ -175,6 +205,10 @@ export function ClassesTable() {
       csvData={csvData} 
       pdfConfig={pdfConfig} 
       customActions={customActions}
+      data={paginatedData}
+      pagination={pagination}
+      onPageChange={onPageChange}
+      onPageSizeChange={onPageSizeChange}
       emptyStateMessage="Nenhuma turma encontrada"
       emptyStateDescription="As turmas aparecerão aqui conforme forem sendo criadas"
     />
