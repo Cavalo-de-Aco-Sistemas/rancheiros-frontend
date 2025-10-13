@@ -8,6 +8,31 @@ e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR
 ## [Unreleased]
 
 ### Added
+- **Novas funcionalidades serão documentadas aqui**
+
+### Changed
+- **Mudanças em funcionalidades existentes serão documentadas aqui**
+
+### Fixed
+- **Correções de bugs serão documentadas aqui**
+
+### Enhanced
+- **Melhorias de performance e UX serão documentadas aqui**
+
+### Technical
+- **Mudanças técnicas e de infraestrutura serão documentadas aqui**
+
+## [1.6.0] - 2025-01-12
+
+### Pull Request
+- **PR #32**: Sistema de Download de Listas, Paginação Client-Side e Densidade Mínima das Tabelas
+  - Implementação completa de sistema de download de listas de inscrições confirmadas
+  - Sistema de paginação client-side em todas as páginas principais
+  - Densidade mínima aplicada em todas as tabelas do sistema
+  - Correções de bugs e melhorias de UX
+  - [Ver PR](https://github.com/Cavalo-de-Aco-Sistemas/rancheiros-frontend/pull/32)
+
+### Added
 - **Sistema de Download de Listas de Inscrições Confirmadas**:
   - **ClassesTable**: Funcionalidade para baixar lista de inscrições confirmadas por turma
     - Botão de download na coluna de ações padrão do CRUDTable
