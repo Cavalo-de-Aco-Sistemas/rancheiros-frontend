@@ -75,6 +75,7 @@ export interface CRUDTableProps<T extends MRT_RowData> {
   enableEdit?: boolean;
   pagination?: PaginationInfo;
   onPageChange?: (page: number) => void;
+  enableFilters?: boolean; // Habilita filtros de colunas
 }
 
 const DEFAULT_PERMISSIONS = {
@@ -95,8 +96,18 @@ export function CRUDTable<T extends MRT_RowData>(props: CRUDTableProps<T>) {
     enableEdit = false,
     pagination,
     onPageChange,
+    enableFilters = false,
   } = props;
-  const { query, setSelected, setAction, open } = useCRUD();
+  const { 
+    query, 
+    setSelected, 
+    setAction, 
+    open,
+    columnFilters,
+    setColumnFilters,
+    globalFilter,
+    setGlobalFilter,
+  } = useCRUD();
 
   // Estados para modal de confirmação
   const [confirmationModal, setConfirmationModal] = useState<{
@@ -186,15 +197,29 @@ export function CRUDTable<T extends MRT_RowData>(props: CRUDTableProps<T>) {
     [filename]
   );
 
+  // Debug: Log dos dados recebidos
+  const tableData = (customData ?? data ?? []) as T[];
+  if (enableFilters) {
+    console.log('🔍 CRUDTable - Dados recebidos:', {
+      totalData: tableData.length,
+      hasCustomData: !!customData,
+      hasData: !!data,
+      columnFilters,
+      globalFilter
+    });
+  }
+
   // Memoize the table configuration to prevent unnecessary re-renders
   const tableConfig = useMemo(
     () => ({
       columns,
-      data: (customData ?? data ?? []) as T[],
+      data: tableData,
       localization: MRT_Localization_PT_BR,
       initialState: {
         density: 'xs' as const,
         columnVisibility: columnVisibility || {},
+        showColumnFilters: enableFilters,
+        showGlobalFilter: enableFilters,
       },
       mantineToolbarAlertBannerProps: isError
         ? {
@@ -202,7 +227,13 @@ export function CRUDTable<T extends MRT_RowData>(props: CRUDTableProps<T>) {
             children: error?.message ?? 'Error loading data',
           }
         : undefined,
-      state: { isLoading, showAlertBanner: isError, showProgressBars: isFetching },
+      state: { 
+        isLoading, 
+        showAlertBanner: isError, 
+        showProgressBars: isFetching,
+        columnFilters: enableFilters ? columnFilters : undefined,
+        globalFilter: enableFilters ? globalFilter : undefined,
+      },
       mantinePaperProps: {
         style: {
           border: 'none',
@@ -213,6 +244,22 @@ export function CRUDTable<T extends MRT_RowData>(props: CRUDTableProps<T>) {
       enableRowVirtualization: !pagination,
       mantineTableContainerProps: { style: { maxHeight: 'calc(100vh - 128px)' } },
       enableRowActions: true,
+      // Configurações de filtros
+      enableColumnFilters: enableFilters,
+      enableGlobalFilter: enableFilters,
+      enableColumnFilterModes: enableFilters,
+      enableFilterMatchHighlighting: enableFilters,
+      // Sempre usar manual filtering quando filtros estão habilitados
+      // para evitar dupla filtragem (backend + frontend)
+      manualFiltering: enableFilters,
+      onColumnFiltersChange: enableFilters ? setColumnFilters : undefined,
+      onGlobalFilterChange: enableFilters ? setGlobalFilter : undefined,
+      // Desabilitar filtros locais quando manual filtering está ativo
+      enableColumnFiltering: enableFilters,
+      enableGlobalFiltering: enableFilters,
+      // Configurações específicas para filtros
+      enableMultiSort: false,
+      enableMultiColumnFiltering: true,
       pagination: pagination
         ? {
             pageIndex: pagination.page - 1,
@@ -247,6 +294,11 @@ export function CRUDTable<T extends MRT_RowData>(props: CRUDTableProps<T>) {
       columnVisibility,
       pagination,
       onPageChange,
+      enableFilters,
+      columnFilters,
+      globalFilter,
+      setColumnFilters,
+      setGlobalFilter,
     ]
   );
 
@@ -321,8 +373,8 @@ export function CRUDTable<T extends MRT_RowData>(props: CRUDTableProps<T>) {
 
     renderToolbarInternalActions: ({ table }) => (
       <Group>
-        <MRT_ToggleGlobalFilterButton table={table} />
-        <MRT_ToggleFiltersButton table={table} />
+        {enableFilters && <MRT_ToggleGlobalFilterButton table={table} />}
+        {enableFilters && <MRT_ToggleFiltersButton table={table} />}
         <MRT_ShowHideColumnsButton table={table} />
         <MRT_ToggleDensePaddingButton table={table} />
         <MRT_ToggleFullScreenButton table={table} />

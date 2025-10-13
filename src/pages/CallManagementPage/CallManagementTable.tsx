@@ -327,6 +327,7 @@ Deus abençoe grandemente.`;
         csvData={csvData}
         pdfConfig={pdfConfig}
         customActions={customActions}
+        enableFilters
         columnVisibility={{
           cnh: false,
           email: false,

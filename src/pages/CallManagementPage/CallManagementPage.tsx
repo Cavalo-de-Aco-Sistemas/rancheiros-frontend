@@ -16,6 +16,7 @@ export function CallManagementPage() {
         limit: pageSize,
       }}
       usePagination
+      enableFilters
       pageId="call-management"
     >
       <CallManagementTable

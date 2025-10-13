@@ -76,6 +76,8 @@ export function EnrollmentsTable() {
       {
         accessorKey: 'class',
         header: 'Turma',
+        filterVariant: 'text',
+        filterFn: 'contains',
         Cell: ({ row }) => {
           const classData = row.original.class;
           if (!classData) {
@@ -99,18 +101,42 @@ export function EnrollmentsTable() {
       {
         accessorKey: 'status',
         header: 'Status',
+        filterVariant: 'select',
+        filterSelectOptions: [
+          { label: 'Aguardando', value: 'waiting' },
+          { label: 'Chamado', value: 'called' },
+          { label: 'Confirmado', value: 'confirmed' },
+          { label: 'Ignorado', value: 'ignored' },
+          { label: 'Desistiu', value: 'dropped' },
+          { label: 'Faltou', value: 'missed' },
+          { label: 'Certificado', value: 'certified' },
+        ],
+        filterFn: 'equals',
         Cell: ({ row }) => <StatusIcon status={row.original.status} />,
       },
-      { accessorKey: 'enrollment_date', header: 'Data de Inscrição' },
+      { 
+        accessorKey: 'enrollment_date', 
+        header: 'Data de Inscrição',
+        filterVariant: 'date',
+      },
       {
         accessorKey: 'preferred_city',
         header: 'Cidade Preferencial',
+        filterVariant: 'text',
+        filterFn: 'contains',
         Cell: ({ row }) => row.original.preferred_city?.name ?? '',
       },
-      { accessorKey: 'name', header: 'Nome' },
+      { 
+        accessorKey: 'name', 
+        header: 'Nome',
+        filterVariant: 'text',
+        filterFn: 'contains',
+      },
       {
         accessorKey: 'phone',
         header: 'Telefone',
+        filterVariant: 'text',
+        filterFn: 'contains',
         Cell: ({ row }) => {
           const phone = row.original.phone;
           const enrollment = row.original;
@@ -180,7 +206,13 @@ Deus abençoe grandemente.`;
       { accessorKey: 'uf_cnh', header: 'UF' },
       // Colunas ocultas por padrão
       { accessorKey: 'cnh', header: 'CNH', enableHiding: true },
-      { accessorKey: 'email', header: 'Email', enableHiding: true },
+      { 
+        accessorKey: 'email', 
+        header: 'Email', 
+        enableHiding: true,
+        filterVariant: 'text',
+        filterFn: 'contains',
+      },
       { accessorKey: 'motorcycle_usage', header: 'Uso de Moto', enableHiding: true },
       { accessorKey: 'brand', header: 'Marca', enableHiding: true },
       { accessorKey: 'model', header: 'Modelo', enableHiding: true },
@@ -270,6 +302,7 @@ Deus abençoe grandemente.`;
         pdfConfig={pdfConfig}
         customActions={customActions}
         enableEdit
+        enableFilters
         data={data}
         columnVisibility={{
           cnh: false,

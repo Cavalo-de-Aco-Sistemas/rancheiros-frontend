@@ -5,6 +5,8 @@ import { BACKEND_ADDRESS } from '@/utils/constants';
 
 interface QueryParams {
   [key: string]: string | number | boolean | undefined;
+  // Filtros de colunas são enviados como filter_<columnId>: value
+  // Filtro global é enviado como search: value
 }
 
 interface PaginatedResult<T> {
