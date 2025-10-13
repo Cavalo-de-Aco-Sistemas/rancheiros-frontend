@@ -5,6 +5,8 @@ Todas as mudanças notáveis neste projeto serão documentadas neste arquivo.
 O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/),
 e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR/).
 
+As mudanças em development estão documentadas em On Development, quando desejamos criar um PR para production devemos criar uma nova versão na seção On Production com as atualizações da develop.
+
 ## [Unreleased]
 
 ### Added
@@ -22,277 +24,52 @@ e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR
 ### Technical
 - **Mudanças técnicas e de infraestrutura serão documentadas aqui**
 
-## [1.6.0] - 2025-01-12
+# On Develop Branch
 
-### Pull Requests
-- **PR #32**: Sistema de Download de Listas, Paginação Client-Side e Densidade Mínima das Tabelas
-  - Implementação completa de sistema de download de listas de inscrições confirmadas
-  - Sistema de paginação client-side em todas as páginas principais
-  - Densidade mínima aplicada em todas as tabelas do sistema
-  - Correções de bugs e melhorias de UX
-  - [Ver PR](https://github.com/Cavalo-de-Aco-Sistemas/rancheiros-frontend/pull/32)
+# On Production Branch
 
-- **PR #33**: 🚀 Release v1.6.0: Sistema de Download de Listas, Paginação Client-Side e Densidade Mínima
-  - Release de produção da versão 1.6.0
-  - Merge da develop para production
-  - Documentação completa para deploy em produção
-  - [Ver PR](https://github.com/Cavalo-de-Aco-Sistemas/rancheiros-frontend/pull/33)
+## [2.0.0] - production
 
 ### Added
-- **Sistema de Download de Listas de Inscrições Confirmadas**:
-  - **ClassesTable**: Funcionalidade para baixar lista de inscrições confirmadas por turma
-    - Botão de download na coluna de ações padrão do CRUDTable
-    - Suporte a formatos CSV e PDF
-    - Integração com API `/enrollments/confirmed/class/:classId`
-    - Notificações de sucesso, aviso (sem inscrições) e erro
-    - Feedback visual durante download com estado de loading
-
-  - **Relatórios de Inscrições**: Estrutura de relatório otimizada
-    - **Cabeçalho**: Local, data e total de confirmados
-    - **Tabela**: Número sequencial, nome, moto (marca/modelo), assinatura
-    - **Remoção**: Colunas telefone e CNH removidas conforme solicitado
-    - **Coluna de Assinatura**: Campo amplo para assinatura presencial
-    - **Formato Moto**: Combinação "Marca/Modelo" em coluna única
-
-### Enhanced
-- **CRUDTable**: Densidade mínima aplicada em todas as tabelas
-  - **Densidade 'xs'**: Menor espaçamento possível entre linhas
-  - **Configuração Dupla**: `initialState.density` e `state.density` forçados para 'xs'
-  - **Menu Limpo**: Removido botão de toggle de densidade do menu
-  - **Consistência**: Todas as tabelas do sistema com densidade uniforme
-  - **Performance**: Mais dados visíveis por tela, melhor aproveitamento do espaço
+- **Sistema de Download de Listas de Inscrições Confirmadas**: Funcionalidade completa para baixar listas por turma
+  - Botão de download na coluna de ações padrão do CRUDTable
+  - Suporte a formatos CSV e PDF
+  - Integração com API `/enrollments/confirmed/class/:classId`
+  - Notificações de sucesso, aviso (sem inscrições) e erro
+  - Feedback visual durante download com estado de loading
 
 - **Sistema de Paginação Client-Side**: Implementado em páginas principais
-  - **Páginas com Paginação**: Classes, Ranchos, Membros, Locais de Treinamento, Usuários
-  - **Controles Avançados**: Navegação entre páginas, seletor de tamanho (10, 25, 50, 100)
-  - **Reset Automático**: Volta para página 1 ao mudar tamanho da página
-  - **Contadores**: Total de registros e páginas disponíveis
-  - **Performance**: Carrega apenas dados visíveis na tela
+  - Páginas com Paginação: Classes, Ranchos, Membros, Locais de Treinamento, Usuários
+  - Controles Avançados: Navegação entre páginas, seletor de tamanho (10, 25, 50, 100)
+  - Reset Automático: Volta para página 1 ao mudar tamanho da página
+  - Contadores: Total de registros e páginas disponíveis
+  - Performance: Carrega apenas dados visíveis na tela
 
-### Fixed
-- **CSV Download**: Correção na geração de arquivos CSV
-  - **Problema**: CSV não era baixado, apenas PDF funcionava
-  - **Solução**: Adicionada chamada explícita `download(config)(csv)` após `generateCsv`
-  - **Biblioteca**: Corrigido uso da biblioteca `export-to-csv`
-  - **Funcionalidade**: CSV e PDF agora funcionam corretamente
+- **Sistema de Controle de Paginação Completo**: Controles avançados de paginação
+  - CRUDTable: Controles avançados de paginação
+  - Seletor de tamanho de página (10, 25, 50, 100 itens)
+  - Navegação entre páginas com botões próxima/anterior
+  - Contador de registros (ex: "1-50 de 897")
+  - Informações de página atual e total de páginas
+  - Integração completa com backend para paginação server-side
 
-- **Validação de Dados**: Melhorada validação para listas vazias
-  - **Verificação de Array**: Validação se `enrollments` é array válido
-  - **Verificação de Conteúdo**: Validação se há inscrições confirmadas
-  - **Notificações**: Aviso específico quando não há inscrições confirmadas
-  - **Tratamento de Erro**: Mensagens de erro mais específicas e úteis
+- **Sistema de Numeração Sequencial de Linhas**: Coluna de numeração automática
+  - Nova prop `enableRowNumbers` para habilitar/desabilitar numeração
+  - Coluna "#" posicionada como primeira coluna da tabela
+  - Cálculo inteligente considerando paginação atual
+  - Numeração sequencial correta entre páginas (ex: página 2 inicia em 51)
+  - Estilo visual consistente (centralizado, negrito, cor cinza)
+  - Coluna não ordenável, não filtrável e não ocultável
 
-### Technical
-- **API Integration**: Integração direta com backend para dados de inscrições
-  - **Endpoint**: `/enrollments/confirmed/class/:classId`
-  - **Autenticação**: Uso do `axiosInstance` do AuthContext
-  - **Tratamento de Resposta**: Validação de formato de dados retornados
-  - **Error Handling**: Tratamento robusto de erros de API
+- **Sistema de Filtros Avançados no Frontend**: Suporte completo a filtros dinâmicos
+  - CRUDContext: Estados para `columnFilters` e `globalFilter`
+  - Conversão automática de filtros em parâmetros de query para o backend
+  - Cache automático por parâmetros de filtro
+  - Novo parâmetro `enableFilters` para habilitar filtros
+  - CRUDTable: Integração completa com MantineReactTable para filtros
+  - Tipos de Filtros Disponíveis: Filtro global, filtros por coluna, filtros combinados, filtros com paginação
 
-- **Report Generation**: Utilitários para geração de relatórios
-  - **generateEnrollmentCSV**: Geração de CSV com validações
-  - **generateEnrollmentPDF**: Geração de PDF com layout otimizado
-  - **Validações**: Verificação de dados antes da geração
-  - **Nomenclatura**: Arquivos com nome descritivo (local-data)
-
-- **Client-Side Pagination**: Implementação de paginação local
-  - **Estado**: `currentPage` e `pageSize` gerenciados localmente
-  - **Memoização**: `allData`, `paginatedData` e `pagination` otimizados
-  - **Performance**: Slice de dados apenas para itens visíveis
-  - **Sincronização**: Props passadas para CRUDTable para controle externo
-
-## [1.5.0] - 2025-01-12
-
-### Pull Request
-- **PR #31**: Sistema de Paginação Avançado, Numeração de Linhas e Melhorias de UX
-  - Implementação completa de sistema de paginação avançada com controles de tamanho de página
-  - Sistema de numeração sequencial de linhas considerando paginação
-  - Melhorias significativas na experiência do usuário com loading states e mensagens contextuais
-  - Correção de formatação de data com timezone UTC
-  - Otimização de visibilidade de colunas na página de certificação
-  - [Ver PR](https://github.com/Cavalo-de-Aco-Sistemas/rancheiros-frontend/pull/31)
-
-### Added
-- **Sistema de Controle de Paginação Completo**:
-  - **CRUDTable**: Controles avançados de paginação
-    - Seletor de tamanho de página (10, 25, 50, 100 itens)
-    - Navegação entre páginas com botões próxima/anterior
-    - Contador de registros (ex: "1-50 de 897")
-    - Informações de página atual e total de páginas
-    - Integração completa com backend para paginação server-side
-
-  - **Páginas com Paginação Implementada**:
-    - **EnrollmentsPage**: Visão geral de inscrições com paginação
-    - **CallManagementPage**: Gestão de chamadas com paginação
-    - **CertificationManagementPage**: Gestão de certificações com paginação
-
-- **Sistema de Numeração Sequencial de Linhas**:
-  - **CRUDTable**: Coluna de numeração automática
-    - Nova prop `enableRowNumbers` para habilitar/desabilitar numeração
-    - Coluna "#" posicionada como primeira coluna da tabela
-    - Cálculo inteligente considerando paginação atual
-    - Numeração sequencial correta entre páginas (ex: página 2 inicia em 51)
-    - Estilo visual consistente (centralizado, negrito, cor cinza)
-    - Coluna não ordenável, não filtrável e não ocultável
-
-  - **Páginas com Numeração Implementada**:
-    - **EnrollmentsPage**: Numeração sequencial habilitada
-    - **CallManagementPage**: Numeração sequencial habilitada
-    - **CertificationManagementPage**: Numeração sequencial habilitada
-
-### Fixed
-- **CRUDTable**: Correção de erro de paginação
-  - Resolvido erro "Cannot read properties of undefined (reading 'pageSize')"
-  - Estado de paginação sempre definido com valores padrão seguros
-  - Configuração correta de `rowCount` para `manualPagination`
-  - Sincronização adequada entre estado interno e props externas
-
-- **CRUDTable**: Correção de exibição de paginação
-  - Corrigida exibição incorreta "1-50 de 50" para "1-50 de 897"
-  - Habilitados botões de navegação entre páginas
-  - Cálculo correto do total de páginas baseado no `rowCount`
-  - Configuração adequada de `pageCount` e `manualPagination`
-
-- **Formatação de Data de Inscrição**: Correção de timezone
-  - Resolvido problema de formatação incorreta com timezone UTC
-  - Corrigida exibição "12T00:00:00.000Z/10/2025" para "08/10/2025"
-  - Implementada conversão segura de ISO string para Date object
-  - Formatação brasileira DD/MM/YYYY em todas as tabelas
-  - Try/catch para proteção contra datas inválidas
-
-### Enhanced
-- **CRUDTable**: Melhorias na experiência de paginação
-  - **Estado Controlado**: Sincronização perfeita entre frontend e backend
-  - **Re-renderização**: Chave única para forçar atualização quando paginação muda
-  - **Fallbacks Seguros**: Valores padrão para evitar erros durante carregamento
-  - **Reset de Página**: Volta para página 1 quando muda tamanho da página
-  - **Feedback Visual**: Loading states durante mudanças de paginação
-
-- **CertificationManagementTable**: Otimização de visibilidade de colunas
-  - **Interface Limpa**: Colunas ocultas por padrão para melhor experiência
-  - **Colunas Ocultas por Padrão**: Status, Data de Inscrição, Cidade Preferencial, UF
-  - **Flexibilidade**: Usuário pode mostrar/ocultar colunas conforme necessário
-  - **Foco no Essencial**: Página carrega com colunas mais relevantes visíveis
-  - **Controle Total**: Menu "Mostrar/Ocultar Colunas" funcional para todas as colunas
-
-### Technical
-- **CRUDTable**: Configuração otimizada de paginação
-  - `rowCount`: Total de registros para cálculo correto de páginas
-  - `pageCount`: Total de páginas para navegação
-  - `manualPagination`: Controle server-side da paginação
-  - `state.pagination`: Sincronização com props externas
-  - `onPaginationChange`: Callbacks para mudanças de página e tamanho
-
-- **CRUDTable**: Implementação de numeração sequencial
-  - `enableRowNumbers`: Prop para habilitar coluna de numeração
-  - `rowNumberColumn`: Coluna customizada com cálculo de paginação
-  - `finalColumns`: Combinação dinâmica de colunas com numeração
-  - Cálculo: `(pageIndex * pageSize) + rowIndex + 1`
-  - Memoização para performance otimizada
-  - Integração transparente com colunas existentes
-
-- **Formatação de Data**: Implementação robusta para timezone
-  - Conversão segura de ISO string para Date object
-  - Formatação brasileira DD/MM/YYYY com padStart
-  - Tratamento de timezone UTC do banco de dados
-  - Try/catch para proteção contra datas inválidas
-  - Aplicação em todas as tabelas de enrollment
-
-## [1.4.0] - 2025-01-12
-
-### Pull Request
-- **PR #29**: Sistema de Filtros Avançados e Melhorias de UX
-  - Implementação completa de sistema de filtros avançados no backend e frontend
-  - Melhorias significativas na experiência do usuário
-  - Loading states, mensagens de estado vazio personalizadas e interface mais limpa
-  - [Ver PR](https://github.com/Cavalo-de-Aco-Sistemas/rancheiros-frontend/pull/29)
-
-### Added
-- **Sistema de Filtros Avançados no Frontend**:
-  - **CRUDContext**: Suporte completo a filtros dinâmicos
-    - Estados para `columnFilters` e `globalFilter`
-    - Conversão automática de filtros em parâmetros de query para o backend
-    - Cache automático por parâmetros de filtro
-    - Novo parâmetro `enableFilters` para habilitar filtros
-
-  - **CRUDTable**: Integração completa com MantineReactTable para filtros
-    - Novo parâmetro `enableFilters` para controlar exibição dos filtros
-    - Configuração automática de `manualFiltering` baseada em paginação
-    - Botões de filtro condicionais na toolbar
-    - Suporte a filtros de texto, select, data e faixa de data
-
-  - **Páginas com Filtros Implementados**:
-    - **EnrollmentsPage**: Filtros completos para visão geral de inscrições
-    - **CallManagementPage**: Filtros para gestão de chamadas
-    - **CertificationManagementPage**: Filtros para gestão de certificações
-    - **UsersPage**: Filtros para gestão de usuários
-
-  - **Tipos de Filtros Disponíveis**:
-    - Filtro global (busca em múltiplos campos)
-    - Filtros por coluna (texto, seleção, data)
-    - Filtros combinados (múltiplos filtros simultâneos)
-    - Filtros com paginação (mantém filtros entre páginas)
-
-### Changed
-- **CRUDTable**: Configuração híbrida de filtros
-  - `manualFiltering: true` para páginas com paginação (sincronização com backend)
-  - `manualFiltering: false` para páginas sem paginação (filtros locais)
-  - Detecção automática baseada na presença de paginação
-
-- **EnrollmentsTable**: Colunas com filtros configurados
-  - Status: Select com opções (waiting, called, confirmed, etc.)
-  - Nome: Texto com busca parcial
-  - Telefone: Texto com busca parcial
-  - Cidade Preferencial: Texto com busca parcial
-  - Data de Inscrição: Seletor de data
-  - Email: Texto com busca parcial
-  - Turma: Texto com busca parcial
-
-- **CertificationManagementTable**: Filtros adicionados
-  - Mesmos filtros da EnrollmentsTable
-  - Integração com sistema de certificação
-
-### Fixed
-- **CRUDTable**: Correção de dupla filtragem
-  - Resolvido problema de filtros aplicados tanto no backend quanto no frontend
-  - Configuração correta de `manualFiltering` para evitar conflitos
-  - Logs de debug adicionados para troubleshooting
-
-### Technical
-- **useCRUDQuery**: Documentação atualizada
-  - Comentários sobre formato dos parâmetros de filtro
-  - Suporte a `filter_<columnId>` e `search` parameters
-  - Cache otimizado por parâmetros de filtro
-
-### Enhanced
-- **CRUDTable**: Sistema de loading e mensagens de estado vazio aprimorado
-  - **Loading States**: Indicadores visuais durante carregamento de dados
-    - Skeleton loading com animação de onda
-    - Progress bars durante operações (filtros, paginação)
-    - Loading overlay para feedback visual claro
-  - **Mensagens de Estado Vazio**: Sistema personalizável e contextual
-    - Parâmetros `emptyStateMessage` e `emptyStateDescription`
-    - Mensagens específicas para cada tipo de tabela
-    - Remoção de mensagens prematuras (antes da tabela ser construída)
-  - **Experiência do Usuário**: Feedback visual consistente
-    - Loading adequado durante busca de dados
-    - Mensagens contextuais apenas quando necessário
-    - Design uniforme em todas as tabelas
-
-- **Todas as Tabelas**: Mensagens personalizadas implementadas
-  - **EnrollmentsTable**: "Nenhuma inscrição encontrada"
-  - **CallManagementTable**: "Nenhuma inscrição em processo de chamada encontrada"
-  - **CertificationManagementTable**: "Nenhuma inscrição confirmada encontrada"
-  - **UsersTable**: "Nenhum usuário encontrado"
-  - **RanchesTable**: "Nenhum rancho encontrado"
-  - **LocationsTable**: "Nenhum local de treinamento encontrado"
-  - **ClassesTable**: "Nenhuma turma encontrada"
-  - **MembersTable**: "Nenhum membro encontrado"
-
-## [1.3.0] - 2025-01-12
-
-### Added
-- **CRUDTable**: Implementado sistema de controle de visibilidade de colunas
+- **Sistema de Controle de Visibilidade de Colunas**: Implementado sistema de controle de visibilidade
   - Novo parâmetro `columnVisibility?: Record<string, boolean>` para definir colunas visíveis por padrão
   - Integração com funcionalidade nativa do MantineReactTable para mostrar/ocultar colunas
   - Botão "Mostrar/Ocultar Colunas" na toolbar da tabela para controle do usuário
@@ -317,6 +94,53 @@ e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR
   - Navegação intuitiva com indicadores visuais de estado ativo
   - Suporte a permissões granulares por funcionalidade
 
+- **EnrollmentsTable**: Implementado link do WhatsApp na coluna Telefone
+  - Link clicável que abre WhatsApp com número do aluno
+  - Detecção automática de dispositivo móvel (usa `whatsapp://` ou `https://wa.me/`)
+  - Formatação automática do telefone no padrão brasileiro (XX) XXXXX-XXXX
+  - Mensagem personalizada com parâmetros da turma (nome do aluno, data, local, cidade)
+  - Inclui nome do admin logado na mensagem para identificação pessoal
+  - Mensagem completa com instruções do treinamento e recomendações de segurança
+
+- **User Model**: Adicionado campo `name` ao modelo de usuários
+  - Interface `User` e `UserDto` atualizadas com campo `name`
+  - Campo obrigatório para identificação pessoal dos usuários
+  - Separação entre `username` (login) e `name` (exibição)
+
+- **AuthContext**: Expandido contexto de autenticação
+  - Adicionado campo `name` ao `AuthContextType` e `LoginProps`
+  - Armazenamento do nome do usuário no localStorage
+  - Disponibilização do nome em toda a aplicação via contexto
+
+- **UsersForm**: Atualizado formulário de usuários
+  - Novo campo "Nome" obrigatório no formulário de criação/edição
+  - Validação e persistência do campo `name`
+  - Interface atualizada para gerenciar nome e username separadamente
+
+- **UsersTable**: Expandida tabela de usuários
+  - Nova coluna "Nome" na tabela de usuários
+  - Exportação CSV/PDF inclui o nome dos usuários
+  - Interface mais informativa com identificação completa
+
+- **CRUDForm**: Adicionado suporte para transformação de dados antes do envio para API
+  - Nova propriedade opcional `transformData?: (data: D) => API`
+  - Novo tipo genérico `API` para permitir transformação de tipos
+  - Função `onSubmit` atualizada para usar transformação quando fornecida
+
+- **Model**: Criado tipo `ClassCreateDto` para representar dados enviados para API com `date` como string
+
+- **Classes Table Toggle Active Feature**: Funcionalidade para ativar/desativar turmas
+  - Criada ação personalizada na tabela de turmas com botão de toggle
+  - Usuários podem ativar/desativar turmas com confirmação e feedback visual
+  - Nova mutation `useClassToggleActiveMutation` com atualização otimista
+  - Confirmação antes da ação, ícones dinâmicos e notificações de sucesso/erro
+
+- **Classes Table Switch Implementation**: Implementação de switch na coluna Ativo
+  - Removida ação personalizada e implementado Switch diretamente na coluna "Ativo"
+  - Interface mais intuitiva - switch clicável para ativar/desativar turmas
+  - Ativação/desativação imediata sem necessidade de confirmação
+  - Switch com estado de loading e cor verde para melhor feedback visual
+
 ### Changed
 - **EnrollmentsPage**: Movida para estrutura hierárquica de inscrições
   - Nova rota: `/inscricoes/visao-geral` (anteriormente `/inscricoes`)
@@ -332,7 +156,85 @@ e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR
   - Atualização dos headers de exportação CSV/PDF para refletir nova ordem
   - Melhoria na organização visual da tabela com colunas mais relevantes em destaque
 
+- **CRUDTable**: Configuração híbrida de filtros
+  - `manualFiltering: true` para páginas com paginação (sincronização com backend)
+  - `manualFiltering: false` para páginas sem paginação (filtros locais)
+  - Detecção automática baseada na presença de paginação
+
+- **EnrollmentsTable**: Colunas com filtros configurados
+  - Status: Select com opções (waiting, called, confirmed, etc.)
+  - Nome: Texto com busca parcial
+  - Telefone: Texto com busca parcial
+  - Cidade Preferencial: Texto com busca parcial
+  - Data de Inscrição: Seletor de data
+  - Email: Texto com busca parcial
+  - Turma: Texto com busca parcial
+
+- **CertificationManagementTable**: Filtros adicionados
+  - Mesmos filtros da EnrollmentsTable
+  - Integração com sistema de certificação
+
+- **Backend AuthService**: Atualizado serviço de autenticação
+  - Método `validateUser()` retorna campo `name` do usuário
+  - Método `login()` inclui `name` na resposta de autenticação
+  - Documentação da API atualizada com campo `name`
+
+- **Backend AuthController**: Expandido controller de autenticação
+  - `LoginResponseDto` inclui campo `name` na documentação Swagger
+  - Resposta de login contém informações completas do usuário
+
+- **Backend User Entity**: Atualizada entidade de usuário
+  - Adicionada coluna `name` na entidade `User`
+  - DTOs `CreateUserDto` e `UserResponseDto` atualizados
+  - Validações e documentação da API expandidas
+
+- **WhatsApp Integration**: Melhorada integração com WhatsApp
+  - Mensagem personalizada com nome real do admin em vez de username
+  - Comunicação mais profissional e pessoal
+  - Identificação clara de quem está entrando em contato
+
+- **ClassesForm**: Melhorada compatibilidade entre frontend e backend
+  - Formulário continua trabalhando com objetos `Date` para facilitar uso com componentes de data
+  - Transformação automática de data para formato esperado pelo backend
+  - Mantida compatibilidade com padrão estabelecido no projeto
+
 ### Fixed
+- **CSV Download**: Correção na geração de arquivos CSV
+  - Problema: CSV não era baixado, apenas PDF funcionava
+  - Solução: Adicionada chamada explícita `download(config)(csv)` após `generateCsv`
+  - Biblioteca: Corrigido uso da biblioteca `export-to-csv`
+  - Funcionalidade: CSV e PDF agora funcionam corretamente
+
+- **Validação de Dados**: Melhorada validação para listas vazias
+  - Verificação de Array: Validação se `enrollments` é array válido
+  - Verificação de Conteúdo: Validação se há inscrições confirmadas
+  - Notificações: Aviso específico quando não há inscrições confirmadas
+  - Tratamento de Erro: Mensagens de erro mais específicas e úteis
+
+- **CRUDTable**: Correção de erro de paginação
+  - Resolvido erro "Cannot read properties of undefined (reading 'pageSize')"
+  - Estado de paginação sempre definido com valores padrão seguros
+  - Configuração correta de `rowCount` para `manualPagination`
+  - Sincronização adequada entre estado interno e props externas
+
+- **CRUDTable**: Correção de exibição de paginação
+  - Corrigida exibição incorreta "1-50 de 50" para "1-50 de 897"
+  - Habilitados botões de navegação entre páginas
+  - Cálculo correto do total de páginas baseado no `rowCount`
+  - Configuração adequada de `pageCount` e `manualPagination`
+
+- **Formatação de Data de Inscrição**: Correção de timezone
+  - Resolvido problema de formatação incorreta com timezone UTC
+  - Corrigida exibição "12T00:00:00.000Z/10/2025" para "08/10/2025"
+  - Implementada conversão segura de ISO string para Date object
+  - Formatação brasileira DD/MM/YYYY em todas as tabelas
+  - Try/catch para proteção contra datas inválidas
+
+- **CRUDTable**: Correção de dupla filtragem
+  - Resolvido problema de filtros aplicados tanto no backend quanto no frontend
+  - Configuração correta de `manualFiltering` para evitar conflitos
+  - Logs de debug adicionados para troubleshooting
+
 - **CRUDForm Integration**: Corrigido uso incorreto do CRUDForm nas novas páginas
   - Formulários agora seguem o padrão correto com props adequadas
   - Implementação de `useForm` e estrutura de campos conforme esperado
@@ -535,27 +437,29 @@ e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR
   - **Impact**: Status IGNORED, CONFIRMED e DROPPED podem retornar para CALLED conforme necessário
   - **Business Logic**: Flexibilidade no fluxo de chamadas - permite reativar alunos ignorados/cancelados
 
-- **Classes Table Toggle Active Feature**: Funcionalidade para ativar/desativar turmas
-  - **Problem**: Não havia forma de ativar/desativar turmas diretamente na tabela
-  - **Solution**: Criada ação personalizada na tabela de turmas com botão de toggle
-  - **Impact**: Usuários podem ativar/desativar turmas com confirmação e feedback visual
-  - **Technical**: Nova mutation `useClassToggleActiveMutation` com atualização otimista
-  - **UX**: Confirmação antes da ação, ícones dinâmicos e notificações de sucesso/erro
-
 - **Classes Table Icon Fix**: Correção de erro de renderização de ícones
   - **Problem**: Erro "Objects are not valid as a React child" na página de turmas
   - **Solution**: Corrigido tipo de ícone nas ações personalizadas - usando componente estático
   - **Impact**: Página de turmas funciona corretamente sem erros de renderização
   - **Technical**: Ícone fixo `IconToggleRight` em vez de função dinâmica
 
-- **Classes Table Switch Implementation**: Implementação de switch na coluna Ativo
-  - **Problem**: Ação personalizada para ativar/desativar turmas não era intuitiva
-  - **Solution**: Removida ação personalizada e implementado Switch diretamente na coluna "Ativo"
-  - **Impact**: Interface mais intuitiva - switch clicável para ativar/desativar turmas
-  - **UX**: Ativação/desativação imediata sem necessidade de confirmação
-  - **Technical**: Switch com estado de loading e cor verde para melhor feedback visual
+- **UsersForm**: Corrigido erro de validação no formulário de usuários
+  - Implementada função `transformData` para remover `repeatPassword` antes do envio à API
+  - Campo `repeatPassword` mantido para validação no frontend, removido apenas no envio
+  - Campo `password` vazio removido durante edições para evitar erro de validação
+  - Resolvido erro "property repeatPassword should not exist" e "password should not be empty"
+  - Formulário agora funciona corretamente para criação e edição de usuários
 
-### Fixed
+- **EnrollmentsForm**: Removida função `transformData` do formulário de enrollments
+  - Formulário agora envia dados diretamente para a API sem transformação
+  - Backend atualizado para aceitar todos os campos enviados pelo frontend
+  - Simplificação do código removendo lógica de transformação desnecessária
+  - Melhor compatibilidade entre frontend e backend
+
+- **ClassesForm**: Corrigido erro de validação na criação de classes
+  - Removido campo `name` inexistente do `INITIAL_VALUES` que causava erro "property name should not exist"
+  - Corrigido formato de data enviado para API - agora converte objetos `Date` para strings ISO (YYYY-MM-DD) antes do envio
+
 - **TypeScript Errors**: Corrigidos erros de compilação relacionados a dados paginados
   - Criada função utilitária `extractData()` para extrair dados de arrays ou objetos paginados
   - Corrigidos erros "Property 'map' does not exist on type 'PaginatedResult<...>'"
@@ -574,15 +478,109 @@ e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR
   - Aplicação pronta para produção
   - Melhorada performance de build com otimizações de chunking
 
-### Pull Requests
-- **PR #26**: Sistema de Gestão de Inscrições com Páginas Especializadas
-  - **URL**: https://github.com/Cavalo-de-Aco-Sistemas/rancheiros-frontend/pull/26
-  - **Base**: develop ← mpv
-  - **Status**: Aberto para revisão
-  - **Relacionado**: Backend PR #47
-  - **Testes**: TypeScript compilation ✅, Build process ✅, Linting corrigido ✅
+### Enhanced
+- **CRUDTable**: Densidade mínima aplicada em todas as tabelas
+  - Densidade 'xs': Menor espaçamento possível entre linhas
+  - Configuração Dupla: `initialState.density` e `state.density` forçados para 'xs'
+  - Menu Limpo: Removido botão de toggle de densidade do menu
+  - Consistência: Todas as tabelas do sistema com densidade uniforme
+  - Performance: Mais dados visíveis por tela, melhor aproveitamento do espaço
 
-### Technical Details
+- **CRUDTable**: Melhorias na experiência de paginação
+  - Estado Controlado: Sincronização perfeita entre frontend e backend
+  - Re-renderização: Chave única para forçar atualização quando paginação muda
+  - Fallbacks Seguros: Valores padrão para evitar erros durante carregamento
+  - Reset de Página: Volta para página 1 quando muda tamanho da página
+  - Feedback Visual: Loading states durante mudanças de paginação
+
+- **CertificationManagementTable**: Otimização de visibilidade de colunas
+  - Interface Limpa: Colunas ocultas por padrão para melhor experiência
+  - Colunas Ocultas por Padrão: Status, Data de Inscrição, Cidade Preferencial, UF
+  - Flexibilidade: Usuário pode mostrar/ocultar colunas conforme necessário
+  - Foco no Essencial: Página carrega com colunas mais relevantes visíveis
+  - Controle Total: Menu "Mostrar/Ocultar Colunas" funcional para todas as colunas
+
+- **CRUDTable**: Sistema de loading e mensagens de estado vazio aprimorado
+  - Loading States: Indicadores visuais durante carregamento de dados
+  - Skeleton loading com animação de onda
+  - Progress bars durante operações (filtros, paginação)
+  - Loading overlay para feedback visual claro
+  - Mensagens de Estado Vazio: Sistema personalizável e contextual
+  - Parâmetros `emptyStateMessage` e `emptyStateDescription`
+  - Mensagens específicas para cada tipo de tabela
+  - Remoção de mensagens prematuras (antes da tabela ser construída)
+  - Experiência do Usuário: Feedback visual consistente
+  - Loading adequado durante busca de dados
+  - Mensagens contextuais apenas quando necessário
+  - Design uniforme em todas as tabelas
+
+- **Todas as Tabelas**: Mensagens personalizadas implementadas
+  - EnrollmentsTable: "Nenhuma inscrição encontrada"
+  - CallManagementTable: "Nenhuma inscrição em processo de chamada encontrada"
+  - CertificationManagementTable: "Nenhuma inscrição confirmada encontrada"
+  - UsersTable: "Nenhum usuário encontrado"
+  - RanchesTable: "Nenhum rancho encontrado"
+  - LocationsTable: "Nenhum local de treinamento encontrado"
+  - ClassesTable: "Nenhuma turma encontrada"
+  - MembersTable: "Nenhum membro encontrado"
+
+- **ClassesTable**: Melhorada experiência do usuário na coluna de link do Maps
+  - Substituído texto do link por ícone de mapa (IconMapPin) clicável com tooltip
+  - Link abre em nova aba com segurança (noopener, noreferrer)
+  - Interface mais limpa e intuitiva com ícone semânticamente correto
+
+### Technical
+- **API Integration**: Integração direta com backend para dados de inscrições
+  - Endpoint: `/enrollments/confirmed/class/:classId`
+  - Autenticação: Uso do `axiosInstance` do AuthContext
+  - Tratamento de Resposta: Validação de formato de dados retornados
+  - Error Handling: Tratamento robusto de erros de API
+
+- **Report Generation**: Utilitários para geração de relatórios
+  - generateEnrollmentCSV: Geração de CSV com validações
+  - generateEnrollmentPDF: Geração de PDF com layout otimizado
+  - Validações: Verificação de dados antes da geração
+  - Nomenclatura: Arquivos com nome descritivo (local-data)
+
+- **Client-Side Pagination**: Implementação de paginação local
+  - Estado: `currentPage` e `pageSize` gerenciados localmente
+  - Memoização: `allData`, `paginatedData` e `pagination` otimizados
+  - Performance: Slice de dados apenas para itens visíveis
+  - Sincronização: Props passadas para CRUDTable para controle externo
+
+- **CRUDTable**: Configuração otimizada de paginação
+  - `rowCount`: Total de registros para cálculo correto de páginas
+  - `pageCount`: Total de páginas para navegação
+  - `manualPagination`: Controle server-side da paginação
+  - `state.pagination`: Sincronização com props externas
+  - `onPaginationChange`: Callbacks para mudanças de página e tamanho
+
+- **CRUDTable**: Implementação de numeração sequencial
+  - `enableRowNumbers`: Prop para habilitar coluna de numeração
+  - `rowNumberColumn`: Coluna customizada com cálculo de paginação
+  - `finalColumns`: Combinação dinâmica de colunas com numeração
+  - Cálculo: `(pageIndex * pageSize) + rowIndex + 1`
+  - Memoização para performance otimizada
+  - Integração transparente com colunas existentes
+
+- **Formatação de Data**: Implementação robusta para timezone
+  - Conversão segura de ISO string para Date object
+  - Formatação brasileira DD/MM/YYYY com padStart
+  - Tratamento de timezone UTC do banco de dados
+  - Try/catch para proteção contra datas inválidas
+  - Aplicação em todas as tabelas de enrollment
+
+- **useCRUDQuery**: Documentação atualizada
+  - Comentários sobre formato dos parâmetros de filtro
+  - Suporte a `filter_<columnId>` e `search` parameters
+  - Cache otimizado por parâmetros de filtro
+
+- **Database Schema**: Preparado para migração com nova coluna `name`
+- **API Compatibility**: Mantida compatibilidade com sistema existente
+- **Type Safety**: Tipos TypeScript atualizados em todo o sistema
+- **Validation**: Validações de backend e frontend sincronizadas
+- **Data Transformation**: Implementada transformação de dados no CRUDForm para limpeza antes do envio
+
 - **Column Management**: Utilização do sistema nativo de visibilidade do MantineReactTable
 - **Export Compatibility**: CSV e PDF mantêm compatibilidade com nova ordem de colunas
 - **Type Safety**: Tipos TypeScript atualizados para suportar controle de visibilidade
@@ -593,111 +591,16 @@ e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR
 - **Permission System**: Integração com sistema de permissões existente para controle de acesso
 - **Error Handling**: Validação robusta para estados de dados vazios e erros de tipo
 
-## [1.2.0] - 2025-01-09
-
-### Added
-- **EnrollmentsTable**: Implementado link do WhatsApp na coluna Telefone
-  - Link clicável que abre WhatsApp com número do aluno
-  - Detecção automática de dispositivo móvel (usa `whatsapp://` ou `https://wa.me/`)
-  - Formatação automática do telefone no padrão brasileiro (XX) XXXXX-XXXX
-  - Mensagem personalizada com parâmetros da turma (nome do aluno, data, local, cidade)
-  - Inclui nome do admin logado na mensagem para identificação pessoal
-  - Mensagem completa com instruções do treinamento e recomendações de segurança
-
-- **User Model**: Adicionado campo `name` ao modelo de usuários
-  - Interface `User` e `UserDto` atualizadas com campo `name`
-  - Campo obrigatório para identificação pessoal dos usuários
-  - Separação entre `username` (login) e `name` (exibição)
-
-- **AuthContext**: Expandido contexto de autenticação
-  - Adicionado campo `name` ao `AuthContextType` e `LoginProps`
-  - Armazenamento do nome do usuário no localStorage
-  - Disponibilização do nome em toda a aplicação via contexto
-
-- **UsersForm**: Atualizado formulário de usuários
-  - Novo campo "Nome" obrigatório no formulário de criação/edição
-  - Validação e persistência do campo `name`
-  - Interface atualizada para gerenciar nome e username separadamente
-
-- **UsersTable**: Expandida tabela de usuários
-  - Nova coluna "Nome" na tabela de usuários
-  - Exportação CSV/PDF inclui o nome dos usuários
-  - Interface mais informativa com identificação completa
-
-### Changed
-- **Backend AuthService**: Atualizado serviço de autenticação
-  - Método `validateUser()` retorna campo `name` do usuário
-  - Método `login()` inclui `name` na resposta de autenticação
-  - Documentação da API atualizada com campo `name`
-
-- **Backend AuthController**: Expandido controller de autenticação
-  - `LoginResponseDto` inclui campo `name` na documentação Swagger
-  - Resposta de login contém informações completas do usuário
-
-- **Backend User Entity**: Atualizada entidade de usuário
-  - Adicionada coluna `name` na entidade `User`
-  - DTOs `CreateUserDto` e `UserResponseDto` atualizados
-  - Validações e documentação da API expandidas
-
-- **WhatsApp Integration**: Melhorada integração com WhatsApp
-  - Mensagem personalizada com nome real do admin em vez de username
-  - Comunicação mais profissional e pessoal
-  - Identificação clara de quem está entrando em contato
-
-### Fixed
-- **UsersForm**: Corrigido erro de validação no formulário de usuários
-  - Implementada função `transformData` para remover `repeatPassword` antes do envio à API
-  - Campo `repeatPassword` mantido para validação no frontend, removido apenas no envio
-  - Campo `password` vazio removido durante edições para evitar erro de validação
-  - Resolvido erro "property repeatPassword should not exist" e "password should not be empty"
-  - Formulário agora funciona corretamente para criação e edição de usuários
-
-- **EnrollmentsForm**: Removida função `transformData` do formulário de enrollments
-  - Formulário agora envia dados diretamente para a API sem transformação
-  - Backend atualizado para aceitar todos os campos enviados pelo frontend
-  - Simplificação do código removendo lógica de transformação desnecessária
-  - Melhor compatibilidade entre frontend e backend
-
-### Technical Details
-- **Database Schema**: Preparado para migração com nova coluna `name`
-- **API Compatibility**: Mantida compatibilidade com sistema existente
-- **Type Safety**: Tipos TypeScript atualizados em todo o sistema
-- **Validation**: Validações de backend e frontend sincronizadas
-- **Data Transformation**: Implementada transformação de dados no CRUDForm para limpeza antes do envio
-
 ### Pull Requests
-- **PR #24**: [feat: Implementação de link WhatsApp e campo name para usuários](https://github.com/Cavalo-de-Aco-Sistemas/rancheiros-frontend/pull/24) - Enviado para develop
+- **PR #32**: Sistema de Download de Listas, Paginação Client-Side e Densidade Mínima das Tabelas
+- **PR #33**: 🚀 Release v1.6.0: Sistema de Download de Listas, Paginação Client-Side e Densidade Mínima
+- **PR #31**: Sistema de Paginação Avançado, Numeração de Linhas e Melhorias de UX
+- **PR #29**: Sistema de Filtros Avançados e Melhorias de UX
+- **PR #26**: Sistema de Gestão de Inscrições com Páginas Especializadas
+- **PR #24**: [feat: Implementação de link WhatsApp e campo name para usuários]
+- **PR #16**: [fix: Corrigir validação de criação de classes e melhorar UX da tabela]
 
-## [1.1.0] - 2025-01-09
-
-### Fixed
-- **ClassesForm**: Corrigido erro de validação na criação de classes
-  - Removido campo `name` inexistente do `INITIAL_VALUES` que causava erro "property name should not exist"
-  - Corrigido formato de data enviado para API - agora converte objetos `Date` para strings ISO (YYYY-MM-DD) antes do envio
-
-### Added
-- **CRUDForm**: Adicionado suporte para transformação de dados antes do envio para API
-  - Nova propriedade opcional `transformData?: (data: D) => API`
-  - Novo tipo genérico `API` para permitir transformação de tipos
-  - Função `onSubmit` atualizada para usar transformação quando fornecida
-
-- **Model**: Criado tipo `ClassCreateDto` para representar dados enviados para API com `date` como string
-
-- **ClassesTable**: Melhorada experiência do usuário na coluna de link do Maps
-  - Substituído texto do link por ícone de mapa (IconMapPin) clicável com tooltip
-  - Link abre em nova aba com segurança (noopener, noreferrer)
-  - Interface mais limpa e intuitiva com ícone semânticamente correto
-
-### Changed
-- **ClassesForm**: Melhorada compatibilidade entre frontend e backend
-  - Formulário continua trabalhando com objetos `Date` para facilitar uso com componentes de data
-  - Transformação automática de data para formato esperado pelo backend
-  - Mantida compatibilidade com padrão estabelecido no projeto
-
-### Pull Requests
-- **PR #16**: [fix: Corrigir validação de criação de classes e melhorar UX da tabela](https://github.com/Cavalo-de-Aco-Sistemas/rancheiros-frontend/pull/16) - Enviado para develop
-
-## [1.0.0] - 2024-01-XX
+## [1.0.0] - production
 
 ### Added
 - Sistema inicial de gerenciamento de rancheiros
