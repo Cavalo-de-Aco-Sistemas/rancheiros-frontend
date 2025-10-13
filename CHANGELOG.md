@@ -24,13 +24,19 @@ e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR
 
 ## [1.6.0] - 2025-01-12
 
-### Pull Request
+### Pull Requests
 - **PR #32**: Sistema de Download de Listas, Paginação Client-Side e Densidade Mínima das Tabelas
   - Implementação completa de sistema de download de listas de inscrições confirmadas
   - Sistema de paginação client-side em todas as páginas principais
   - Densidade mínima aplicada em todas as tabelas do sistema
   - Correções de bugs e melhorias de UX
   - [Ver PR](https://github.com/Cavalo-de-Aco-Sistemas/rancheiros-frontend/pull/32)
+
+- **PR #33**: 🚀 Release v1.6.0: Sistema de Download de Listas, Paginação Client-Side e Densidade Mínima
+  - Release de produção da versão 1.6.0
+  - Merge da develop para production
+  - Documentação completa para deploy em produção
+  - [Ver PR](https://github.com/Cavalo-de-Aco-Sistemas/rancheiros-frontend/pull/33)
 
 ### Added
 - **Sistema de Download de Listas de Inscrições Confirmadas**:
