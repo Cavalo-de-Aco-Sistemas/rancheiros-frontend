@@ -7,6 +7,17 @@ e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR
 
 ## [Unreleased]
 
+## [1.5.0] - 2025-01-12
+
+### Pull Request
+- **PR #31**: Sistema de Paginação Avançado, Numeração de Linhas e Melhorias de UX
+  - Implementação completa de sistema de paginação avançada com controles de tamanho de página
+  - Sistema de numeração sequencial de linhas considerando paginação
+  - Melhorias significativas na experiência do usuário com loading states e mensagens contextuais
+  - Correção de formatação de data com timezone UTC
+  - Otimização de visibilidade de colunas na página de certificação
+  - [Ver PR](https://github.com/Cavalo-de-Aco-Sistemas/rancheiros-frontend/pull/31)
+
 ### Added
 - **Sistema de Controle de Paginação Completo**:
   - **CRUDTable**: Controles avançados de paginação
