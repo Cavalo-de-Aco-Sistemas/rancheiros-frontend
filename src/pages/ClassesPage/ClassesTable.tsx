@@ -44,6 +44,11 @@ export function ClassesTable() {
           throw new Error(`Resposta da API não é um array de inscrições. Tipo recebido: ${typeof enrollments}`);
         }
         
+        // Verificar se há inscrições confirmadas
+        if (enrollments.length === 0) {
+          throw new Error('Nenhuma inscrição confirmada encontrada para esta turma');
+        }
+        
         const reportData = {
           class: classItem,
           enrollments,

@@ -15,12 +15,21 @@ export function generateEnrollmentCSV({ class: classData, enrollments }: Enrollm
     throw new Error('Enrollments deve ser um array');
   }
   
+  if (enrollments.length === 0) {
+    throw new Error('Nenhuma inscrição confirmada encontrada para esta turma');
+  }
+  
   const csvData = enrollments.map((enrollment, index) => ({
     'Nº': index + 1,
-    'Nome': enrollment.name,
+    'Nome': enrollment.name || '',
     'Moto': enrollment.brand && enrollment.model ? `${enrollment.brand}/${enrollment.model}` : (enrollment.brand || enrollment.model || ''),
     'Assinatura': '',
   }));
+
+  // Verificar se csvData é válido
+  if (!csvData || csvData.length === 0) {
+    throw new Error('Erro ao processar dados para CSV');
+  }
 
   const locationName = classData.location?.name?.replace(/[^a-zA-Z0-9]/g, '-') || 'turma';
   const dateStr = dateBR(classData.date)?.replace(/\//g, '-') || 'data';
@@ -32,12 +41,17 @@ export function generateEnrollmentCSV({ class: classData, enrollments }: Enrollm
     filename: `inscricoes-confirmadas-${locationName}-${dateStr}`,
   });
 
-  generateCsv(config)(csvData);
+  const csv = generateCsv(config)(csvData);
+  download(config)(csv);
 }
 
 export function generateEnrollmentPDF({ class: classData, enrollments }: EnrollmentReportData) {
   if (!Array.isArray(enrollments)) {
     throw new Error('Enrollments deve ser um array');
+  }
+  
+  if (enrollments.length === 0) {
+    throw new Error('Nenhuma inscrição confirmada encontrada para esta turma');
   }
   
   const doc = new jsPDF({
