@@ -130,6 +130,10 @@ export function EnrollmentsTable({
         accessorKey: 'enrollment_date', 
         header: 'Data de Inscrição',
         filterVariant: 'date',
+        Cell: ({ row }) => {
+          const date = row.original.enrollment_date;
+          return date ? (dateBR(date) ?? '') : '';
+        },
       },
       {
         accessorKey: 'preferred_city',

@@ -124,7 +124,14 @@ export function CallManagementTable({
         header: 'Status',
         Cell: ({ row }) => <StatusIcon status={row.original.status} />,
       },
-      { accessorKey: 'enrollment_date', header: 'Data de Inscrição' },
+      { 
+        accessorKey: 'enrollment_date', 
+        header: 'Data de Inscrição',
+        Cell: ({ row }) => {
+          const date = row.original.enrollment_date;
+          return date ? (dateBR(date) ?? '') : '';
+        },
+      },
       {
         accessorKey: 'preferred_city',
         header: 'Cidade Preferencial',

@@ -149,6 +149,10 @@ export function CertificationManagementTable({
         accessorKey: 'enrollment_date', 
         header: 'Data de Inscrição',
         filterVariant: 'date',
+        Cell: ({ row }) => {
+          const date = row.original.enrollment_date;
+          return date ? (dateBR(date) ?? '') : '';
+        },
       },
       {
         accessorKey: 'preferred_city',
@@ -355,6 +359,10 @@ Deus abençoe grandemente.`;
         enableFilters
         enableRowNumbers
         columnVisibility={{
+          status: false,
+          enrollment_date: false,
+          preferred_city: false,
+          uf_cnh: false,
           cnh: false,
           email: false,
           motorcycle_usage: false,
