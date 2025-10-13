@@ -67,11 +67,26 @@ export function UsersTable() {
 
   const columns = useMemo<MRT_ColumnDef<User>[]>(
     () => [
-      { accessorKey: 'username', header: 'Usuário' },
-      { accessorKey: 'name', header: 'Nome' },
+      { 
+        accessorKey: 'username', 
+        header: 'Usuário',
+        filterVariant: 'text',
+        filterFn: 'contains',
+      },
+      { 
+        accessorKey: 'name', 
+        header: 'Nome',
+        filterVariant: 'text',
+        filterFn: 'contains',
+      },
       {
         accessorKey: 'super_admin',
         header: 'Super Admin',
+        filterVariant: 'select',
+        filterSelectOptions: [
+          { label: 'Sim', value: 'true' },
+          { label: 'Não', value: 'false' },
+        ],
         Cell: ({ row }) => (
           <Badge
             color={row.original.super_admin ? 'green' : 'gray'}
@@ -174,5 +189,15 @@ export function UsersTable() {
 
   const pdfConfig = useMemo(() => ({ tableHeaders, rowMapper }), [rowMapper]);
 
-  return <CRUDTable columns={columns} title="Usuários" csvData={csvData} pdfConfig={pdfConfig} />;
+  return (
+    <CRUDTable 
+      columns={columns} 
+      title="Usuários" 
+      csvData={csvData} 
+      pdfConfig={pdfConfig} 
+      enableFilters 
+      emptyStateMessage="Nenhum usuário encontrado"
+      emptyStateDescription="Os usuários aparecerão aqui conforme forem sendo criados"
+    />
+  );
 }

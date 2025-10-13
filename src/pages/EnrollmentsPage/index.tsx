@@ -4,7 +4,7 @@ import { EnrollmentsTable } from './EnrollmentsTable';
 
 export function EnrollmentsPage() {
   return (
-    <CRUDProvider endpoint="enrollments" pageId="enrollments-overview">
+    <CRUDProvider endpoint="enrollments" pageId="enrollments-overview" enableFilters>
       <EnrollmentsTable />
       <EnrollmentsForm />
     </CRUDProvider>

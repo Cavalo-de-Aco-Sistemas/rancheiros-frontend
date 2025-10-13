@@ -4,7 +4,7 @@ import { UsersTable } from './UsersTable';
 
 export function UsersPage() {
   return (
-    <CRUDProvider endpoint="users">
+    <CRUDProvider endpoint="users" enableFilters>
       <UsersTable />
       <UsersForm />
     </CRUDProvider>

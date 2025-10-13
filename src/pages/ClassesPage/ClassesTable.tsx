@@ -91,5 +91,14 @@ export function ClassesTable() {
 
   const pdfConfig = useMemo(() => ({ tableHeaders, rowMapper }), [rowMapper]);
 
-  return <CRUDTable columns={columns} title="Turmas" csvData={csvData} pdfConfig={pdfConfig} />;
+  return (
+    <CRUDTable 
+      columns={columns} 
+      title="Turmas" 
+      csvData={csvData} 
+      pdfConfig={pdfConfig} 
+      emptyStateMessage="Nenhuma turma encontrada"
+      emptyStateDescription="As turmas aparecerão aqui conforme forem sendo criadas"
+    />
+  );
 }

@@ -116,6 +116,8 @@ export function CertificationManagementTable({
       {
         accessorKey: 'class',
         header: 'Turma',
+        filterVariant: 'text',
+        filterFn: 'contains',
         Cell: ({ row }) => {
           const classData = row.original.class;
           if (!classData) {
@@ -141,16 +143,29 @@ export function CertificationManagementTable({
         header: 'Status',
         Cell: ({ row }) => <StatusIcon status={row.original.status} />,
       },
-      { accessorKey: 'enrollment_date', header: 'Data de Inscrição' },
+      { 
+        accessorKey: 'enrollment_date', 
+        header: 'Data de Inscrição',
+        filterVariant: 'date',
+      },
       {
         accessorKey: 'preferred_city',
         header: 'Cidade Preferencial',
+        filterVariant: 'text',
+        filterFn: 'contains',
         Cell: ({ row }) => row.original.preferred_city?.name ?? '',
       },
-      { accessorKey: 'name', header: 'Nome' },
+      { 
+        accessorKey: 'name', 
+        header: 'Nome',
+        filterVariant: 'text',
+        filterFn: 'contains',
+      },
       {
         accessorKey: 'phone',
         header: 'Telefone',
+        filterVariant: 'text',
+        filterFn: 'contains',
         Cell: ({ row }) => {
           const phone = row.original.phone;
           const enrollment = row.original;
@@ -220,7 +235,13 @@ Deus abençoe grandemente.`;
       { accessorKey: 'uf_cnh', header: 'UF' },
       // Colunas ocultas por padrão
       { accessorKey: 'cnh', header: 'CNH', enableHiding: true },
-      { accessorKey: 'email', header: 'Email', enableHiding: true },
+      { 
+        accessorKey: 'email', 
+        header: 'Email', 
+        enableHiding: true,
+        filterVariant: 'text',
+        filterFn: 'contains',
+      },
       { accessorKey: 'motorcycle_usage', header: 'Uso de Moto', enableHiding: true },
       { accessorKey: 'brand', header: 'Marca', enableHiding: true },
       { accessorKey: 'model', header: 'Modelo', enableHiding: true },
@@ -321,22 +342,6 @@ Deus abençoe grandemente.`;
 
   const pdfConfig = useMemo(() => ({ tableHeaders, rowMapper }), [rowMapper]);
 
-  // Se não há dados, mostrar mensagem informativa
-  if (data.length === 0) {
-    return (
-      <Center h={400}>
-        <Stack align="center" gap="md">
-          <Text size="lg" c="dimmed">
-            Nenhuma inscrição confirmada encontrada
-          </Text>
-          <Text size="sm" c="dimmed">
-            As inscrições confirmadas aparecerão aqui para certificação
-          </Text>
-        </Stack>
-      </Center>
-    );
-  }
-
   return (
     <>
       <CRUDTable<Enrollment>
@@ -345,6 +350,7 @@ Deus abençoe grandemente.`;
         csvData={csvData}
         pdfConfig={pdfConfig}
         customActions={customActions}
+        enableFilters
         columnVisibility={{
           cnh: false,
           email: false,
@@ -355,6 +361,8 @@ Deus abençoe grandemente.`;
         data={data}
         pagination={pagination}
         onPageChange={onPageChange}
+        emptyStateMessage="Nenhuma inscrição confirmada encontrada"
+        emptyStateDescription="As inscrições confirmadas aparecerão aqui para certificação"
       />
     </>
   );

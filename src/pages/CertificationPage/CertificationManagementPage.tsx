@@ -16,6 +16,7 @@ export function CertificationManagementPage() {
         limit: pageSize,
       }}
       usePagination
+      enableFilters
       pageId="certification-management"
     >
       <CertificationManagementTable

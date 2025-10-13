@@ -7,6 +7,88 @@ e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR
 
 ## [Unreleased]
 
+### Added
+- **Sistema de Filtros Avançados no Frontend**:
+  - **CRUDContext**: Suporte completo a filtros dinâmicos
+    - Estados para `columnFilters` e `globalFilter`
+    - Conversão automática de filtros em parâmetros de query para o backend
+    - Cache automático por parâmetros de filtro
+    - Novo parâmetro `enableFilters` para habilitar filtros
+
+  - **CRUDTable**: Integração completa com MantineReactTable para filtros
+    - Novo parâmetro `enableFilters` para controlar exibição dos filtros
+    - Configuração automática de `manualFiltering` baseada em paginação
+    - Botões de filtro condicionais na toolbar
+    - Suporte a filtros de texto, select, data e faixa de data
+
+  - **Páginas com Filtros Implementados**:
+    - **EnrollmentsPage**: Filtros completos para visão geral de inscrições
+    - **CallManagementPage**: Filtros para gestão de chamadas
+    - **CertificationManagementPage**: Filtros para gestão de certificações
+    - **UsersPage**: Filtros para gestão de usuários
+
+  - **Tipos de Filtros Disponíveis**:
+    - Filtro global (busca em múltiplos campos)
+    - Filtros por coluna (texto, seleção, data)
+    - Filtros combinados (múltiplos filtros simultâneos)
+    - Filtros com paginação (mantém filtros entre páginas)
+
+### Changed
+- **CRUDTable**: Configuração híbrida de filtros
+  - `manualFiltering: true` para páginas com paginação (sincronização com backend)
+  - `manualFiltering: false` para páginas sem paginação (filtros locais)
+  - Detecção automática baseada na presença de paginação
+
+- **EnrollmentsTable**: Colunas com filtros configurados
+  - Status: Select com opções (waiting, called, confirmed, etc.)
+  - Nome: Texto com busca parcial
+  - Telefone: Texto com busca parcial
+  - Cidade Preferencial: Texto com busca parcial
+  - Data de Inscrição: Seletor de data
+  - Email: Texto com busca parcial
+  - Turma: Texto com busca parcial
+
+- **CertificationManagementTable**: Filtros adicionados
+  - Mesmos filtros da EnrollmentsTable
+  - Integração com sistema de certificação
+
+### Fixed
+- **CRUDTable**: Correção de dupla filtragem
+  - Resolvido problema de filtros aplicados tanto no backend quanto no frontend
+  - Configuração correta de `manualFiltering` para evitar conflitos
+  - Logs de debug adicionados para troubleshooting
+
+### Technical
+- **useCRUDQuery**: Documentação atualizada
+  - Comentários sobre formato dos parâmetros de filtro
+  - Suporte a `filter_<columnId>` e `search` parameters
+  - Cache otimizado por parâmetros de filtro
+
+### Enhanced
+- **CRUDTable**: Sistema de loading e mensagens de estado vazio aprimorado
+  - **Loading States**: Indicadores visuais durante carregamento de dados
+    - Skeleton loading com animação de onda
+    - Progress bars durante operações (filtros, paginação)
+    - Loading overlay para feedback visual claro
+  - **Mensagens de Estado Vazio**: Sistema personalizável e contextual
+    - Parâmetros `emptyStateMessage` e `emptyStateDescription`
+    - Mensagens específicas para cada tipo de tabela
+    - Remoção de mensagens prematuras (antes da tabela ser construída)
+  - **Experiência do Usuário**: Feedback visual consistente
+    - Loading adequado durante busca de dados
+    - Mensagens contextuais apenas quando necessário
+    - Design uniforme em todas as tabelas
+
+- **Todas as Tabelas**: Mensagens personalizadas implementadas
+  - **EnrollmentsTable**: "Nenhuma inscrição encontrada"
+  - **CallManagementTable**: "Nenhuma inscrição em processo de chamada encontrada"
+  - **CertificationManagementTable**: "Nenhuma inscrição confirmada encontrada"
+  - **UsersTable**: "Nenhum usuário encontrado"
+  - **RanchesTable**: "Nenhum rancho encontrado"
+  - **LocationsTable**: "Nenhum local de treinamento encontrado"
+  - **ClassesTable**: "Nenhuma turma encontrada"
+  - **MembersTable**: "Nenhum membro encontrado"
+
 ## [1.3.0] - 2025-01-12
 
 ### Added

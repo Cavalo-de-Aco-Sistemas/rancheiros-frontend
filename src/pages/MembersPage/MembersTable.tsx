@@ -201,5 +201,14 @@ export function MembersTable() {
 
   const pdfConfig = useMemo(() => ({ tableHeaders, rowMapper }), [rowMapper]);
 
-  return <CRUDTable columns={columns} title="Membros" csvData={csvData} pdfConfig={pdfConfig} />;
+  return (
+    <CRUDTable 
+      columns={columns} 
+      title="Membros" 
+      csvData={csvData} 
+      pdfConfig={pdfConfig} 
+      emptyStateMessage="Nenhum membro encontrado"
+      emptyStateDescription="Os membros aparecerão aqui conforme forem sendo cadastrados"
+    />
+  );
 }

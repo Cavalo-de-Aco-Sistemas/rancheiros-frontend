@@ -27,6 +27,11 @@ export interface CRUDContextType<T extends CRUDType> {
   opened: boolean;
   close: () => void;
   selected?: T;
+  // Filtros
+  columnFilters: ColumnFilter[];
+  setColumnFilters: React.Dispatch<React.SetStateAction<ColumnFilter[]>>;
+  globalFilter: string;
+  setGlobalFilter: React.Dispatch<React.SetStateAction<string>>;
 }
 
 export const CRUDContext = createContext<CRUDContextType<CRUDType> | undefined>(undefined);
@@ -35,11 +40,17 @@ interface QueryParams {
   [key: string]: string | number | boolean | undefined;
 }
 
+interface ColumnFilter {
+  id: string;
+  value: any;
+}
+
 interface CRUDProviderProps {
   endpoint: string;
   params?: QueryParams;
   usePagination?: boolean;
   pageId?: string; // Identificador único para a página
+  enableFilters?: boolean; // Habilita filtros de colunas
 }
 
 export const CRUDProvider = ({
@@ -48,16 +59,41 @@ export const CRUDProvider = ({
   params,
   usePagination = false,
   pageId,
+  enableFilters = false,
 }: PropsWithChildren<CRUDProviderProps>) => {
   const [selected, setSelected] = useState<CRUDType | undefined>(undefined);
   const [action, setAction] = useState<'create' | 'update' | 'delete'>('create');
   const [opened, setOpened] = useState(false);
+  
+  // Estados para filtros
+  const [columnFilters, setColumnFilters] = useState<ColumnFilter[]>([]);
+  const [globalFilter, setGlobalFilter] = useState<string>('');
 
-  // Criar parâmetros únicos incluindo o pageId
+  // Criar parâmetros únicos incluindo o pageId e filtros
   const uniqueParams = useMemo(() => {
-    if (!pageId) {return params;}
-    return { ...params, _pageId: pageId };
-  }, [params, pageId]);
+    let finalParams = { ...params };
+    
+    if (pageId) {
+      finalParams._pageId = pageId;
+    }
+    
+    // Adicionar filtros de colunas se habilitado
+    if (enableFilters) {
+      // Adicionar filtro global
+      if (globalFilter) {
+        finalParams.search = globalFilter;
+      }
+      
+      // Adicionar filtros de colunas
+      columnFilters.forEach(filter => {
+        if (filter.value !== undefined && filter.value !== null && filter.value !== '') {
+          finalParams[`filter_${filter.id}`] = filter.value;
+        }
+      });
+    }
+    
+    return finalParams;
+  }, [params, pageId, enableFilters, globalFilter, columnFilters]);
 
   const query = useCRUDQuery<CRUDType>(endpoint, uniqueParams, { usePagination });
 
@@ -74,8 +110,12 @@ export const CRUDProvider = ({
       selected,
       action,
       opened,
+      columnFilters,
+      setColumnFilters,
+      globalFilter,
+      setGlobalFilter,
     }),
-    [query, setSelected, setAction, open, close, selected, action, opened]
+    [query, setSelected, setAction, open, close, selected, action, opened, columnFilters, globalFilter]
   );
 
   return <CRUDContext.Provider value={value}>{children}</CRUDContext.Provider>;

@@ -75,6 +75,9 @@ export interface CRUDTableProps<T extends MRT_RowData> {
   enableEdit?: boolean;
   pagination?: PaginationInfo;
   onPageChange?: (page: number) => void;
+  enableFilters?: boolean; // Habilita filtros de colunas
+  emptyStateMessage?: string; // Mensagem personalizada para estado vazio
+  emptyStateDescription?: string; // Descrição adicional para estado vazio
 }
 
 const DEFAULT_PERMISSIONS = {
@@ -95,8 +98,20 @@ export function CRUDTable<T extends MRT_RowData>(props: CRUDTableProps<T>) {
     enableEdit = false,
     pagination,
     onPageChange,
+    enableFilters = false,
+    emptyStateMessage = 'Nenhum dado encontrado',
+    emptyStateDescription,
   } = props;
-  const { query, setSelected, setAction, open } = useCRUD();
+  const { 
+    query, 
+    setSelected, 
+    setAction, 
+    open,
+    columnFilters,
+    setColumnFilters,
+    globalFilter,
+    setGlobalFilter,
+  } = useCRUD();
 
   // Estados para modal de confirmação
   const [confirmationModal, setConfirmationModal] = useState<{
@@ -195,6 +210,8 @@ export function CRUDTable<T extends MRT_RowData>(props: CRUDTableProps<T>) {
       initialState: {
         density: 'xs' as const,
         columnVisibility: columnVisibility || {},
+        showColumnFilters: false, // Filtros desativados por padrão para interface limpa
+        showGlobalFilter: false, // Filtro global desativado por padrão
       },
       mantineToolbarAlertBannerProps: isError
         ? {
@@ -202,7 +219,40 @@ export function CRUDTable<T extends MRT_RowData>(props: CRUDTableProps<T>) {
             children: error?.message ?? 'Error loading data',
           }
         : undefined,
-      state: { isLoading, showAlertBanner: isError, showProgressBars: isFetching },
+      state: { 
+        isLoading, 
+        showAlertBanner: isError, 
+        showProgressBars: isFetching,
+        columnFilters: enableFilters ? columnFilters : undefined,
+        globalFilter: enableFilters ? globalFilter : undefined,
+      },
+      // Configuração para estado vazio
+      renderEmptyRowsFallback: () => (
+        <div style={{ 
+          padding: '2rem', 
+          textAlign: 'center', 
+          color: '#666',
+          fontSize: '14px'
+        }}>
+          <div style={{ fontSize: '16px', marginBottom: '8px' }}>
+            {emptyStateMessage}
+          </div>
+          {emptyStateDescription && (
+            <div style={{ fontSize: '12px', color: '#999' }}>
+              {emptyStateDescription}
+            </div>
+          )}
+        </div>
+      ),
+      // Configurações de loading
+      mantineSkeletonProps: {
+        animation: 'wave',
+        height: 20,
+      },
+      mantineLinearProgressProps: {
+        color: 'blue',
+        variant: 'indeterminate',
+      },
       mantinePaperProps: {
         style: {
           border: 'none',
@@ -213,6 +263,22 @@ export function CRUDTable<T extends MRT_RowData>(props: CRUDTableProps<T>) {
       enableRowVirtualization: !pagination,
       mantineTableContainerProps: { style: { maxHeight: 'calc(100vh - 128px)' } },
       enableRowActions: true,
+      // Configurações de filtros
+      enableColumnFilters: enableFilters,
+      enableGlobalFilter: enableFilters,
+      enableColumnFilterModes: enableFilters,
+      enableFilterMatchHighlighting: enableFilters,
+      // Sempre usar manual filtering quando filtros estão habilitados
+      // para evitar dupla filtragem (backend + frontend)
+      manualFiltering: enableFilters,
+      onColumnFiltersChange: enableFilters ? setColumnFilters : undefined,
+      onGlobalFilterChange: enableFilters ? setGlobalFilter : undefined,
+      // Desabilitar filtros locais quando manual filtering está ativo
+      enableColumnFiltering: enableFilters,
+      enableGlobalFiltering: enableFilters,
+      // Configurações específicas para filtros
+      enableMultiSort: false,
+      enableMultiColumnFiltering: true,
       pagination: pagination
         ? {
             pageIndex: pagination.page - 1,
@@ -247,6 +313,11 @@ export function CRUDTable<T extends MRT_RowData>(props: CRUDTableProps<T>) {
       columnVisibility,
       pagination,
       onPageChange,
+      enableFilters,
+      columnFilters,
+      globalFilter,
+      setColumnFilters,
+      setGlobalFilter,
     ]
   );
 
@@ -321,8 +392,8 @@ export function CRUDTable<T extends MRT_RowData>(props: CRUDTableProps<T>) {
 
     renderToolbarInternalActions: ({ table }) => (
       <Group>
-        <MRT_ToggleGlobalFilterButton table={table} />
-        <MRT_ToggleFiltersButton table={table} />
+        {enableFilters && <MRT_ToggleGlobalFilterButton table={table} />}
+        {enableFilters && <MRT_ToggleFiltersButton table={table} />}
         <MRT_ShowHideColumnsButton table={table} />
         <MRT_ToggleDensePaddingButton table={table} />
         <MRT_ToggleFullScreenButton table={table} />

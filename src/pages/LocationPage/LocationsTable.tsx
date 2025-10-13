@@ -53,6 +53,8 @@ export function LocationsTable() {
       title="Locais de Treinamento"
       csvData={csvData}
       pdfConfig={pdfConfig}
+      emptyStateMessage="Nenhum local de treinamento encontrado"
+      emptyStateDescription="Os locais de treinamento aparecerão aqui conforme forem sendo criados"
     />
   );
 }
