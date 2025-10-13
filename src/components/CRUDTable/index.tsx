@@ -9,7 +9,6 @@ import {
   MRT_Row,
   MRT_RowData,
   MRT_ShowHideColumnsButton,
-  MRT_ToggleDensePaddingButton,
   MRT_ToggleFiltersButton,
   MRT_ToggleFullScreenButton,
   MRT_ToggleGlobalFilterButton,
@@ -276,6 +275,7 @@ export function CRUDTable<T extends MRT_RowData>(props: CRUDTableProps<T>) {
         showProgressBars: isFetching,
         columnFilters: enableFilters ? columnFilters : undefined,
         globalFilter: enableFilters ? globalFilter : undefined,
+        density: 'xs' as const, // Forçar densidade mínima
         pagination: pagination ? {
           pageIndex: pagination.page - 1,
           pageSize: pagination.limit,
@@ -506,7 +506,6 @@ export function CRUDTable<T extends MRT_RowData>(props: CRUDTableProps<T>) {
         {enableFilters && <MRT_ToggleGlobalFilterButton table={table} />}
         {enableFilters && <MRT_ToggleFiltersButton table={table} />}
         <MRT_ShowHideColumnsButton table={table} />
-        <MRT_ToggleDensePaddingButton table={table} />
         <MRT_ToggleFullScreenButton table={table} />
         <ActionIcon
           onClick={() => handleExportRowsPDF(table.getPrePaginationRowModel().rows)}

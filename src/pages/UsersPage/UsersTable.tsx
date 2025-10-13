@@ -62,7 +62,19 @@ const permissionsToString = (permissions: Permissions | undefined) => {
     .join(', ');
 };
 
-export function UsersTable() {
+interface UsersTableProps {
+  onPageChange?: (page: number) => void;
+  onPageSizeChange?: (pageSize: number) => void;
+  currentPage?: number;
+  pageSize?: number;
+}
+
+export function UsersTable({
+  onPageChange,
+  onPageSizeChange,
+  currentPage = 1,
+  pageSize = 10,
+}: UsersTableProps = {}) {
   const { query } = useCRUD();
 
   const columns = useMemo<MRT_ColumnDef<User>[]>(
@@ -189,12 +201,34 @@ export function UsersTable() {
 
   const pdfConfig = useMemo(() => ({ tableHeaders, rowMapper }), [rowMapper]);
 
+  // Paginação client-side
+  const allData = useMemo(() => {
+    return extractData(query.data) as unknown as User[];
+  }, [query.data]);
+
+  const paginatedData = useMemo(() => {
+    const startIndex = (currentPage - 1) * pageSize;
+    const endIndex = startIndex + pageSize;
+    return allData.slice(startIndex, endIndex);
+  }, [allData, currentPage, pageSize]);
+
+  const pagination = useMemo(() => ({
+    page: currentPage,
+    limit: pageSize,
+    total: allData.length,
+    totalPages: Math.ceil(allData.length / pageSize),
+  }), [allData.length, currentPage, pageSize]);
+
   return (
     <CRUDTable 
       columns={columns} 
       title="Usuários" 
       csvData={csvData} 
       pdfConfig={pdfConfig} 
+      data={paginatedData}
+      pagination={pagination}
+      onPageChange={onPageChange}
+      onPageSizeChange={onPageSizeChange}
       enableFilters 
       emptyStateMessage="Nenhum usuário encontrado"
       emptyStateDescription="Os usuários aparecerão aqui conforme forem sendo criados"
