@@ -92,16 +92,6 @@ export const CRUDProvider = ({
       });
     }
     
-    // Debug: Log dos parâmetros sendo enviados
-    if (enableFilters && (globalFilter || columnFilters.length > 0)) {
-      console.log('🔍 CRUDContext - Enviando filtros para backend:', {
-        endpoint,
-        globalFilter,
-        columnFilters,
-        finalParams
-      });
-    }
-    
     return finalParams;
   }, [params, pageId, enableFilters, globalFilter, columnFilters]);
 

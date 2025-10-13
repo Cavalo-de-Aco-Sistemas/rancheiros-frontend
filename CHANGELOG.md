@@ -64,6 +64,31 @@ e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR
   - Suporte a `filter_<columnId>` e `search` parameters
   - Cache otimizado por parâmetros de filtro
 
+### Enhanced
+- **CRUDTable**: Sistema de loading e mensagens de estado vazio aprimorado
+  - **Loading States**: Indicadores visuais durante carregamento de dados
+    - Skeleton loading com animação de onda
+    - Progress bars durante operações (filtros, paginação)
+    - Loading overlay para feedback visual claro
+  - **Mensagens de Estado Vazio**: Sistema personalizável e contextual
+    - Parâmetros `emptyStateMessage` e `emptyStateDescription`
+    - Mensagens específicas para cada tipo de tabela
+    - Remoção de mensagens prematuras (antes da tabela ser construída)
+  - **Experiência do Usuário**: Feedback visual consistente
+    - Loading adequado durante busca de dados
+    - Mensagens contextuais apenas quando necessário
+    - Design uniforme em todas as tabelas
+
+- **Todas as Tabelas**: Mensagens personalizadas implementadas
+  - **EnrollmentsTable**: "Nenhuma inscrição encontrada"
+  - **CallManagementTable**: "Nenhuma inscrição em processo de chamada encontrada"
+  - **CertificationManagementTable**: "Nenhuma inscrição confirmada encontrada"
+  - **UsersTable**: "Nenhum usuário encontrado"
+  - **RanchesTable**: "Nenhum rancho encontrado"
+  - **LocationsTable**: "Nenhum local de treinamento encontrado"
+  - **ClassesTable**: "Nenhuma turma encontrada"
+  - **MembersTable**: "Nenhum membro encontrado"
+
 ## [1.3.0] - 2025-01-12
 
 ### Added

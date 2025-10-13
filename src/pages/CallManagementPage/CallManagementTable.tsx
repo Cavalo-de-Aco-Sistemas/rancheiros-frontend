@@ -302,23 +302,6 @@ Deus abençoe grandemente.`;
 
   const pdfConfig = useMemo(() => ({ tableHeaders, rowMapper }), [rowMapper]);
 
-  // Se não há dados, mostrar mensagem informativa
-  if (data.length === 0) {
-    return (
-      <Center h={400}>
-        <Stack align="center" gap="md">
-          <Text size="lg" c="dimmed">
-            Nenhuma inscrição em processo de chamada encontrada
-          </Text>
-          <Text size="sm" c="dimmed">
-            As inscrições em lista de espera, chamadas, confirmadas, ignoradas ou desistências
-            aparecerão aqui
-          </Text>
-        </Stack>
-      </Center>
-    );
-  }
-
   return (
     <>
       <CRUDTable<Enrollment>
@@ -338,6 +321,8 @@ Deus abençoe grandemente.`;
         data={data}
         pagination={pagination}
         onPageChange={onPageChange}
+        emptyStateMessage="Nenhuma inscrição em processo de chamada encontrada"
+        emptyStateDescription="As inscrições em lista de espera, chamadas, confirmadas, ignoradas ou desistências aparecerão aqui"
       />
     </>
   );

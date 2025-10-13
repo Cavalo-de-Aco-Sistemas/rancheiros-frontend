@@ -76,6 +76,8 @@ export interface CRUDTableProps<T extends MRT_RowData> {
   pagination?: PaginationInfo;
   onPageChange?: (page: number) => void;
   enableFilters?: boolean; // Habilita filtros de colunas
+  emptyStateMessage?: string; // Mensagem personalizada para estado vazio
+  emptyStateDescription?: string; // Descrição adicional para estado vazio
 }
 
 const DEFAULT_PERMISSIONS = {
@@ -97,6 +99,8 @@ export function CRUDTable<T extends MRT_RowData>(props: CRUDTableProps<T>) {
     pagination,
     onPageChange,
     enableFilters = false,
+    emptyStateMessage = 'Nenhum dado encontrado',
+    emptyStateDescription,
   } = props;
   const { 
     query, 
@@ -197,23 +201,11 @@ export function CRUDTable<T extends MRT_RowData>(props: CRUDTableProps<T>) {
     [filename]
   );
 
-  // Debug: Log dos dados recebidos
-  const tableData = (customData ?? data ?? []) as T[];
-  if (enableFilters) {
-    console.log('🔍 CRUDTable - Dados recebidos:', {
-      totalData: tableData.length,
-      hasCustomData: !!customData,
-      hasData: !!data,
-      columnFilters,
-      globalFilter
-    });
-  }
-
   // Memoize the table configuration to prevent unnecessary re-renders
   const tableConfig = useMemo(
     () => ({
       columns,
-      data: tableData,
+      data: (customData ?? data ?? []) as T[],
       localization: MRT_Localization_PT_BR,
       initialState: {
         density: 'xs' as const,
@@ -233,6 +225,33 @@ export function CRUDTable<T extends MRT_RowData>(props: CRUDTableProps<T>) {
         showProgressBars: isFetching,
         columnFilters: enableFilters ? columnFilters : undefined,
         globalFilter: enableFilters ? globalFilter : undefined,
+      },
+      // Configuração para estado vazio
+      renderEmptyRowsFallback: () => (
+        <div style={{ 
+          padding: '2rem', 
+          textAlign: 'center', 
+          color: '#666',
+          fontSize: '14px'
+        }}>
+          <div style={{ fontSize: '16px', marginBottom: '8px' }}>
+            {emptyStateMessage}
+          </div>
+          {emptyStateDescription && (
+            <div style={{ fontSize: '12px', color: '#999' }}>
+              {emptyStateDescription}
+            </div>
+          )}
+        </div>
+      ),
+      // Configurações de loading
+      mantineSkeletonProps: {
+        animation: 'wave',
+        height: 20,
+      },
+      mantineLinearProgressProps: {
+        color: 'blue',
+        variant: 'indeterminate',
       },
       mantinePaperProps: {
         style: {

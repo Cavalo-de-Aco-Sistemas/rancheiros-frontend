@@ -342,22 +342,6 @@ Deus abençoe grandemente.`;
 
   const pdfConfig = useMemo(() => ({ tableHeaders, rowMapper }), [rowMapper]);
 
-  // Se não há dados, mostrar mensagem informativa
-  if (data.length === 0) {
-    return (
-      <Center h={400}>
-        <Stack align="center" gap="md">
-          <Text size="lg" c="dimmed">
-            Nenhuma inscrição confirmada encontrada
-          </Text>
-          <Text size="sm" c="dimmed">
-            As inscrições confirmadas aparecerão aqui para certificação
-          </Text>
-        </Stack>
-      </Center>
-    );
-  }
-
   return (
     <>
       <CRUDTable<Enrollment>
@@ -377,6 +361,8 @@ Deus abençoe grandemente.`;
         data={data}
         pagination={pagination}
         onPageChange={onPageChange}
+        emptyStateMessage="Nenhuma inscrição confirmada encontrada"
+        emptyStateDescription="As inscrições confirmadas aparecerão aqui para certificação"
       />
     </>
   );

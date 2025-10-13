@@ -42,5 +42,14 @@ export function RanchesTable() {
 
   const pdfConfig = useMemo(() => ({ tableHeaders, rowMapper }), [rowMapper]);
 
-  return <CRUDTable columns={columns} title="Ranchos" csvData={csvData} pdfConfig={pdfConfig} />;
+  return (
+    <CRUDTable 
+      columns={columns} 
+      title="Ranchos" 
+      csvData={csvData} 
+      pdfConfig={pdfConfig} 
+      emptyStateMessage="Nenhum rancho encontrado"
+      emptyStateDescription="Os ranchos aparecerão aqui conforme forem sendo criados"
+    />
+  );
 }

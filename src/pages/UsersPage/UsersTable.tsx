@@ -189,5 +189,15 @@ export function UsersTable() {
 
   const pdfConfig = useMemo(() => ({ tableHeaders, rowMapper }), [rowMapper]);
 
-  return <CRUDTable columns={columns} title="Usuários" csvData={csvData} pdfConfig={pdfConfig} enableFilters />;
+  return (
+    <CRUDTable 
+      columns={columns} 
+      title="Usuários" 
+      csvData={csvData} 
+      pdfConfig={pdfConfig} 
+      enableFilters 
+      emptyStateMessage="Nenhum usuário encontrado"
+      emptyStateDescription="Os usuários aparecerão aqui conforme forem sendo criados"
+    />
+  );
 }

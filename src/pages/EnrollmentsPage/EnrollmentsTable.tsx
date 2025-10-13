@@ -311,6 +311,8 @@ Deus abençoe grandemente.`;
           brand: false,
           model: false,
         }}
+        emptyStateMessage="Nenhuma inscrição encontrada"
+        emptyStateDescription="As inscrições aparecerão aqui conforme forem sendo criadas"
       />
     </>
   );
