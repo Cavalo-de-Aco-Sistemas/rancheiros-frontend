@@ -1,8 +1,9 @@
 import { useCallback, useMemo, useState } from 'react';
 import { IconMapPin, IconDownload } from '@tabler/icons-react';
 import { MRT_ColumnDef, MRT_Row } from 'mantine-react-table';
-import { ActionIcon, Switch, Tooltip, Menu, rem } from '@mantine/core';
-import { CRUDTable } from '@/components/CRUDTable';
+import { ActionIcon, Switch, Tooltip } from '@mantine/core';
+import { notifications } from '@mantine/notifications';
+import { CRUDTable, CustomAction } from '@/components/CRUDTable';
 import { useCRUD } from '@/contexts/CRUDContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { BACKEND_ADDRESS } from '@/utils/constants';
@@ -12,7 +13,7 @@ import { extractData } from '@/utils/dataUtils';
 import { dateBR } from '@/utils/dates';
 import { generateEnrollmentCSV, generateEnrollmentPDF } from '@/utils/enrollmentReports';
 
-const tableHeaders = ['Local do MPV', 'Data', 'Link do Maps', 'Ativo', 'Ações'];
+const tableHeaders = ['Local do MPV', 'Data', 'Link do Maps', 'Ativo'];
 
 export function ClassesTable() {
   const { query } = useCRUD();
@@ -46,7 +47,13 @@ export function ClassesTable() {
         
         // Verificar se há inscrições confirmadas
         if (enrollments.length === 0) {
-          throw new Error('Nenhuma inscrição confirmada encontrada para esta turma');
+          notifications.show({
+            title: 'Nenhuma inscrição confirmada',
+            message: `Não há inscrições confirmadas para a turma de ${classItem.location?.name || 'local não informado'} em ${dateBR(classItem.date) || 'data não informada'}.`,
+            color: 'orange',
+            autoClose: 5000,
+          });
+          return;
         }
         
         const reportData = {
@@ -59,9 +66,22 @@ export function ClassesTable() {
         } else {
           generateEnrollmentPDF(reportData);
         }
+        
+        // Notificação de sucesso
+        notifications.show({
+          title: 'Download realizado com sucesso',
+          message: `Lista de ${enrollments.length} inscrição(ões) confirmada(s) baixada em formato ${format.toUpperCase()}.`,
+          color: 'green',
+          autoClose: 3000,
+        });
       } catch (error) {
         console.error('Erro ao baixar inscrições:', error);
-        // Aqui você pode adicionar uma notificação de erro
+        notifications.show({
+          title: 'Erro ao baixar lista',
+          message: error instanceof Error ? error.message : 'Ocorreu um erro inesperado ao baixar a lista de inscrições.',
+          color: 'red',
+          autoClose: 5000,
+        });
       } finally {
         setDownloadingClassId(null);
       }
@@ -112,47 +132,6 @@ export function ClassesTable() {
           />
         ),
       },
-      {
-        accessorKey: 'actions',
-        header: 'Ações',
-        enableSorting: false,
-        enableColumnFilter: false,
-        Cell: ({ row }) => {
-          const isDownloading = downloadingClassId === row.original.id;
-          
-          return (
-            <Menu shadow="md" width={200}>
-              <Menu.Target>
-                <ActionIcon 
-                  variant="subtle" 
-                  color="blue" 
-                  size="sm"
-                  loading={isDownloading}
-                >
-                  <IconDownload size={16} />
-                </ActionIcon>
-              </Menu.Target>
-              <Menu.Dropdown>
-                <Menu.Label>Baixar Inscrições Confirmadas</Menu.Label>
-                <Menu.Item
-                  leftSection={<IconDownload style={{ width: rem(16), height: rem(16) }} />}
-                  onClick={() => handleDownloadEnrollments(row.original, 'csv')}
-                  disabled={isDownloading}
-                >
-                  Baixar CSV
-                </Menu.Item>
-                <Menu.Item
-                  leftSection={<IconDownload style={{ width: rem(16), height: rem(16) }} />}
-                  onClick={() => handleDownloadEnrollments(row.original, 'pdf')}
-                  disabled={isDownloading}
-                >
-                  Baixar PDF
-                </Menu.Item>
-              </Menu.Dropdown>
-            </Menu>
-          );
-        },
-      },
     ],
     []
   );
@@ -165,7 +144,6 @@ export function ClassesTable() {
           Data: date,
           'Link do Maps': mapsLink,
           Ativo: active,
-          Ações: '',
         })
       ),
     [query.data]
@@ -173,10 +151,22 @@ export function ClassesTable() {
 
   const rowMapper = useCallback((row: MRT_Row<Class>) => {
     const { location, date, mapsLink, active } = row.original;
-    return [location?.name ?? '', dateBR(date) ?? '', mapsLink, active, ''];
+    return [location?.name ?? '', dateBR(date) ?? '', mapsLink, active];
   }, []);
 
   const pdfConfig = useMemo(() => ({ tableHeaders, rowMapper }), [rowMapper]);
+
+  const customActions: CustomAction<Class>[] = useMemo(() => [
+    {
+      label: 'Baixar Lista de Confirmados (PDF)',
+      icon: IconDownload,
+      color: 'blue',
+      onClick: (classItem: Class) => {
+        handleDownloadEnrollments(classItem, 'pdf');
+      },
+      isVisible: () => true,
+    },
+  ], [handleDownloadEnrollments]);
 
   return (
     <CRUDTable 
@@ -184,6 +174,7 @@ export function ClassesTable() {
       title="Turmas" 
       csvData={csvData} 
       pdfConfig={pdfConfig} 
+      customActions={customActions}
       emptyStateMessage="Nenhuma turma encontrada"
       emptyStateDescription="As turmas aparecerão aqui conforme forem sendo criadas"
     />
