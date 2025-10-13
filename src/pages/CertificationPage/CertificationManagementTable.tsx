@@ -1,8 +1,9 @@
 import { useCallback, useMemo } from 'react';
-import { IconClock } from '@tabler/icons-react';
+import { IconCheck, IconX } from '@tabler/icons-react';
 import { MRT_ColumnDef, MRT_Row } from 'mantine-react-table';
-import { Anchor } from '@mantine/core';
+import { Anchor, Center, Stack, Text } from '@mantine/core';
 import { CRUDTable } from '@/components/CRUDTable';
+import { EnrollmentStatusCertificationActions } from '@/components/EnrollmentStatusActions/EnrollmentStatusCertificationActions';
 import { StatusIcon } from '@/components/StatusIcon';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCRUD } from '@/contexts/CRUDContext';
@@ -11,6 +12,7 @@ import { useEnrollmentFlowMutation } from '@/mutations/useEnrollmentFlowMutation
 import { dateBR } from '@/utils/dates';
 
 const tableHeaders = [
+  'Fluxo',
   'Turma',
   'Status',
   'Data de Inscrição',
@@ -25,66 +27,94 @@ const tableHeaders = [
   'Modelo',
 ];
 
-interface EnrollmentsTableProps {
+interface CertificationManagementTableProps {
   onPageChange?: (page: number) => void;
   onPageSizeChange?: (pageSize: number) => void;
   currentPage?: number;
   pageSize?: number;
 }
 
-export function EnrollmentsTable({
+export function CertificationManagementTable({
   onPageChange,
   onPageSizeChange,
   currentPage: _currentPage,
   pageSize: _pageSize,
-}: EnrollmentsTableProps = {}) {
+}: CertificationManagementTableProps) {
   const { query } = useCRUD();
   const { name } = useAuth();
   const updateFlowMutation = useEnrollmentFlowMutation();
 
-  const handleReturnToWaiting = useCallback(
+  const handleCertify = useCallback(
     (enrollment: Enrollment) => {
       updateFlowMutation.mutate({
         enrollmentId: enrollment.id,
-        status: EnrollmentStatus.WAITING,
+        status: EnrollmentStatus.CERTIFIED,
       });
     },
     [updateFlowMutation]
   );
 
-  const canReturnToWaiting = useCallback((enrollment: Enrollment) => {
-    // Só pode voltar para lista de espera se:
-    // 1. Não estiver já em waiting
-    // 2. Não estiver certificado (situação final)
-    // 3. Não tiver faltado (situação final)
-    return (
-      enrollment.status !== EnrollmentStatus.WAITING &&
-      enrollment.status !== EnrollmentStatus.CERTIFIED &&
-      enrollment.status !== EnrollmentStatus.MISSED
-    );
+  const handleMarkAsMissed = useCallback(
+    (enrollment: Enrollment) => {
+      updateFlowMutation.mutate({
+        enrollmentId: enrollment.id,
+        status: EnrollmentStatus.MISSED,
+      });
+    },
+    [updateFlowMutation]
+  );
+
+  const canCertify = useCallback((enrollment: Enrollment) => {
+    // Só pode certificar se estiver confirmado
+    return enrollment.status === EnrollmentStatus.CONFIRMED;
+  }, []);
+
+  const canMarkAsMissed = useCallback((enrollment: Enrollment) => {
+    // Só pode marcar como faltou se estiver confirmado
+    return enrollment.status === EnrollmentStatus.CONFIRMED;
   }, []);
 
   const customActions = useMemo(
     () => [
       {
-        label: 'Voltar para Lista de Espera',
-        icon: IconClock,
-        onClick: handleReturnToWaiting,
-        isVisible: canReturnToWaiting,
+        label: 'Certificar',
+        icon: IconCheck,
+        onClick: handleCertify,
+        isVisible: canCertify,
         isLoading: updateFlowMutation.isPending,
         requiresConfirmation: true,
-        confirmationTitle: 'Confirmar Retorno para Lista de Espera',
+        confirmationTitle: 'Confirmar Certificação',
         confirmationMessage: (enrollment: Enrollment) =>
-          `Tem certeza que deseja mover ${enrollment.name} de volta para a Lista de Espera?`,
-        confirmationButtonText: 'Confirmar',
-        confirmationButtonColor: 'blue',
+          `Tem certeza que deseja certificar ${enrollment.name}?`,
+        confirmationButtonText: 'Certificar',
+        confirmationButtonColor: 'green',
+      },
+      {
+        label: 'Marcar como Faltou',
+        icon: IconX,
+        onClick: handleMarkAsMissed,
+        isVisible: canMarkAsMissed,
+        isLoading: updateFlowMutation.isPending,
+        requiresConfirmation: true,
+        confirmationTitle: 'Confirmar Falta',
+        confirmationMessage: (enrollment: Enrollment) =>
+          `Tem certeza que deseja marcar ${enrollment.name} como faltou?`,
+        confirmationButtonText: 'Confirmar Falta',
+        confirmationButtonColor: 'red',
       },
     ],
-    [handleReturnToWaiting, canReturnToWaiting, updateFlowMutation.isPending]
+    [handleCertify, handleMarkAsMissed, canCertify, canMarkAsMissed, updateFlowMutation.isPending]
   );
 
   const columns = useMemo<MRT_ColumnDef<Enrollment>[]>(
     () => [
+      {
+        id: 'actions',
+        header: 'Fluxo',
+        Cell: ({ row }) => <EnrollmentStatusCertificationActions enrollment={row.original} />,
+        enableSorting: false,
+        enableColumnFilter: false,
+      },
       {
         accessorKey: 'class',
         header: 'Turma',
@@ -113,17 +143,6 @@ export function EnrollmentsTable({
       {
         accessorKey: 'status',
         header: 'Status',
-        filterVariant: 'select',
-        filterSelectOptions: [
-          { label: 'Aguardando', value: 'waiting' },
-          { label: 'Chamado', value: 'called' },
-          { label: 'Confirmado', value: 'confirmed' },
-          { label: 'Ignorado', value: 'ignored' },
-          { label: 'Desistiu', value: 'dropped' },
-          { label: 'Faltou', value: 'missed' },
-          { label: 'Certificado', value: 'certified' },
-        ],
-        filterFn: 'equals',
         Cell: ({ row }) => <StatusIcon status={row.original.status} />,
       },
       { 
@@ -247,40 +266,64 @@ Deus abençoe grandemente.`;
     []
   );
 
-  const csvData = useMemo(() => {
-    // Handle both array and paginated data
-    const data = Array.isArray(query.data) ? query.data : query.data?.data || [];
+  // Dados já filtrados pelo backend
+  const paginatedData = query.data as any;
 
-    return data.map(
-      ({
-        name,
-        phone,
-        cnh,
-        uf_cnh,
-        preferred_city,
-        email,
-        motorcycle_usage,
-        brand,
-        model,
-        status,
-        enrollment_date,
-        class: class_,
-      }) => ({
-        Turma: class_?.date ? (dateBR(class_.date) ?? '') : '',
-        Status: status,
-        'Data de Inscrição': enrollment_date,
-        'Cidade Preferencial': preferred_city?.name ?? '',
-        Nome: name,
-        Telefone: phone,
-        UF: uf_cnh,
-        CNH: cnh,
-        Email: email,
-        'Uso de Moto': motorcycle_usage,
-        Marca: brand,
-        Modelo: model,
-      })
-    );
-  }, [query.data]);
+  // Tentar diferentes formas de extrair os dados
+  let data = [];
+  if (paginatedData?.data && Array.isArray(paginatedData.data)) {
+    data = paginatedData.data;
+  } else if (Array.isArray(paginatedData)) {
+    data = paginatedData;
+  } else if (paginatedData && typeof paginatedData === 'object') {
+    // Se não tem propriedade 'data', talvez os dados estejam diretamente no objeto
+    data = Object.values(paginatedData).find((value) => Array.isArray(value)) || [];
+  }
+
+  const pagination =
+    paginatedData && !Array.isArray(paginatedData)
+      ? {
+          page: paginatedData.page,
+          limit: paginatedData.limit,
+          total: paginatedData.total,
+          totalPages: paginatedData.totalPages,
+        }
+      : undefined;
+
+  const csvData = useMemo(
+    () =>
+      data?.map(
+        ({
+          name,
+          phone,
+          cnh,
+          uf_cnh,
+          preferred_city,
+          email,
+          motorcycle_usage,
+          brand,
+          model,
+          status,
+          enrollment_date,
+          class: class_,
+        }: Enrollment) => ({
+          Fluxo: '', // Fluxo não é exportado para CSV/PDF
+          Turma: class_?.date ? (dateBR(class_.date) ?? '') : '',
+          Status: status,
+          'Data de Inscrição': enrollment_date,
+          'Cidade Preferencial': preferred_city?.name ?? '',
+          Nome: name,
+          Telefone: phone,
+          UF: uf_cnh,
+          CNH: cnh,
+          Email: email,
+          'Uso de Moto': motorcycle_usage,
+          Marca: brand,
+          Modelo: model,
+        })
+      ) ?? [],
+    [data]
+  );
 
   const rowMapper = useCallback((row: MRT_Row<Enrollment>): string[] => {
     const {
@@ -298,6 +341,7 @@ Deus abençoe grandemente.`;
       enrollment_date,
     } = row.original;
     return [
+      '', // Fluxo não é exportado para CSV/PDF
       class_?.date ? (dateBR(class_.date) ?? '') : '',
       status,
       enrollment_date ? (dateBR(enrollment_date) ?? '') : '',
@@ -315,46 +359,33 @@ Deus abençoe grandemente.`;
 
   const pdfConfig = useMemo(() => ({ tableHeaders, rowMapper }), [rowMapper]);
 
-  // Extrair dados corretamente (pode ser array ou paginado)
-  const data = (Array.isArray(query.data)
-    ? query.data
-    : query.data?.data || []) as unknown as Enrollment[];
-
-  // Configuração de paginação
-  const pagination = query.data && !Array.isArray(query.data)
-    ? {
-        page: query.data.page,
-        limit: query.data.limit,
-        total: query.data.total,
-        totalPages: query.data.totalPages,
-      }
-    : undefined;
-
-
   return (
     <>
       <CRUDTable<Enrollment>
         columns={columns}
-        title="Visão Geral - Inscrições"
+        title="Gestão de Certificações"
         csvData={csvData}
         pdfConfig={pdfConfig}
         customActions={customActions}
-        enableEdit
         enableFilters
         enableRowNumbers
-        data={data}
-        pagination={pagination}
-        onPageChange={onPageChange}
-        onPageSizeChange={onPageSizeChange}
         columnVisibility={{
+          status: false,
+          enrollment_date: false,
+          preferred_city: false,
+          uf_cnh: false,
           cnh: false,
           email: false,
           motorcycle_usage: false,
           brand: false,
           model: false,
         }}
-        emptyStateMessage="Nenhuma inscrição encontrada"
-        emptyStateDescription="As inscrições aparecerão aqui conforme forem sendo criadas"
+        data={data}
+        pagination={pagination}
+        onPageChange={onPageChange}
+        onPageSizeChange={onPageSizeChange}
+        emptyStateMessage="Nenhuma inscrição confirmada encontrada"
+        emptyStateDescription="As inscrições confirmadas aparecerão aqui para certificação"
       />
     </>
   );

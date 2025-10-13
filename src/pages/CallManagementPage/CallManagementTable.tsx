@@ -1,8 +1,9 @@
 import { useCallback, useMemo } from 'react';
 import { IconClock } from '@tabler/icons-react';
 import { MRT_ColumnDef, MRT_Row } from 'mantine-react-table';
-import { Anchor } from '@mantine/core';
+import { Anchor, Center, Stack, Text } from '@mantine/core';
 import { CRUDTable } from '@/components/CRUDTable';
+import { EnrollmentStatusCallActions } from '@/components/EnrollmentStatusActions/EnrollmentStatusCallActions';
 import { StatusIcon } from '@/components/StatusIcon';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCRUD } from '@/contexts/CRUDContext';
@@ -11,6 +12,7 @@ import { useEnrollmentFlowMutation } from '@/mutations/useEnrollmentFlowMutation
 import { dateBR } from '@/utils/dates';
 
 const tableHeaders = [
+  'Fluxo',
   'Turma',
   'Status',
   'Data de Inscrição',
@@ -25,19 +27,19 @@ const tableHeaders = [
   'Modelo',
 ];
 
-interface EnrollmentsTableProps {
+interface CallManagementTableProps {
   onPageChange?: (page: number) => void;
   onPageSizeChange?: (pageSize: number) => void;
   currentPage?: number;
   pageSize?: number;
 }
 
-export function EnrollmentsTable({
+export function CallManagementTable({
   onPageChange,
   onPageSizeChange,
   currentPage: _currentPage,
   pageSize: _pageSize,
-}: EnrollmentsTableProps = {}) {
+}: CallManagementTableProps) {
   const { query } = useCRUD();
   const { name } = useAuth();
   const updateFlowMutation = useEnrollmentFlowMutation();
@@ -57,10 +59,12 @@ export function EnrollmentsTable({
     // 1. Não estiver já em waiting
     // 2. Não estiver certificado (situação final)
     // 3. Não tiver faltado (situação final)
+    // 4. Não estiver dropped (situação final)
     return (
       enrollment.status !== EnrollmentStatus.WAITING &&
       enrollment.status !== EnrollmentStatus.CERTIFIED &&
-      enrollment.status !== EnrollmentStatus.MISSED
+      enrollment.status !== EnrollmentStatus.MISSED &&
+      enrollment.status !== EnrollmentStatus.DROPPED
     );
   }, []);
 
@@ -86,10 +90,15 @@ export function EnrollmentsTable({
   const columns = useMemo<MRT_ColumnDef<Enrollment>[]>(
     () => [
       {
+        id: 'actions',
+        header: 'Fluxo',
+        Cell: ({ row }) => <EnrollmentStatusCallActions enrollment={row.original} />,
+        enableSorting: false,
+        enableColumnFilter: false,
+      },
+      {
         accessorKey: 'class',
         header: 'Turma',
-        filterVariant: 'text',
-        filterFn: 'contains',
         Cell: ({ row }) => {
           const classData = row.original.class;
           if (!classData) {
@@ -113,23 +122,11 @@ export function EnrollmentsTable({
       {
         accessorKey: 'status',
         header: 'Status',
-        filterVariant: 'select',
-        filterSelectOptions: [
-          { label: 'Aguardando', value: 'waiting' },
-          { label: 'Chamado', value: 'called' },
-          { label: 'Confirmado', value: 'confirmed' },
-          { label: 'Ignorado', value: 'ignored' },
-          { label: 'Desistiu', value: 'dropped' },
-          { label: 'Faltou', value: 'missed' },
-          { label: 'Certificado', value: 'certified' },
-        ],
-        filterFn: 'equals',
         Cell: ({ row }) => <StatusIcon status={row.original.status} />,
       },
       { 
         accessorKey: 'enrollment_date', 
         header: 'Data de Inscrição',
-        filterVariant: 'date',
         Cell: ({ row }) => {
           const date = row.original.enrollment_date;
           if (!date) return '';
@@ -149,21 +146,12 @@ export function EnrollmentsTable({
       {
         accessorKey: 'preferred_city',
         header: 'Cidade Preferencial',
-        filterVariant: 'text',
-        filterFn: 'contains',
         Cell: ({ row }) => row.original.preferred_city?.name ?? '',
       },
-      { 
-        accessorKey: 'name', 
-        header: 'Nome',
-        filterVariant: 'text',
-        filterFn: 'contains',
-      },
+      { accessorKey: 'name', header: 'Nome' },
       {
         accessorKey: 'phone',
         header: 'Telefone',
-        filterVariant: 'text',
-        filterFn: 'contains',
         Cell: ({ row }) => {
           const phone = row.original.phone;
           const enrollment = row.original;
@@ -233,13 +221,7 @@ Deus abençoe grandemente.`;
       { accessorKey: 'uf_cnh', header: 'UF' },
       // Colunas ocultas por padrão
       { accessorKey: 'cnh', header: 'CNH', enableHiding: true },
-      { 
-        accessorKey: 'email', 
-        header: 'Email', 
-        enableHiding: true,
-        filterVariant: 'text',
-        filterFn: 'contains',
-      },
+      { accessorKey: 'email', header: 'Email', enableHiding: true },
       { accessorKey: 'motorcycle_usage', header: 'Uso de Moto', enableHiding: true },
       { accessorKey: 'brand', header: 'Marca', enableHiding: true },
       { accessorKey: 'model', header: 'Modelo', enableHiding: true },
@@ -247,40 +229,64 @@ Deus abençoe grandemente.`;
     []
   );
 
-  const csvData = useMemo(() => {
-    // Handle both array and paginated data
-    const data = Array.isArray(query.data) ? query.data : query.data?.data || [];
+  // Dados já filtrados pelo backend
+  const paginatedData = query.data as any;
 
-    return data.map(
-      ({
-        name,
-        phone,
-        cnh,
-        uf_cnh,
-        preferred_city,
-        email,
-        motorcycle_usage,
-        brand,
-        model,
-        status,
-        enrollment_date,
-        class: class_,
-      }) => ({
-        Turma: class_?.date ? (dateBR(class_.date) ?? '') : '',
-        Status: status,
-        'Data de Inscrição': enrollment_date,
-        'Cidade Preferencial': preferred_city?.name ?? '',
-        Nome: name,
-        Telefone: phone,
-        UF: uf_cnh,
-        CNH: cnh,
-        Email: email,
-        'Uso de Moto': motorcycle_usage,
-        Marca: brand,
-        Modelo: model,
-      })
-    );
-  }, [query.data]);
+  // Tentar diferentes formas de extrair os dados
+  let data = [];
+  if (paginatedData?.data && Array.isArray(paginatedData.data)) {
+    data = paginatedData.data;
+  } else if (Array.isArray(paginatedData)) {
+    data = paginatedData;
+  } else if (paginatedData && typeof paginatedData === 'object') {
+    // Se não tem propriedade 'data', talvez os dados estejam diretamente no objeto
+    data = Object.values(paginatedData).find((value) => Array.isArray(value)) || [];
+  }
+
+  const pagination =
+    paginatedData && !Array.isArray(paginatedData)
+      ? {
+          page: paginatedData.page,
+          limit: paginatedData.limit,
+          total: paginatedData.total,
+          totalPages: paginatedData.totalPages,
+        }
+      : undefined;
+
+  const csvData = useMemo(
+    () =>
+      data?.map(
+        ({
+          name,
+          phone,
+          cnh,
+          uf_cnh,
+          preferred_city,
+          email,
+          motorcycle_usage,
+          brand,
+          model,
+          status,
+          enrollment_date,
+          class: class_,
+        }: Enrollment) => ({
+          Fluxo: '', // Fluxo não é exportado para CSV/PDF
+          Turma: class_?.date ? (dateBR(class_.date) ?? '') : '',
+          Status: status,
+          'Data de Inscrição': enrollment_date,
+          'Cidade Preferencial': preferred_city?.name ?? '',
+          Nome: name,
+          Telefone: phone,
+          UF: uf_cnh,
+          CNH: cnh,
+          Email: email,
+          'Uso de Moto': motorcycle_usage,
+          Marca: brand,
+          Modelo: model,
+        })
+      ) ?? [],
+    [data]
+  );
 
   const rowMapper = useCallback((row: MRT_Row<Enrollment>): string[] => {
     const {
@@ -298,6 +304,7 @@ Deus abençoe grandemente.`;
       enrollment_date,
     } = row.original;
     return [
+      '', // Fluxo não é exportado para CSV/PDF
       class_?.date ? (dateBR(class_.date) ?? '') : '',
       status,
       enrollment_date ? (dateBR(enrollment_date) ?? '') : '',
@@ -315,37 +322,16 @@ Deus abençoe grandemente.`;
 
   const pdfConfig = useMemo(() => ({ tableHeaders, rowMapper }), [rowMapper]);
 
-  // Extrair dados corretamente (pode ser array ou paginado)
-  const data = (Array.isArray(query.data)
-    ? query.data
-    : query.data?.data || []) as unknown as Enrollment[];
-
-  // Configuração de paginação
-  const pagination = query.data && !Array.isArray(query.data)
-    ? {
-        page: query.data.page,
-        limit: query.data.limit,
-        total: query.data.total,
-        totalPages: query.data.totalPages,
-      }
-    : undefined;
-
-
   return (
     <>
       <CRUDTable<Enrollment>
         columns={columns}
-        title="Visão Geral - Inscrições"
+        title="Gestão de Chamadas"
         csvData={csvData}
         pdfConfig={pdfConfig}
         customActions={customActions}
-        enableEdit
         enableFilters
         enableRowNumbers
-        data={data}
-        pagination={pagination}
-        onPageChange={onPageChange}
-        onPageSizeChange={onPageSizeChange}
         columnVisibility={{
           cnh: false,
           email: false,
@@ -353,8 +339,12 @@ Deus abençoe grandemente.`;
           brand: false,
           model: false,
         }}
-        emptyStateMessage="Nenhuma inscrição encontrada"
-        emptyStateDescription="As inscrições aparecerão aqui conforme forem sendo criadas"
+        data={data}
+        pagination={pagination}
+        onPageChange={onPageChange}
+        onPageSizeChange={onPageSizeChange}
+        emptyStateMessage="Nenhuma inscrição em processo de chamada encontrada"
+        emptyStateDescription="As inscrições em lista de espera, chamadas, confirmadas, ignoradas ou desistências aparecerão aqui"
       />
     </>
   );

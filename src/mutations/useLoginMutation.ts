@@ -1,8 +1,8 @@
 import { useMemo } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import axios, { AxiosInstance } from 'axios';
-import { BACKEND_ADDRESS } from '@/utils/constants';
 import { Credentials } from '@/model/models';
+import { BACKEND_ADDRESS } from '@/utils/constants';
 
 export default function useLoginMutation() {
   // we do not use the global axios instance configured with auth

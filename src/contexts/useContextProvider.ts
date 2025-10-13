@@ -2,7 +2,7 @@ import { useContext } from 'react';
 
 /**
  * Helper to retrieve the value of a React context
- * 
+ *
  * @param context - The context to retrieve the value from
  * @param hookName - The name of the hook, for message purposes
  * @param providerName - The name of the context, for message purposes

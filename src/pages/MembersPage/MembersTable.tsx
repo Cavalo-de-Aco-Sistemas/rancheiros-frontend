@@ -4,6 +4,7 @@ import { Anchor, Badge } from '@mantine/core';
 import { CRUDTable } from '@/components/CRUDTable';
 import { useCRUD } from '@/contexts/CRUDContext';
 import { Member } from '@/model/member';
+import { extractData } from '@/utils/dataUtils';
 import { dateBR } from '@/utils/dates';
 import { phasesOptions } from './MembersForm';
 
@@ -37,7 +38,19 @@ const tableHeaders = [
   'Padrinho',
 ];
 
-export function MembersTable() {
+interface MembersTableProps {
+  onPageChange?: (page: number) => void;
+  onPageSizeChange?: (pageSize: number) => void;
+  currentPage?: number;
+  pageSize?: number;
+}
+
+export function MembersTable({
+  onPageChange,
+  onPageSizeChange,
+  currentPage = 1,
+  pageSize = 10,
+}: MembersTableProps = {}) {
   const { query } = useCRUD();
 
   const columns = useMemo<MRT_ColumnDef<Member>[]>(
@@ -127,7 +140,7 @@ export function MembersTable() {
 
   const csvData = useMemo(
     () =>
-      query.data?.map(
+      extractData(query.data).map(
         ({
           name,
           patch,
@@ -143,7 +156,7 @@ export function MembersTable() {
           dateFullPatch,
           spouse,
           godfather,
-        }) => ({
+        }: any) => ({
           Nome: name,
           'Nome no Patch': patch ?? '',
           'Tipo sanguíneo': blood ?? '',
@@ -159,7 +172,7 @@ export function MembersTable() {
           Cônjuge: spouse?.name ?? '',
           Padrinho: godfather?.name ?? '',
         })
-      ) ?? [],
+      ),
     [query.data]
   );
 
@@ -200,5 +213,36 @@ export function MembersTable() {
 
   const pdfConfig = useMemo(() => ({ tableHeaders, rowMapper }), [rowMapper]);
 
-  return <CRUDTable columns={columns} title="Membros" csvData={csvData} pdfConfig={pdfConfig} />;
+  // Paginação client-side
+  const allData = useMemo(() => {
+    return extractData(query.data) as unknown as Member[];
+  }, [query.data]);
+
+  const paginatedData = useMemo(() => {
+    const startIndex = (currentPage - 1) * pageSize;
+    const endIndex = startIndex + pageSize;
+    return allData.slice(startIndex, endIndex);
+  }, [allData, currentPage, pageSize]);
+
+  const pagination = useMemo(() => ({
+    page: currentPage,
+    limit: pageSize,
+    total: allData.length,
+    totalPages: Math.ceil(allData.length / pageSize),
+  }), [allData.length, currentPage, pageSize]);
+
+  return (
+    <CRUDTable 
+      columns={columns} 
+      title="Membros" 
+      csvData={csvData} 
+      pdfConfig={pdfConfig} 
+      data={paginatedData}
+      pagination={pagination}
+      onPageChange={onPageChange}
+      onPageSizeChange={onPageSizeChange}
+      emptyStateMessage="Nenhum membro encontrado"
+      emptyStateDescription="Os membros aparecerão aqui conforme forem sendo cadastrados"
+    />
+  );
 }

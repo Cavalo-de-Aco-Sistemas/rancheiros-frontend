@@ -1,4 +1,4 @@
-import { Ranch } from "./ranch";
+import { Ranch } from './ranch';
 
 export interface Permissions {
   create: boolean;
@@ -20,6 +20,7 @@ export interface UserPermissions {
 export interface User {
   id: string;
   username: string;
+  name: string;
   permissions: UserPermissions;
   ranches: Ranch[];
   super_admin: boolean;
@@ -27,6 +28,7 @@ export interface User {
 
 export interface UserDto {
   username: string;
+  name: string;
   password?: string;
   repeatPassword?: string;
   permissions: UserPermissions;

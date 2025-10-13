@@ -1,5 +1,6 @@
 import { useCallback, useMemo, useState } from 'react';
 import { IconCsv, IconEdit, IconPdf, IconPlus, IconTrash } from '@tabler/icons-react';
+import { download, generateCsv, mkConfig } from 'export-to-csv';
 import jsPDF from 'jspdf';
 import autoTable, { RowInput } from 'jspdf-autotable';
 import {
@@ -8,7 +9,6 @@ import {
   MRT_Row,
   MRT_RowData,
   MRT_ShowHideColumnsButton,
-  MRT_ToggleDensePaddingButton,
   MRT_ToggleFiltersButton,
   MRT_ToggleFullScreenButton,
   MRT_ToggleGlobalFilterButton,
@@ -16,11 +16,10 @@ import {
 } from 'mantine-react-table';
 import { MRT_Localization_PT_BR } from 'mantine-react-table/locales/pt-BR/index.cjs';
 import { useLocation } from 'react-router-dom';
-import { ActionIcon, Group, Menu, rem, Title, Modal, Text, Button } from '@mantine/core';
+import { ActionIcon, Button, Group, Menu, Modal, rem, Text, Title } from '@mantine/core';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCRUD } from '@/contexts/CRUDContext';
 import { ROUTES_MAP } from '@/pages/MainPage/MainPage';
-import { download, generateCsv, mkConfig } from "export-to-csv";
 
 type AcceptedData = number | string | boolean | null | undefined;
 
@@ -31,13 +30,13 @@ type CSVData = {
 
 export function slugify(str: string): string {
   return str
-    .normalize("NFD") // Decompose accented characters
-    .replace(/[\u0300-\u036f]/g, "") // Remove diacritics
+    .normalize('NFD') // Decompose accented characters
+    .replace(/[\u0300-\u036f]/g, '') // Remove diacritics
     .toLowerCase() // Convert to lowercase
-    .replace(/[^a-z0-9-]+/g, "-") // Replace non-alphanumerics/dashes with dashes
-    .replace(/-+/g, "-") // Collapse multiple dashes
-    .replace(/^-+/, "") // Trim leading dashes
-    .replace(/-+$/, ""); // Trim trailing dashes
+    .replace(/[^a-z0-9-]+/g, '-') // Replace non-alphanumerics/dashes with dashes
+    .replace(/-+/g, '-') // Collapse multiple dashes
+    .replace(/^-+/, '') // Trim leading dashes
+    .replace(/-+$/, ''); // Trim trailing dashes
 }
 
 export interface CustomAction<T extends MRT_RowData> {
@@ -54,6 +53,13 @@ export interface CustomAction<T extends MRT_RowData> {
   confirmationButtonColor?: string;
 }
 
+interface PaginationInfo {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+}
+
 export interface CRUDTableProps<T extends MRT_RowData> {
   columns: MRT_ColumnDef<T>[];
   title: string;
@@ -63,6 +69,16 @@ export interface CRUDTableProps<T extends MRT_RowData> {
     rowMapper: (row: MRT_Row<T>) => RowInput;
   };
   customActions?: CustomAction<T>[];
+  columnVisibility?: Record<string, boolean>;
+  data?: T[];
+  enableEdit?: boolean;
+  pagination?: PaginationInfo;
+  onPageChange?: (page: number) => void;
+  onPageSizeChange?: (pageSize: number) => void;
+  enableFilters?: boolean; // Habilita filtros de colunas
+  enableRowNumbers?: boolean; // Habilita numeração sequencial das linhas
+  emptyStateMessage?: string; // Mensagem personalizada para estado vazio
+  emptyStateDescription?: string; // Descrição adicional para estado vazio
 }
 
 const DEFAULT_PERMISSIONS = {
@@ -72,9 +88,34 @@ const DEFAULT_PERMISSIONS = {
 };
 
 export function CRUDTable<T extends MRT_RowData>(props: CRUDTableProps<T>) {
-  const { columns, title, csvData, pdfConfig, customActions = [] } = props;
-  const { query, setSelected, setAction, open } = useCRUD();
-  
+  const {
+    columns,
+    title,
+    csvData,
+    pdfConfig,
+    customActions = [],
+    columnVisibility,
+    data: customData,
+    enableEdit = false,
+    pagination,
+    onPageChange,
+    onPageSizeChange,
+    enableFilters = false,
+    enableRowNumbers = false,
+    emptyStateMessage = 'Nenhum dado encontrado',
+    emptyStateDescription,
+  } = props;
+  const { 
+    query, 
+    setSelected, 
+    setAction, 
+    open,
+    columnFilters,
+    setColumnFilters,
+    globalFilter,
+    setGlobalFilter,
+  } = useCRUD();
+
   // Estados para modal de confirmação
   const [confirmationModal, setConfirmationModal] = useState<{
     opened: boolean;
@@ -125,6 +166,42 @@ export function CRUDTable<T extends MRT_RowData>(props: CRUDTableProps<T>) {
 
   const filename = useMemo(() => slugify(title), [title]);
 
+  // Coluna de numeração sequencial
+  const rowNumberColumn = useMemo(() => ({
+    id: 'rowNumber',
+    header: '#',
+    size: 60,
+    enableSorting: false,
+    enableColumnFilter: false,
+    enableHiding: false,
+    Cell: ({ row, table }: { row: any; table: any }) => {
+      // Calcular número sequencial considerando paginação
+      const pagination = table.options.state?.pagination;
+      const pageIndex = pagination?.pageIndex || 0;
+      const pageSize = pagination?.pageSize || 50;
+      const rowNumber = pageIndex * pageSize + row.index + 1;
+      
+      return (
+        <div style={{ 
+          textAlign: 'center', 
+          fontWeight: 'bold',
+          color: '#666',
+          fontSize: '14px'
+        }}>
+          {rowNumber}
+        </div>
+      );
+    },
+  }), []);
+
+  // Combinar colunas com numeração se habilitado
+  const finalColumns = useMemo(() => {
+    if (enableRowNumbers) {
+      return [rowNumberColumn, ...columns];
+    }
+    return columns;
+  }, [enableRowNumbers, rowNumberColumn, columns]);
+
   const {
     create,
     update,
@@ -139,7 +216,7 @@ export function CRUDTable<T extends MRT_RowData>(props: CRUDTableProps<T>) {
   const handleExportRowsPDF = useCallback(
     (rows: MRT_Row<T>[]) => {
       const doc = new jsPDF({
-        orientation: 'landscape'
+        orientation: 'landscape',
       });
       const tableData = rows.map(rowMapper);
       autoTable(doc, {
@@ -155,40 +232,205 @@ export function CRUDTable<T extends MRT_RowData>(props: CRUDTableProps<T>) {
   const csvConfig = useMemo(
     () =>
       mkConfig({
-        fieldSeparator: ",",
-        decimalSeparator: ".",
+        fieldSeparator: ',',
+        decimalSeparator: '.',
         useKeysAsHeaders: true,
         filename,
       }),
     [filename]
   );
 
+
+  // Chave única para forçar re-renderização quando paginação muda
+  const tableKey = useMemo(() => 
+    `table-${pagination?.page || 1}-${pagination?.limit || 50}`,
+    [pagination?.page, pagination?.limit]
+  );
+
   // Memoize the table configuration to prevent unnecessary re-renders
-  const tableConfig = useMemo(() => ({
-    columns,
-    data: (data ?? []) as T[],
-    localization: MRT_Localization_PT_BR,
-    initialState: {
-      density: 'xs' as const,
-    },
-    mantineToolbarAlertBannerProps: isError
-      ? {
-          color: 'red' as const,
-          children: error?.message ?? 'Error loading data',
-        }
-      : undefined,
-    state: { isLoading, showAlertBanner: isError, showProgressBars: isFetching },
-    mantinePaperProps: {
-      style: {
-        border: 'none',
+  const tableConfig = useMemo(
+    () => ({
+      columns: finalColumns,
+      data: (customData ?? data ?? []) as T[],
+      localization: MRT_Localization_PT_BR,
+      initialState: {
+        density: 'xs' as const,
+        columnVisibility: columnVisibility || {},
+        showColumnFilters: false, // Filtros desativados por padrão para interface limpa
+        showGlobalFilter: false, // Filtro global desativado por padrão
+        showPagination: true, // Garantir que paginação está visível
+        // Não definir pagination no initialState quando usando manualPagination
+        // para evitar conflitos com o estado controlado
+        ...(pagination ? {} : {
+          pagination: {
+            pageSize: 50,
+            pageIndex: 0,
+          },
+        }),
       },
-    },
-    enableBottomToolbar: false,
-    enablePagination: false,
-    enableRowVirtualization: true,
-    mantineTableContainerProps: { style: { maxHeight: 'calc(100vh - 128px)' } },
-    enableRowActions: true,
-  }), [columns, data, isError, error?.message, isLoading, isFetching]);
+      // Estado atual da paginação para sincronizar com props
+      state: {
+        isLoading,
+        showAlertBanner: isError,
+        showProgressBars: isFetching,
+        columnFilters: enableFilters ? columnFilters : undefined,
+        globalFilter: enableFilters ? globalFilter : undefined,
+        density: 'xs' as const, // Forçar densidade mínima
+        pagination: pagination ? {
+          pageIndex: pagination.page - 1,
+          pageSize: pagination.limit,
+        } : {
+          pageIndex: 0,
+          pageSize: 50,
+        },
+      },
+      // Configuração para estado vazio
+      renderEmptyRowsFallback: () => (
+        <div style={{ 
+          padding: '2rem', 
+          textAlign: 'center', 
+          color: '#666',
+          fontSize: '14px'
+        }}>
+          <div style={{ fontSize: '16px', marginBottom: '8px' }}>
+            {emptyStateMessage}
+          </div>
+          {emptyStateDescription && (
+            <div style={{ fontSize: '12px', color: '#999' }}>
+              {emptyStateDescription}
+            </div>
+          )}
+        </div>
+      ),
+      // Configurações de loading
+      mantineSkeletonProps: {
+        animation: 'wave',
+        height: 20,
+      },
+      mantineLinearProgressProps: {
+        color: 'blue',
+        variant: 'indeterminate',
+      },
+      mantinePaperProps: {
+        style: {
+          border: 'none',
+        },
+      },
+      enableBottomToolbar: true, // Habilitar toolbar inferior para controles de paginação
+      enableRowVirtualization: !pagination,
+      mantineTableContainerProps: { style: { maxHeight: 'calc(100vh - 128px)' } },
+      enableRowActions: true,
+      // Configurações de filtros
+      enableColumnFilters: enableFilters,
+      enableGlobalFilter: enableFilters,
+      enableColumnFilterModes: enableFilters,
+      enableFilterMatchHighlighting: enableFilters,
+      // Sempre usar manual filtering quando filtros estão habilitados
+      // para evitar dupla filtragem (backend + frontend)
+      manualFiltering: enableFilters,
+      onColumnFiltersChange: enableFilters ? setColumnFilters : undefined,
+      onGlobalFilterChange: enableFilters ? setGlobalFilter : undefined,
+      // Desabilitar filtros locais quando manual filtering está ativo
+      enableColumnFiltering: enableFilters,
+      enableGlobalFiltering: enableFilters,
+      // Configurações específicas para filtros
+      enableMultiSort: false,
+      enableMultiColumnFiltering: true,
+      // Configurações de paginação
+      enablePagination: true,
+      enableRowSelection: false,
+      enableDensityToggle: false,
+      enableFullScreenToggle: false,
+      enableHiding: true,
+      // Mostrar informações de paginação
+      enablePaginationDisplay: true,
+      // Mostrar contagem de linhas
+      enableRowCount: true,
+      // Exibir informações de linha na parte inferior
+      renderBottomToolbarCustomActions: pagination
+        ? () => (
+            <div style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: '8px',
+              fontSize: '14px',
+              color: '#666'
+            }}>
+              <span>Total: {pagination.total} registros</span>
+              <span>•</span>
+              <span>Página {pagination.page} de {pagination.totalPages}</span>
+            </div>
+          )
+        : undefined,
+      // Exibir informações de linha na toolbar
+      renderToolbarAlertBannerProps: isError
+        ? {
+            color: 'red' as const,
+            children: error?.message ?? 'Error loading data',
+          }
+        : pagination
+        ? {
+            color: 'blue' as const,
+            children: `Total de registros: ${pagination.total} | Página ${pagination.page} de ${pagination.totalPages}`,
+          }
+        : undefined,
+      // Opções de tamanho de página
+      enablePageSizeOptions: true,
+      pageSizeOptions: [10, 25, 50, 100],
+      pageCount: pagination?.totalPages || -1,
+      rowCount: pagination?.total || 0,
+      manualPagination: !!pagination,
+      onPaginationChange:
+        pagination && (onPageChange || onPageSizeChange)
+          ? (updater: any) => {
+              if (typeof updater === 'function') {
+                const newPagination = updater({
+                  pageIndex: pagination.page - 1,
+                  pageSize: pagination.limit,
+                });
+                
+                // Notificar mudança de página
+                if (onPageChange && newPagination.pageIndex !== pagination.page - 1) {
+                  onPageChange(newPagination.pageIndex + 1);
+                }
+                
+                // Notificar mudança de tamanho da página
+                if (onPageSizeChange && newPagination.pageSize !== pagination.limit) {
+                  onPageSizeChange(newPagination.pageSize);
+                }
+              } else {
+                // Notificar mudança de página
+                if (onPageChange && updater.pageIndex !== pagination.page - 1) {
+                  onPageChange(updater.pageIndex + 1);
+                }
+                
+                // Notificar mudança de tamanho da página
+                if (onPageSizeChange && updater.pageSize !== pagination.limit) {
+                  onPageSizeChange(updater.pageSize);
+                }
+              }
+            }
+          : undefined,
+    }),
+    [
+      finalColumns,
+      customData,
+      data,
+      isError,
+      error?.message,
+      isLoading,
+      isFetching,
+      columnVisibility,
+      pagination,
+      onPageChange,
+      onPageSizeChange,
+      enableFilters,
+      columnFilters,
+      globalFilter,
+      setColumnFilters,
+      setGlobalFilter,
+    ]
+  );
 
   const handleExportDataCSV = useCallback(() => {
     const csv = generateCsv(csvConfig)(csvData ?? []);
@@ -203,18 +445,19 @@ export function CRUDTable<T extends MRT_RowData>(props: CRUDTableProps<T>) {
       </Title>
     ),
     renderRowActionMenuItems: ({ row }) => {
-      const rowData = data?.[row.index];
+      const actualData = Array.isArray(data) ? data : data?.data || [];
+      const rowData = actualData[row.index];
       if (!rowData) {
         return null;
       }
-      
+
       return (
         <>
-          {update && (
+          {(update || enableEdit) && (
             <Menu.Item
               onClick={() => {
                 open();
-                setSelected(rowData);
+                setSelected(rowData as any);
                 setAction('update');
               }}
               leftSection={<IconEdit style={{ width: rem(16), height: rem(16) }} />}
@@ -227,7 +470,7 @@ export function CRUDTable<T extends MRT_RowData>(props: CRUDTableProps<T>) {
             if (!isVisible) {
               return null;
             }
-            
+
             const IconComponent = action.icon;
             return (
               <Menu.Item
@@ -245,7 +488,7 @@ export function CRUDTable<T extends MRT_RowData>(props: CRUDTableProps<T>) {
             <Menu.Item
               onClick={() => {
                 open();
-                setSelected(rowData);
+                setSelected(rowData as any);
                 setAction('delete');
               }}
               color="red"
@@ -260,10 +503,9 @@ export function CRUDTable<T extends MRT_RowData>(props: CRUDTableProps<T>) {
 
     renderToolbarInternalActions: ({ table }) => (
       <Group>
-        <MRT_ToggleGlobalFilterButton table={table} />
-        <MRT_ToggleFiltersButton table={table} />
+        {enableFilters && <MRT_ToggleGlobalFilterButton table={table} />}
+        {enableFilters && <MRT_ToggleFiltersButton table={table} />}
         <MRT_ShowHideColumnsButton table={table} />
-        <MRT_ToggleDensePaddingButton table={table} />
         <MRT_ToggleFullScreenButton table={table} />
         <ActionIcon
           onClick={() => handleExportRowsPDF(table.getPrePaginationRowModel().rows)}
@@ -294,8 +536,8 @@ export function CRUDTable<T extends MRT_RowData>(props: CRUDTableProps<T>) {
 
   return (
     <>
-      <MantineReactTable table={table} />
-      
+      <MantineReactTable key={tableKey} table={table} />
+
       {/* Modal de confirmação genérico */}
       <Modal
         opened={confirmationModal.opened}
@@ -313,7 +555,7 @@ export function CRUDTable<T extends MRT_RowData>(props: CRUDTableProps<T>) {
           <Button variant="outline" onClick={cancelConfirmation}>
             Cancelar
           </Button>
-          <Button 
+          <Button
             color={confirmationModal.action?.confirmationButtonColor || 'blue'}
             onClick={confirmAction}
             loading={confirmationModal.action?.isLoading}

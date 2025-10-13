@@ -15,6 +15,7 @@ import { CRUDTable } from '@/components/CRUDTable';
 import { useCRUD } from '@/contexts/CRUDContext';
 import { Ranch } from '@/model/ranch';
 import { Permissions, User } from '@/model/user';
+import { extractData } from '@/utils/dataUtils';
 
 function PermissionRow({ permission }: { permission: Permissions | undefined }) {
   if (!permission) {
@@ -27,7 +28,7 @@ function PermissionRow({ permission }: { permission: Permissions | undefined }) 
       </Group>
     );
   }
-  
+
   return (
     <Group>
       {permission.create ? <IconStar stroke={1.5} /> : <IconStarOff stroke={1} color="gray" />}
@@ -40,6 +41,7 @@ function PermissionRow({ permission }: { permission: Permissions | undefined }) 
 
 const tableHeaders = [
   'Usuário',
+  'Nome',
   'Super Admin',
   'Membros',
   'Turmas',
@@ -60,18 +62,46 @@ const permissionsToString = (permissions: Permissions | undefined) => {
     .join(', ');
 };
 
-export function UsersTable() {
+interface UsersTableProps {
+  onPageChange?: (page: number) => void;
+  onPageSizeChange?: (pageSize: number) => void;
+  currentPage?: number;
+  pageSize?: number;
+}
+
+export function UsersTable({
+  onPageChange,
+  onPageSizeChange,
+  currentPage = 1,
+  pageSize = 10,
+}: UsersTableProps = {}) {
   const { query } = useCRUD();
 
   const columns = useMemo<MRT_ColumnDef<User>[]>(
     () => [
-      { accessorKey: 'username', header: 'Usuário' },
+      { 
+        accessorKey: 'username', 
+        header: 'Usuário',
+        filterVariant: 'text',
+        filterFn: 'contains',
+      },
+      { 
+        accessorKey: 'name', 
+        header: 'Nome',
+        filterVariant: 'text',
+        filterFn: 'contains',
+      },
       {
         accessorKey: 'super_admin',
         header: 'Super Admin',
+        filterVariant: 'select',
+        filterSelectOptions: [
+          { label: 'Sim', value: 'true' },
+          { label: 'Não', value: 'false' },
+        ],
         Cell: ({ row }) => (
-          <Badge 
-            color={row.original.super_admin ? 'green' : 'gray'} 
+          <Badge
+            color={row.original.super_admin ? 'green' : 'gray'}
             variant={row.original.super_admin ? 'filled' : 'light'}
           >
             {row.original.super_admin ? 'Sim' : 'Não'}
@@ -138,8 +168,9 @@ export function UsersTable() {
 
   const csvData = useMemo(
     () =>
-      query.data?.map(({ username, super_admin, permissions, ranches }) => ({
+      extractData(query.data).map(({ username, name, super_admin, permissions, ranches }: any) => ({
         Usuário: username,
+        Nome: name,
         'Super Admin': super_admin ? 'Sim' : 'Não',
         Membros: permissionsToString(permissions.members),
         Turmas: permissionsToString(permissions.classes),
@@ -148,14 +179,15 @@ export function UsersTable() {
         Ranchos: permissionsToString(permissions.ranches),
         Fluxo: permissionsToString(permissions.flow),
         Filtros: ranches.map((ranch: Ranch) => ranch.name).join(', '),
-      })) ?? [],
+      })),
     [query.data]
   );
 
   const rowMapper = useCallback((row: MRT_Row<User>): string[] => {
-    const { username, super_admin, permissions, ranches } = row.original;
+    const { username, name, super_admin, permissions, ranches } = row.original;
     return [
       username,
+      name,
       super_admin ? 'Sim' : 'Não',
       permissionsToString(permissions.members),
       permissionsToString(permissions.classes),
@@ -169,5 +201,37 @@ export function UsersTable() {
 
   const pdfConfig = useMemo(() => ({ tableHeaders, rowMapper }), [rowMapper]);
 
-  return <CRUDTable columns={columns} title="Usuários" csvData={csvData} pdfConfig={pdfConfig} />;
+  // Paginação client-side
+  const allData = useMemo(() => {
+    return extractData(query.data) as unknown as User[];
+  }, [query.data]);
+
+  const paginatedData = useMemo(() => {
+    const startIndex = (currentPage - 1) * pageSize;
+    const endIndex = startIndex + pageSize;
+    return allData.slice(startIndex, endIndex);
+  }, [allData, currentPage, pageSize]);
+
+  const pagination = useMemo(() => ({
+    page: currentPage,
+    limit: pageSize,
+    total: allData.length,
+    totalPages: Math.ceil(allData.length / pageSize),
+  }), [allData.length, currentPage, pageSize]);
+
+  return (
+    <CRUDTable 
+      columns={columns} 
+      title="Usuários" 
+      csvData={csvData} 
+      pdfConfig={pdfConfig} 
+      data={paginatedData}
+      pagination={pagination}
+      onPageChange={onPageChange}
+      onPageSizeChange={onPageSizeChange}
+      enableFilters 
+      emptyStateMessage="Nenhum usuário encontrado"
+      emptyStateDescription="Os usuários aparecerão aqui conforme forem sendo criados"
+    />
+  );
 }
