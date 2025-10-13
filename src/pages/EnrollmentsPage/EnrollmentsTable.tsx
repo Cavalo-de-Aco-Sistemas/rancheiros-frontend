@@ -25,7 +25,19 @@ const tableHeaders = [
   'Modelo',
 ];
 
-export function EnrollmentsTable() {
+interface EnrollmentsTableProps {
+  onPageChange?: (page: number) => void;
+  onPageSizeChange?: (pageSize: number) => void;
+  currentPage?: number;
+  pageSize?: number;
+}
+
+export function EnrollmentsTable({
+  onPageChange,
+  onPageSizeChange,
+  currentPage: _currentPage,
+  pageSize: _pageSize,
+}: EnrollmentsTableProps = {}) {
   const { query } = useCRUD();
   const { name } = useAuth();
   const updateFlowMutation = useEnrollmentFlowMutation();
@@ -293,6 +305,17 @@ Deus abençoe grandemente.`;
     ? query.data
     : query.data?.data || []) as unknown as Enrollment[];
 
+  // Configuração de paginação
+  const pagination = query.data && !Array.isArray(query.data)
+    ? {
+        page: query.data.page,
+        limit: query.data.limit,
+        total: query.data.total,
+        totalPages: query.data.totalPages,
+      }
+    : undefined;
+
+
   return (
     <>
       <CRUDTable<Enrollment>
@@ -304,6 +327,9 @@ Deus abençoe grandemente.`;
         enableEdit
         enableFilters
         data={data}
+        pagination={pagination}
+        onPageChange={onPageChange}
+        onPageSizeChange={onPageSizeChange}
         columnVisibility={{
           cnh: false,
           email: false,

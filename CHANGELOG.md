@@ -7,6 +7,49 @@ e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR
 
 ## [Unreleased]
 
+### Added
+- **Sistema de Controle de Paginação Completo**:
+  - **CRUDTable**: Controles avançados de paginação
+    - Seletor de tamanho de página (10, 25, 50, 100 itens)
+    - Navegação entre páginas com botões próxima/anterior
+    - Contador de registros (ex: "1-50 de 897")
+    - Informações de página atual e total de páginas
+    - Integração completa com backend para paginação server-side
+
+  - **Páginas com Paginação Implementada**:
+    - **EnrollmentsPage**: Visão geral de inscrições com paginação
+    - **CallManagementPage**: Gestão de chamadas com paginação
+    - **CertificationManagementPage**: Gestão de certificações com paginação
+
+### Fixed
+- **CRUDTable**: Correção de erro de paginação
+  - Resolvido erro "Cannot read properties of undefined (reading 'pageSize')"
+  - Estado de paginação sempre definido com valores padrão seguros
+  - Configuração correta de `rowCount` para `manualPagination`
+  - Sincronização adequada entre estado interno e props externas
+
+- **CRUDTable**: Correção de exibição de paginação
+  - Corrigida exibição incorreta "1-50 de 50" para "1-50 de 897"
+  - Habilitados botões de navegação entre páginas
+  - Cálculo correto do total de páginas baseado no `rowCount`
+  - Configuração adequada de `pageCount` e `manualPagination`
+
+### Enhanced
+- **CRUDTable**: Melhorias na experiência de paginação
+  - **Estado Controlado**: Sincronização perfeita entre frontend e backend
+  - **Re-renderização**: Chave única para forçar atualização quando paginação muda
+  - **Fallbacks Seguros**: Valores padrão para evitar erros durante carregamento
+  - **Reset de Página**: Volta para página 1 quando muda tamanho da página
+  - **Feedback Visual**: Loading states durante mudanças de paginação
+
+### Technical
+- **CRUDTable**: Configuração otimizada de paginação
+  - `rowCount`: Total de registros para cálculo correto de páginas
+  - `pageCount`: Total de páginas para navegação
+  - `manualPagination`: Controle server-side da paginação
+  - `state.pagination`: Sincronização com props externas
+  - `onPaginationChange`: Callbacks para mudanças de página e tamanho
+
 ## [1.4.0] - 2025-01-12
 
 ### Pull Request

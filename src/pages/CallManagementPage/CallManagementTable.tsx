@@ -29,12 +29,14 @@ const tableHeaders = [
 
 interface CallManagementTableProps {
   onPageChange?: (page: number) => void;
+  onPageSizeChange?: (pageSize: number) => void;
   currentPage?: number;
   pageSize?: number;
 }
 
 export function CallManagementTable({
   onPageChange,
+  onPageSizeChange,
   currentPage: _currentPage,
   pageSize: _pageSize,
 }: CallManagementTableProps) {
@@ -321,6 +323,7 @@ Deus abençoe grandemente.`;
         data={data}
         pagination={pagination}
         onPageChange={onPageChange}
+        onPageSizeChange={onPageSizeChange}
         emptyStateMessage="Nenhuma inscrição em processo de chamada encontrada"
         emptyStateDescription="As inscrições em lista de espera, chamadas, confirmadas, ignoradas ou desistências aparecerão aqui"
       />

@@ -29,12 +29,14 @@ const tableHeaders = [
 
 interface CertificationManagementTableProps {
   onPageChange?: (page: number) => void;
+  onPageSizeChange?: (pageSize: number) => void;
   currentPage?: number;
   pageSize?: number;
 }
 
 export function CertificationManagementTable({
   onPageChange,
+  onPageSizeChange,
   currentPage: _currentPage,
   pageSize: _pageSize,
 }: CertificationManagementTableProps) {
@@ -361,6 +363,7 @@ Deus abençoe grandemente.`;
         data={data}
         pagination={pagination}
         onPageChange={onPageChange}
+        onPageSizeChange={onPageSizeChange}
         emptyStateMessage="Nenhuma inscrição confirmada encontrada"
         emptyStateDescription="As inscrições confirmadas aparecerão aqui para certificação"
       />

@@ -4,7 +4,12 @@ import { CallManagementForm, CallManagementTable } from './index';
 
 export function CallManagementPage() {
   const [currentPage, setCurrentPage] = useState(1);
-  const pageSize = 50;
+  const [pageSize, setPageSize] = useState(50);
+
+  const handlePageSizeChange = (newPageSize: number) => {
+    setPageSize(newPageSize);
+    setCurrentPage(1); // Reset para primeira página quando mudar o tamanho
+  };
 
   return (
     <CRUDProvider
@@ -19,11 +24,12 @@ export function CallManagementPage() {
       enableFilters
       pageId="call-management"
     >
-      <CallManagementTable
-        onPageChange={setCurrentPage}
-        currentPage={currentPage}
-        pageSize={pageSize}
-      />
+            <CallManagementTable
+              onPageChange={setCurrentPage}
+              onPageSizeChange={handlePageSizeChange}
+              currentPage={currentPage}
+              pageSize={pageSize}
+            />
       <CallManagementForm />
     </CRUDProvider>
   );

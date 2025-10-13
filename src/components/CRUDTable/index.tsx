@@ -75,6 +75,7 @@ export interface CRUDTableProps<T extends MRT_RowData> {
   enableEdit?: boolean;
   pagination?: PaginationInfo;
   onPageChange?: (page: number) => void;
+  onPageSizeChange?: (pageSize: number) => void;
   enableFilters?: boolean; // Habilita filtros de colunas
   emptyStateMessage?: string; // Mensagem personalizada para estado vazio
   emptyStateDescription?: string; // Descrição adicional para estado vazio
@@ -98,6 +99,7 @@ export function CRUDTable<T extends MRT_RowData>(props: CRUDTableProps<T>) {
     enableEdit = false,
     pagination,
     onPageChange,
+    onPageSizeChange,
     enableFilters = false,
     emptyStateMessage = 'Nenhum dado encontrado',
     emptyStateDescription,
@@ -201,6 +203,13 @@ export function CRUDTable<T extends MRT_RowData>(props: CRUDTableProps<T>) {
     [filename]
   );
 
+
+  // Chave única para forçar re-renderização quando paginação muda
+  const tableKey = useMemo(() => 
+    `table-${pagination?.page || 1}-${pagination?.limit || 50}`,
+    [pagination?.page, pagination?.limit]
+  );
+
   // Memoize the table configuration to prevent unnecessary re-renders
   const tableConfig = useMemo(
     () => ({
@@ -212,6 +221,30 @@ export function CRUDTable<T extends MRT_RowData>(props: CRUDTableProps<T>) {
         columnVisibility: columnVisibility || {},
         showColumnFilters: false, // Filtros desativados por padrão para interface limpa
         showGlobalFilter: false, // Filtro global desativado por padrão
+        showPagination: true, // Garantir que paginação está visível
+        // Não definir pagination no initialState quando usando manualPagination
+        // para evitar conflitos com o estado controlado
+        ...(pagination ? {} : {
+          pagination: {
+            pageSize: 50,
+            pageIndex: 0,
+          },
+        }),
+      },
+      // Estado atual da paginação para sincronizar com props
+      state: {
+        isLoading,
+        showAlertBanner: isError,
+        showProgressBars: isFetching,
+        columnFilters: enableFilters ? columnFilters : undefined,
+        globalFilter: enableFilters ? globalFilter : undefined,
+        pagination: pagination ? {
+          pageIndex: pagination.page - 1,
+          pageSize: pagination.limit,
+        } : {
+          pageIndex: 0,
+          pageSize: 50,
+        },
       },
       mantineToolbarAlertBannerProps: isError
         ? {
@@ -219,13 +252,6 @@ export function CRUDTable<T extends MRT_RowData>(props: CRUDTableProps<T>) {
             children: error?.message ?? 'Error loading data',
           }
         : undefined,
-      state: { 
-        isLoading, 
-        showAlertBanner: isError, 
-        showProgressBars: isFetching,
-        columnFilters: enableFilters ? columnFilters : undefined,
-        globalFilter: enableFilters ? globalFilter : undefined,
-      },
       // Configuração para estado vazio
       renderEmptyRowsFallback: () => (
         <div style={{ 
@@ -258,8 +284,7 @@ export function CRUDTable<T extends MRT_RowData>(props: CRUDTableProps<T>) {
           border: 'none',
         },
       },
-      enableBottomToolbar: false,
-      enablePagination: !!pagination,
+      enableBottomToolbar: true, // Habilitar toolbar inferior para controles de paginação
       enableRowVirtualization: !pagination,
       mantineTableContainerProps: { style: { maxHeight: 'calc(100vh - 128px)' } },
       enableRowActions: true,
@@ -279,25 +304,48 @@ export function CRUDTable<T extends MRT_RowData>(props: CRUDTableProps<T>) {
       // Configurações específicas para filtros
       enableMultiSort: false,
       enableMultiColumnFiltering: true,
-      pagination: pagination
-        ? {
-            pageIndex: pagination.page - 1,
-            pageSize: pagination.limit,
-          }
-        : undefined,
-      pageCount: pagination?.totalPages,
+      // Configurações de paginação
+      enablePagination: true,
+      enableRowSelection: false,
+      enableDensityToggle: false,
+      enableFullScreenToggle: false,
+      enableHiding: true,
+      // Mostrar informações de paginação
+      enablePaginationDisplay: true,
+      // Opções de tamanho de página
+      enablePageSizeOptions: true,
+      pageSizeOptions: [10, 25, 50, 100],
+      pageCount: pagination?.totalPages || -1,
+      rowCount: pagination?.total || 0,
       manualPagination: !!pagination,
       onPaginationChange:
-        pagination && onPageChange
+        pagination && (onPageChange || onPageSizeChange)
           ? (updater: any) => {
               if (typeof updater === 'function') {
                 const newPagination = updater({
                   pageIndex: pagination.page - 1,
                   pageSize: pagination.limit,
                 });
-                onPageChange(newPagination.pageIndex + 1);
+                
+                // Notificar mudança de página
+                if (onPageChange && newPagination.pageIndex !== pagination.page - 1) {
+                  onPageChange(newPagination.pageIndex + 1);
+                }
+                
+                // Notificar mudança de tamanho da página
+                if (onPageSizeChange && newPagination.pageSize !== pagination.limit) {
+                  onPageSizeChange(newPagination.pageSize);
+                }
               } else {
-                onPageChange(updater.pageIndex + 1);
+                // Notificar mudança de página
+                if (onPageChange && updater.pageIndex !== pagination.page - 1) {
+                  onPageChange(updater.pageIndex + 1);
+                }
+                
+                // Notificar mudança de tamanho da página
+                if (onPageSizeChange && updater.pageSize !== pagination.limit) {
+                  onPageSizeChange(updater.pageSize);
+                }
               }
             }
           : undefined,
@@ -313,6 +361,7 @@ export function CRUDTable<T extends MRT_RowData>(props: CRUDTableProps<T>) {
       columnVisibility,
       pagination,
       onPageChange,
+      onPageSizeChange,
       enableFilters,
       columnFilters,
       globalFilter,
@@ -426,7 +475,7 @@ export function CRUDTable<T extends MRT_RowData>(props: CRUDTableProps<T>) {
 
   return (
     <>
-      <MantineReactTable table={table} />
+      <MantineReactTable key={tableKey} table={table} />
 
       {/* Modal de confirmação genérico */}
       <Modal
