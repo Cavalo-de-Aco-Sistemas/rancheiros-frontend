@@ -21,6 +21,20 @@ e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR
     - **CallManagementPage**: Gestão de chamadas com paginação
     - **CertificationManagementPage**: Gestão de certificações com paginação
 
+- **Sistema de Numeração Sequencial de Linhas**:
+  - **CRUDTable**: Coluna de numeração automática
+    - Nova prop `enableRowNumbers` para habilitar/desabilitar numeração
+    - Coluna "#" posicionada como primeira coluna da tabela
+    - Cálculo inteligente considerando paginação atual
+    - Numeração sequencial correta entre páginas (ex: página 2 inicia em 51)
+    - Estilo visual consistente (centralizado, negrito, cor cinza)
+    - Coluna não ordenável, não filtrável e não ocultável
+
+  - **Páginas com Numeração Implementada**:
+    - **EnrollmentsPage**: Numeração sequencial habilitada
+    - **CallManagementPage**: Numeração sequencial habilitada
+    - **CertificationManagementPage**: Numeração sequencial habilitada
+
 ### Fixed
 - **CRUDTable**: Correção de erro de paginação
   - Resolvido erro "Cannot read properties of undefined (reading 'pageSize')"
@@ -49,6 +63,14 @@ e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR
   - `manualPagination`: Controle server-side da paginação
   - `state.pagination`: Sincronização com props externas
   - `onPaginationChange`: Callbacks para mudanças de página e tamanho
+
+- **CRUDTable**: Implementação de numeração sequencial
+  - `enableRowNumbers`: Prop para habilitar coluna de numeração
+  - `rowNumberColumn`: Coluna customizada com cálculo de paginação
+  - `finalColumns`: Combinação dinâmica de colunas com numeração
+  - Cálculo: `(pageIndex * pageSize) + rowIndex + 1`
+  - Memoização para performance otimizada
+  - Integração transparente com colunas existentes
 
 ## [1.4.0] - 2025-01-12
 

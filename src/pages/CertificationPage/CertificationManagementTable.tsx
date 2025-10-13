@@ -353,6 +353,7 @@ Deus abençoe grandemente.`;
         pdfConfig={pdfConfig}
         customActions={customActions}
         enableFilters
+        enableRowNumbers
         columnVisibility={{
           cnh: false,
           email: false,

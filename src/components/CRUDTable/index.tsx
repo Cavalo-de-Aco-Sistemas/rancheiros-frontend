@@ -77,6 +77,7 @@ export interface CRUDTableProps<T extends MRT_RowData> {
   onPageChange?: (page: number) => void;
   onPageSizeChange?: (pageSize: number) => void;
   enableFilters?: boolean; // Habilita filtros de colunas
+  enableRowNumbers?: boolean; // Habilita numeração sequencial das linhas
   emptyStateMessage?: string; // Mensagem personalizada para estado vazio
   emptyStateDescription?: string; // Descrição adicional para estado vazio
 }
@@ -101,6 +102,7 @@ export function CRUDTable<T extends MRT_RowData>(props: CRUDTableProps<T>) {
     onPageChange,
     onPageSizeChange,
     enableFilters = false,
+    enableRowNumbers = false,
     emptyStateMessage = 'Nenhum dado encontrado',
     emptyStateDescription,
   } = props;
@@ -165,6 +167,42 @@ export function CRUDTable<T extends MRT_RowData>(props: CRUDTableProps<T>) {
 
   const filename = useMemo(() => slugify(title), [title]);
 
+  // Coluna de numeração sequencial
+  const rowNumberColumn = useMemo(() => ({
+    id: 'rowNumber',
+    header: '#',
+    size: 60,
+    enableSorting: false,
+    enableColumnFilter: false,
+    enableHiding: false,
+    Cell: ({ row, table }: { row: any; table: any }) => {
+      // Calcular número sequencial considerando paginação
+      const pagination = table.options.state?.pagination;
+      const pageIndex = pagination?.pageIndex || 0;
+      const pageSize = pagination?.pageSize || 50;
+      const rowNumber = pageIndex * pageSize + row.index + 1;
+      
+      return (
+        <div style={{ 
+          textAlign: 'center', 
+          fontWeight: 'bold',
+          color: '#666',
+          fontSize: '14px'
+        }}>
+          {rowNumber}
+        </div>
+      );
+    },
+  }), []);
+
+  // Combinar colunas com numeração se habilitado
+  const finalColumns = useMemo(() => {
+    if (enableRowNumbers) {
+      return [rowNumberColumn, ...columns];
+    }
+    return columns;
+  }, [enableRowNumbers, rowNumberColumn, columns]);
+
   const {
     create,
     update,
@@ -213,7 +251,7 @@ export function CRUDTable<T extends MRT_RowData>(props: CRUDTableProps<T>) {
   // Memoize the table configuration to prevent unnecessary re-renders
   const tableConfig = useMemo(
     () => ({
-      columns,
+      columns: finalColumns,
       data: (customData ?? data ?? []) as T[],
       localization: MRT_Localization_PT_BR,
       initialState: {
@@ -246,12 +284,6 @@ export function CRUDTable<T extends MRT_RowData>(props: CRUDTableProps<T>) {
           pageSize: 50,
         },
       },
-      mantineToolbarAlertBannerProps: isError
-        ? {
-            color: 'red' as const,
-            children: error?.message ?? 'Error loading data',
-          }
-        : undefined,
       // Configuração para estado vazio
       renderEmptyRowsFallback: () => (
         <div style={{ 
@@ -312,6 +344,36 @@ export function CRUDTable<T extends MRT_RowData>(props: CRUDTableProps<T>) {
       enableHiding: true,
       // Mostrar informações de paginação
       enablePaginationDisplay: true,
+      // Mostrar contagem de linhas
+      enableRowCount: true,
+      // Exibir informações de linha na parte inferior
+      renderBottomToolbarCustomActions: pagination
+        ? () => (
+            <div style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: '8px',
+              fontSize: '14px',
+              color: '#666'
+            }}>
+              <span>Total: {pagination.total} registros</span>
+              <span>•</span>
+              <span>Página {pagination.page} de {pagination.totalPages}</span>
+            </div>
+          )
+        : undefined,
+      // Exibir informações de linha na toolbar
+      renderToolbarAlertBannerProps: isError
+        ? {
+            color: 'red' as const,
+            children: error?.message ?? 'Error loading data',
+          }
+        : pagination
+        ? {
+            color: 'blue' as const,
+            children: `Total de registros: ${pagination.total} | Página ${pagination.page} de ${pagination.totalPages}`,
+          }
+        : undefined,
       // Opções de tamanho de página
       enablePageSizeOptions: true,
       pageSizeOptions: [10, 25, 50, 100],
@@ -351,7 +413,7 @@ export function CRUDTable<T extends MRT_RowData>(props: CRUDTableProps<T>) {
           : undefined,
     }),
     [
-      columns,
+      finalColumns,
       customData,
       data,
       isError,

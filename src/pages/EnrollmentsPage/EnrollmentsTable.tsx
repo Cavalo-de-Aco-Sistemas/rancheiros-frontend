@@ -326,6 +326,7 @@ Deus abençoe grandemente.`;
         customActions={customActions}
         enableEdit
         enableFilters
+        enableRowNumbers
         data={data}
         pagination={pagination}
         onPageChange={onPageChange}
