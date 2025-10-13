@@ -8,19 +8,67 @@ e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR
 ## [Unreleased]
 
 ### Added
-- **Novas funcionalidades serão documentadas aqui**
+- **Sistema de Download de Listas de Inscrições Confirmadas**:
+  - **ClassesTable**: Funcionalidade para baixar lista de inscrições confirmadas por turma
+    - Botão de download na coluna de ações padrão do CRUDTable
+    - Suporte a formatos CSV e PDF
+    - Integração com API `/enrollments/confirmed/class/:classId`
+    - Notificações de sucesso, aviso (sem inscrições) e erro
+    - Feedback visual durante download com estado de loading
 
-### Changed
-- **Mudanças em funcionalidades existentes serão documentadas aqui**
-
-### Fixed
-- **Correções de bugs serão documentadas aqui**
+  - **Relatórios de Inscrições**: Estrutura de relatório otimizada
+    - **Cabeçalho**: Local, data e total de confirmados
+    - **Tabela**: Número sequencial, nome, moto (marca/modelo), assinatura
+    - **Remoção**: Colunas telefone e CNH removidas conforme solicitado
+    - **Coluna de Assinatura**: Campo amplo para assinatura presencial
+    - **Formato Moto**: Combinação "Marca/Modelo" em coluna única
 
 ### Enhanced
-- **Melhorias de performance e UX serão documentadas aqui**
+- **CRUDTable**: Densidade mínima aplicada em todas as tabelas
+  - **Densidade 'xs'**: Menor espaçamento possível entre linhas
+  - **Configuração Dupla**: `initialState.density` e `state.density` forçados para 'xs'
+  - **Menu Limpo**: Removido botão de toggle de densidade do menu
+  - **Consistência**: Todas as tabelas do sistema com densidade uniforme
+  - **Performance**: Mais dados visíveis por tela, melhor aproveitamento do espaço
+
+- **Sistema de Paginação Client-Side**: Implementado em páginas principais
+  - **Páginas com Paginação**: Classes, Ranchos, Membros, Locais de Treinamento, Usuários
+  - **Controles Avançados**: Navegação entre páginas, seletor de tamanho (10, 25, 50, 100)
+  - **Reset Automático**: Volta para página 1 ao mudar tamanho da página
+  - **Contadores**: Total de registros e páginas disponíveis
+  - **Performance**: Carrega apenas dados visíveis na tela
+
+### Fixed
+- **CSV Download**: Correção na geração de arquivos CSV
+  - **Problema**: CSV não era baixado, apenas PDF funcionava
+  - **Solução**: Adicionada chamada explícita `download(config)(csv)` após `generateCsv`
+  - **Biblioteca**: Corrigido uso da biblioteca `export-to-csv`
+  - **Funcionalidade**: CSV e PDF agora funcionam corretamente
+
+- **Validação de Dados**: Melhorada validação para listas vazias
+  - **Verificação de Array**: Validação se `enrollments` é array válido
+  - **Verificação de Conteúdo**: Validação se há inscrições confirmadas
+  - **Notificações**: Aviso específico quando não há inscrições confirmadas
+  - **Tratamento de Erro**: Mensagens de erro mais específicas e úteis
 
 ### Technical
-- **Mudanças técnicas e de infraestrutura serão documentadas aqui**
+- **API Integration**: Integração direta com backend para dados de inscrições
+  - **Endpoint**: `/enrollments/confirmed/class/:classId`
+  - **Autenticação**: Uso do `axiosInstance` do AuthContext
+  - **Tratamento de Resposta**: Validação de formato de dados retornados
+  - **Error Handling**: Tratamento robusto de erros de API
+
+- **Report Generation**: Utilitários para geração de relatórios
+  - **generateEnrollmentCSV**: Geração de CSV com validações
+  - **generateEnrollmentPDF**: Geração de PDF com layout otimizado
+  - **Validações**: Verificação de dados antes da geração
+  - **Nomenclatura**: Arquivos com nome descritivo (local-data)
+
+- **Client-Side Pagination**: Implementação de paginação local
+  - **Estado**: `currentPage` e `pageSize` gerenciados localmente
+  - **Memoização**: `allData`, `paginatedData` e `pagination` otimizados
+  - **Performance**: Slice de dados apenas para itens visíveis
+  - **Sincronização**: Props passadas para CRUDTable para controle externo
 
 ## [1.5.0] - 2025-01-12
 
