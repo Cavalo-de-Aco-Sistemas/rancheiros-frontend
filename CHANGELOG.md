@@ -7,6 +7,15 @@ e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR
 
 ## [Unreleased]
 
+## [1.4.0] - 2025-01-12
+
+### Pull Request
+- **PR #29**: Sistema de Filtros Avançados e Melhorias de UX
+  - Implementação completa de sistema de filtros avançados no backend e frontend
+  - Melhorias significativas na experiência do usuário
+  - Loading states, mensagens de estado vazio personalizadas e interface mais limpa
+  - [Ver PR](https://github.com/Cavalo-de-Aco-Sistemas/rancheiros-frontend/pull/29)
+
 ### Added
 - **Sistema de Filtros Avançados no Frontend**:
   - **CRUDContext**: Suporte completo a filtros dinâmicos
