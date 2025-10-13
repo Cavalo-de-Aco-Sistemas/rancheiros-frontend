@@ -29,12 +29,14 @@ const tableHeaders = [
 
 interface CertificationManagementTableProps {
   onPageChange?: (page: number) => void;
+  onPageSizeChange?: (pageSize: number) => void;
   currentPage?: number;
   pageSize?: number;
 }
 
 export function CertificationManagementTable({
   onPageChange,
+  onPageSizeChange,
   currentPage: _currentPage,
   pageSize: _pageSize,
 }: CertificationManagementTableProps) {
@@ -147,6 +149,21 @@ export function CertificationManagementTable({
         accessorKey: 'enrollment_date', 
         header: 'Data de Inscrição',
         filterVariant: 'date',
+        Cell: ({ row }) => {
+          const date = row.original.enrollment_date;
+          if (!date) return '';
+          
+          try {
+            // Converter para Date e formatar para DD/MM/YYYY
+            const dateObj = new Date(date);
+            const day = dateObj.getDate().toString().padStart(2, '0');
+            const month = (dateObj.getMonth() + 1).toString().padStart(2, '0');
+            const year = dateObj.getFullYear();
+            return `${day}/${month}/${year}`;
+          } catch (error) {
+            return '';
+          }
+        },
       },
       {
         accessorKey: 'preferred_city',
@@ -351,7 +368,12 @@ Deus abençoe grandemente.`;
         pdfConfig={pdfConfig}
         customActions={customActions}
         enableFilters
+        enableRowNumbers
         columnVisibility={{
+          status: false,
+          enrollment_date: false,
+          preferred_city: false,
+          uf_cnh: false,
           cnh: false,
           email: false,
           motorcycle_usage: false,
@@ -361,6 +383,7 @@ Deus abençoe grandemente.`;
         data={data}
         pagination={pagination}
         onPageChange={onPageChange}
+        onPageSizeChange={onPageSizeChange}
         emptyStateMessage="Nenhuma inscrição confirmada encontrada"
         emptyStateDescription="As inscrições confirmadas aparecerão aqui para certificação"
       />

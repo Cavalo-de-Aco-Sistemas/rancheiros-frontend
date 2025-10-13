@@ -4,7 +4,7 @@ import { CertificationManagementForm, CertificationManagementTable } from './ind
 
 export function CertificationManagementPage() {
   const [currentPage, setCurrentPage] = useState(1);
-  const pageSize = 50;
+  const [pageSize, setPageSize] = useState(50);
 
   return (
     <CRUDProvider
@@ -19,11 +19,12 @@ export function CertificationManagementPage() {
       enableFilters
       pageId="certification-management"
     >
-      <CertificationManagementTable
-        onPageChange={setCurrentPage}
-        currentPage={currentPage}
-        pageSize={pageSize}
-      />
+            <CertificationManagementTable
+              onPageChange={setCurrentPage}
+              onPageSizeChange={setPageSize}
+              currentPage={currentPage}
+              pageSize={pageSize}
+            />
       <CertificationManagementForm />
     </CRUDProvider>
   );

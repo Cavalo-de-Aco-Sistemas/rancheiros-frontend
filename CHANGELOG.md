@@ -8,6 +8,127 @@ e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR
 ## [Unreleased]
 
 ### Added
+- **Novas funcionalidades serão documentadas aqui**
+
+### Changed
+- **Mudanças em funcionalidades existentes serão documentadas aqui**
+
+### Fixed
+- **Correções de bugs serão documentadas aqui**
+
+### Enhanced
+- **Melhorias de performance e UX serão documentadas aqui**
+
+### Technical
+- **Mudanças técnicas e de infraestrutura serão documentadas aqui**
+
+## [1.5.0] - 2025-01-12
+
+### Pull Request
+- **PR #31**: Sistema de Paginação Avançado, Numeração de Linhas e Melhorias de UX
+  - Implementação completa de sistema de paginação avançada com controles de tamanho de página
+  - Sistema de numeração sequencial de linhas considerando paginação
+  - Melhorias significativas na experiência do usuário com loading states e mensagens contextuais
+  - Correção de formatação de data com timezone UTC
+  - Otimização de visibilidade de colunas na página de certificação
+  - [Ver PR](https://github.com/Cavalo-de-Aco-Sistemas/rancheiros-frontend/pull/31)
+
+### Added
+- **Sistema de Controle de Paginação Completo**:
+  - **CRUDTable**: Controles avançados de paginação
+    - Seletor de tamanho de página (10, 25, 50, 100 itens)
+    - Navegação entre páginas com botões próxima/anterior
+    - Contador de registros (ex: "1-50 de 897")
+    - Informações de página atual e total de páginas
+    - Integração completa com backend para paginação server-side
+
+  - **Páginas com Paginação Implementada**:
+    - **EnrollmentsPage**: Visão geral de inscrições com paginação
+    - **CallManagementPage**: Gestão de chamadas com paginação
+    - **CertificationManagementPage**: Gestão de certificações com paginação
+
+- **Sistema de Numeração Sequencial de Linhas**:
+  - **CRUDTable**: Coluna de numeração automática
+    - Nova prop `enableRowNumbers` para habilitar/desabilitar numeração
+    - Coluna "#" posicionada como primeira coluna da tabela
+    - Cálculo inteligente considerando paginação atual
+    - Numeração sequencial correta entre páginas (ex: página 2 inicia em 51)
+    - Estilo visual consistente (centralizado, negrito, cor cinza)
+    - Coluna não ordenável, não filtrável e não ocultável
+
+  - **Páginas com Numeração Implementada**:
+    - **EnrollmentsPage**: Numeração sequencial habilitada
+    - **CallManagementPage**: Numeração sequencial habilitada
+    - **CertificationManagementPage**: Numeração sequencial habilitada
+
+### Fixed
+- **CRUDTable**: Correção de erro de paginação
+  - Resolvido erro "Cannot read properties of undefined (reading 'pageSize')"
+  - Estado de paginação sempre definido com valores padrão seguros
+  - Configuração correta de `rowCount` para `manualPagination`
+  - Sincronização adequada entre estado interno e props externas
+
+- **CRUDTable**: Correção de exibição de paginação
+  - Corrigida exibição incorreta "1-50 de 50" para "1-50 de 897"
+  - Habilitados botões de navegação entre páginas
+  - Cálculo correto do total de páginas baseado no `rowCount`
+  - Configuração adequada de `pageCount` e `manualPagination`
+
+- **Formatação de Data de Inscrição**: Correção de timezone
+  - Resolvido problema de formatação incorreta com timezone UTC
+  - Corrigida exibição "12T00:00:00.000Z/10/2025" para "08/10/2025"
+  - Implementada conversão segura de ISO string para Date object
+  - Formatação brasileira DD/MM/YYYY em todas as tabelas
+  - Try/catch para proteção contra datas inválidas
+
+### Enhanced
+- **CRUDTable**: Melhorias na experiência de paginação
+  - **Estado Controlado**: Sincronização perfeita entre frontend e backend
+  - **Re-renderização**: Chave única para forçar atualização quando paginação muda
+  - **Fallbacks Seguros**: Valores padrão para evitar erros durante carregamento
+  - **Reset de Página**: Volta para página 1 quando muda tamanho da página
+  - **Feedback Visual**: Loading states durante mudanças de paginação
+
+- **CertificationManagementTable**: Otimização de visibilidade de colunas
+  - **Interface Limpa**: Colunas ocultas por padrão para melhor experiência
+  - **Colunas Ocultas por Padrão**: Status, Data de Inscrição, Cidade Preferencial, UF
+  - **Flexibilidade**: Usuário pode mostrar/ocultar colunas conforme necessário
+  - **Foco no Essencial**: Página carrega com colunas mais relevantes visíveis
+  - **Controle Total**: Menu "Mostrar/Ocultar Colunas" funcional para todas as colunas
+
+### Technical
+- **CRUDTable**: Configuração otimizada de paginação
+  - `rowCount`: Total de registros para cálculo correto de páginas
+  - `pageCount`: Total de páginas para navegação
+  - `manualPagination`: Controle server-side da paginação
+  - `state.pagination`: Sincronização com props externas
+  - `onPaginationChange`: Callbacks para mudanças de página e tamanho
+
+- **CRUDTable**: Implementação de numeração sequencial
+  - `enableRowNumbers`: Prop para habilitar coluna de numeração
+  - `rowNumberColumn`: Coluna customizada com cálculo de paginação
+  - `finalColumns`: Combinação dinâmica de colunas com numeração
+  - Cálculo: `(pageIndex * pageSize) + rowIndex + 1`
+  - Memoização para performance otimizada
+  - Integração transparente com colunas existentes
+
+- **Formatação de Data**: Implementação robusta para timezone
+  - Conversão segura de ISO string para Date object
+  - Formatação brasileira DD/MM/YYYY com padStart
+  - Tratamento de timezone UTC do banco de dados
+  - Try/catch para proteção contra datas inválidas
+  - Aplicação em todas as tabelas de enrollment
+
+## [1.4.0] - 2025-01-12
+
+### Pull Request
+- **PR #29**: Sistema de Filtros Avançados e Melhorias de UX
+  - Implementação completa de sistema de filtros avançados no backend e frontend
+  - Melhorias significativas na experiência do usuário
+  - Loading states, mensagens de estado vazio personalizadas e interface mais limpa
+  - [Ver PR](https://github.com/Cavalo-de-Aco-Sistemas/rancheiros-frontend/pull/29)
+
+### Added
 - **Sistema de Filtros Avançados no Frontend**:
   - **CRUDContext**: Suporte completo a filtros dinâmicos
     - Estados para `columnFilters` e `globalFilter`

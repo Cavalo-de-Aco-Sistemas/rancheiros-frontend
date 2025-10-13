@@ -29,12 +29,14 @@ const tableHeaders = [
 
 interface CallManagementTableProps {
   onPageChange?: (page: number) => void;
+  onPageSizeChange?: (pageSize: number) => void;
   currentPage?: number;
   pageSize?: number;
 }
 
 export function CallManagementTable({
   onPageChange,
+  onPageSizeChange,
   currentPage: _currentPage,
   pageSize: _pageSize,
 }: CallManagementTableProps) {
@@ -122,7 +124,25 @@ export function CallManagementTable({
         header: 'Status',
         Cell: ({ row }) => <StatusIcon status={row.original.status} />,
       },
-      { accessorKey: 'enrollment_date', header: 'Data de Inscrição' },
+      { 
+        accessorKey: 'enrollment_date', 
+        header: 'Data de Inscrição',
+        Cell: ({ row }) => {
+          const date = row.original.enrollment_date;
+          if (!date) return '';
+          
+          try {
+            // Converter para Date e formatar para DD/MM/YYYY
+            const dateObj = new Date(date);
+            const day = dateObj.getDate().toString().padStart(2, '0');
+            const month = (dateObj.getMonth() + 1).toString().padStart(2, '0');
+            const year = dateObj.getFullYear();
+            return `${day}/${month}/${year}`;
+          } catch (error) {
+            return '';
+          }
+        },
+      },
       {
         accessorKey: 'preferred_city',
         header: 'Cidade Preferencial',
@@ -311,6 +331,7 @@ Deus abençoe grandemente.`;
         pdfConfig={pdfConfig}
         customActions={customActions}
         enableFilters
+        enableRowNumbers
         columnVisibility={{
           cnh: false,
           email: false,
@@ -321,6 +342,7 @@ Deus abençoe grandemente.`;
         data={data}
         pagination={pagination}
         onPageChange={onPageChange}
+        onPageSizeChange={onPageSizeChange}
         emptyStateMessage="Nenhuma inscrição em processo de chamada encontrada"
         emptyStateDescription="As inscrições em lista de espera, chamadas, confirmadas, ignoradas ou desistências aparecerão aqui"
       />
