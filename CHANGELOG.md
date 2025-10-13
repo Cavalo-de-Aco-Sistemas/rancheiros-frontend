@@ -7,6 +7,21 @@ e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR
 
 ## [Unreleased]
 
+### Added
+- **Novas funcionalidades serão documentadas aqui**
+
+### Changed
+- **Mudanças em funcionalidades existentes serão documentadas aqui**
+
+### Fixed
+- **Correções de bugs serão documentadas aqui**
+
+### Enhanced
+- **Melhorias de performance e UX serão documentadas aqui**
+
+### Technical
+- **Mudanças técnicas e de infraestrutura serão documentadas aqui**
+
 ## [1.5.0] - 2025-01-12
 
 ### Pull Request
