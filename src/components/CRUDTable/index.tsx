@@ -210,8 +210,8 @@ export function CRUDTable<T extends MRT_RowData>(props: CRUDTableProps<T>) {
       initialState: {
         density: 'xs' as const,
         columnVisibility: columnVisibility || {},
-        showColumnFilters: enableFilters,
-        showGlobalFilter: enableFilters,
+        showColumnFilters: false, // Filtros desativados por padrão para interface limpa
+        showGlobalFilter: false, // Filtro global desativado por padrão
       },
       mantineToolbarAlertBannerProps: isError
         ? {
