@@ -476,7 +476,11 @@ export function CRUDTable<T extends MRT_RowData>(props: CRUDTableProps<T>) {
     ),
     renderRowActionMenuItems: ({ row }) => {
       const actualData = query.data || [];
-      const rowData = actualData[row.index];
+      // Calcular o índice correto considerando a paginação
+      const currentPage = table.getState().pagination.pageIndex;
+      const pageSize = table.getState().pagination.pageSize;
+      const correctIndex = currentPage * pageSize + row.index;
+      const rowData = actualData[correctIndex];
       if (!rowData) {
         return null;
       }

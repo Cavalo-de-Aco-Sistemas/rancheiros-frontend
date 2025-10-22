@@ -24,11 +24,64 @@ As mudanças em development estão documentadas em On Development, quando deseja
 ### Technical
 - **Mudanças técnicas e de infraestrutura serão documentadas aqui**
 
-# On Develop Branch
+## [unreleased]
 
-# On Production Branch
+### Fixed
+- **Correção de Validação de Datas**: Resolvido erro "Invalid time value" no formulário de edição dos membros
+  - Melhorada função `toDate` com validação robusta de datas
+  - Adicionada validação nos campos `DateInput` para prevenir valores inválidos
+  - Implementado tratamento de erro com fallback seguro
+  - 📄 **Detalhes**: [docs/DATE_VALIDATION_FIX.md](docs/DATE_VALIDATION_FIX.md)
 
-## [2.0.0] - production
+- **Correção de Conflito de Tipos GraphQL**: Resolvido erro "Variable $id of type ID! used in position expecting type String!"
+  - Atualizados todos os resolvers para usar tipo `ID` explicitamente
+  - Corrigida inconsistência entre schema GraphQL e resolvers
+  - Implementada validação adequada de UUIDs
+  - 📄 **Detalhes**: [docs/GRAPHQL_INPUT_FIELDS_FIX.md](docs/GRAPHQL_INPUT_FIELDS_FIX.md)
+
+- **Correção de Campos Extras no GraphQL Input**: Resolvido erro "Field __typename is not defined by type UpdateRanchInput"
+  - Corrigida função `parseSelected` no formulário de ranches
+  - Implementada extração apenas de campos necessários para inputs
+  - Prevenção de envio de campos sensíveis (id, updated_at, deleted, __typename)
+  - 📄 **Detalhes**: [docs/GRAPHQL_INPUT_FIELDS_FIX.md](docs/GRAPHQL_INPUT_FIELDS_FIX.md)
+
+- **Correção de Índice de Paginação**: Resolvido problema de elementos da segunda página pegando dados da primeira
+  - Implementado cálculo correto do índice considerando paginação
+  - Corrigida fórmula: `correctIndex = currentPage * pageSize + row.index`
+  - Adicionada verificação de limites para prevenir erros
+  - 📄 **Detalhes**: [docs/PAGINATION_INDEX_FIX.md](docs/PAGINATION_INDEX_FIX.md)
+
+### Enhanced
+- **Organização de Documentação**: Reestruturação da documentação técnica
+  - Movidos todos os arquivos markdown para pasta `docs/`
+  - Mantidos apenas `CHANGELOG.md` e `README.md` na raiz
+  - Criado índice de documentação em `docs/README.md`
+  - Associadas correções com documentação detalhada
+  - 📄 **Detalhes**: [docs/README.md](docs/README.md)
+
+### Technical
+- **Migração GraphQL Completa**: Finalizada migração de REST para GraphQL
+  - Implementados resolvers para todos os módulos (users, members, ranches, locations, classes, enrollments)
+  - Configurado Apollo Client no frontend com autenticação
+  - Implementado sistema de permissões GraphQL
+  - Criados hooks customizados para operações CRUD
+  - 📄 **Detalhes**: [docs/GRAPHQL_MIGRATION_GUIDE.md](docs/GRAPHQL_MIGRATION_GUIDE.md)
+
+- **Sistema de Compartilhamento de Dados**: Otimização para reduzir chamadas GraphQL
+  - Implementado `SharedEnrollmentsProvider` para dados centralizados
+  - Hooks derivados para diferentes páginas (Enrollments, Call Management, Certification)
+  - Filtros compartilhados entre páginas relacionadas
+  - Normalização de status de inscrições
+  - 📄 **Detalhes**: [docs/SHARED_DATA_OPTIMIZATION.md](docs/SHARED_DATA_OPTIMIZATION.md)
+
+- **Sistema de Filtros Avançados**: Implementação de filtros nativos do Mantine
+  - Filtros por coluna e filtro global
+  - Filtros compartilhados entre páginas de inscrições
+  - Implementação correta de filtros para Call Management
+  - Otimização de performance com filtros client-side
+  - 📄 **Detalhes**: [docs/MANTINE_FILTERS_IMPLEMENTATION.md](docs/MANTINE_FILTERS_IMPLEMENTATION.md)
+
+## [2.0.0]
 
 ### Added
 - **Sistema de Download de Listas de Inscrições Confirmadas**: Funcionalidade completa para baixar listas por turma
@@ -600,7 +653,7 @@ As mudanças em development estão documentadas em On Development, quando deseja
 - **PR #24**: [feat: Implementação de link WhatsApp e campo name para usuários]
 - **PR #16**: [fix: Corrigir validação de criação de classes e melhorar UX da tabela]
 
-## [1.0.0] - production
+## [1.0.0]
 
 ### Added
 - Sistema inicial de gerenciamento de rancheiros

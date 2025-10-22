@@ -170,6 +170,7 @@ export default function MembersForm() {
           disabled={query.isLoading || action === 'delete'}
           valueFormat="DD/MM/YYYY"
           placeholder="DD/MM/AAAA"
+          value={form.values.birthday && form.values.birthday instanceof Date ? form.values.birthday : null}
         />
         <TextInput
           label="Celular/WhatsApp"
@@ -219,6 +220,7 @@ export default function MembersForm() {
           disabled={query.isLoading || action === 'delete'}
           valueFormat="DD/MM/YYYY"
           placeholder="DD/MM/AAAA"
+          value={form.values.dateProspect && form.values.dateProspect instanceof Date ? form.values.dateProspect : null}
         />
         <DateInput
           label="Data Meio escudo"
@@ -227,6 +229,7 @@ export default function MembersForm() {
           disabled={query.isLoading || action === 'delete'}
           valueFormat="DD/MM/YYYY"
           placeholder="DD/MM/AAAA"
+          value={form.values.dateHalfPatch && form.values.dateHalfPatch instanceof Date ? form.values.dateHalfPatch : null}
         />
         <DateInput
           label="Data Full patch"
@@ -235,6 +238,7 @@ export default function MembersForm() {
           disabled={query.isLoading || action === 'delete'}
           valueFormat="DD/MM/YYYY"
           placeholder="DD/MM/AAAA"
+          value={form.values.dateFullPatch && form.values.dateFullPatch instanceof Date ? form.values.dateFullPatch : null}
         />
       </SimpleGrid>
     </GraphQLCRUDForm>

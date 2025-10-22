@@ -25,7 +25,30 @@ export const dateBR = (date: string | Date | null) => {
   return null;
 };
 
-export const toDate = (date?: string | null) => (date ? new Date(`${date}T00:00:00`) : null);
+export const toDate = (date?: string | null) => {
+  if (!date) return null;
+  
+  try {
+    // Handle ISO strings (2000-08-17T00:00:00.000Z)
+    if (typeof date === 'string' && date.includes('T')) {
+      const dateObj = new Date(date);
+      return isNaN(dateObj.getTime()) ? null : dateObj;
+    }
+    
+    // Handle YYYY-MM-DD format
+    if (typeof date === 'string' && date.match(/^\d{4}-\d{2}-\d{2}$/)) {
+      const dateObj = new Date(`${date}T00:00:00`);
+      return isNaN(dateObj.getTime()) ? null : dateObj;
+    }
+    
+    // Handle other string formats
+    const dateObj = new Date(date);
+    return isNaN(dateObj.getTime()) ? null : dateObj;
+  } catch (error) {
+    console.warn('Invalid date value:', date, error);
+    return null;
+  }
+};
 
 export const birthdayBR = (date: string | Date | null) => {
   if (!date) return null;

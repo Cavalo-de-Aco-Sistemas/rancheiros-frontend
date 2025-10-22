@@ -7,7 +7,9 @@ import { CREATE_RANCH, UPDATE_RANCH, DELETE_RANCH } from '@/graphql/ranches';
 
 const INITIAL_VALUES = { name: '' };
 
-const parseSelected = (ranch: Ranch): RanchDto => ranch;
+const parseSelected = (ranch: Ranch): RanchDto => ({
+  name: ranch.name,
+});
 
 export function RanchesForm() {
   const { query, action } = useGraphQLCRUD();
