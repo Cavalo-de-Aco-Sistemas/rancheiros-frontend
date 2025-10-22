@@ -6,7 +6,8 @@ import { Class } from '@/model/class';
 import { Enrollment, EnrollmentStatus } from '@/model/enrollment';
 import { useEnrollmentAssignClassMutation } from '@/mutations/useEnrollmentAssignClassMutation';
 import { useEnrollmentFlowMutation } from '@/mutations/useEnrollmentFlowMutation';
-import useCRUDQuery from '@/queries/useCRUDQuery';
+import { useQuery } from '@apollo/client';
+import { GET_CLASSES } from '@/graphql/classes';
 import { dateBR } from '@/utils/dates';
 
 interface EnrollmentStatusCallActionsProps {
@@ -47,7 +48,8 @@ export function EnrollmentStatusCallActions({
 }: EnrollmentStatusCallActionsProps) {
   const updateFlowMutation = useEnrollmentFlowMutation();
   const assignClassMutation = useEnrollmentAssignClassMutation();
-  const classesQuery = useCRUDQuery<Class>('classes');
+  const { data: classesData } = useQuery(GET_CLASSES);
+  const classesQuery = { data: classesData?.classes };
   const [, { open: _open }] = useDisclosure(false);
 
   const classesOptions = useMemo(() => {
@@ -157,7 +159,7 @@ export function EnrollmentStatusCallActions({
             handleAssignClass(value);
           }
         }}
-        disabled={assignClassMutation.isPending}
+        disabled={assignClassMutation.isLoading}
         size="xs"
         w={200}
       />
@@ -174,7 +176,7 @@ export function EnrollmentStatusCallActions({
             color="blue"
             size="sm"
             onClick={handleReturnToCalled}
-            loading={updateFlowMutation.isPending}
+            loading={updateFlowMutation.isLoading}
           >
             <IconArrowBack size={16} />
           </ActionIcon>
@@ -193,7 +195,7 @@ export function EnrollmentStatusCallActions({
             color="blue"
             size="sm"
             onClick={handleRevertStatus}
-            loading={updateFlowMutation.isPending}
+            loading={updateFlowMutation.isLoading}
           >
             <IconArrowBack size={16} />
           </ActionIcon>
@@ -211,7 +213,7 @@ export function EnrollmentStatusCallActions({
             color={color}
             size="sm"
             onClick={() => handleStatusUpdate(status)}
-            loading={updateFlowMutation.isPending}
+            loading={updateFlowMutation.isLoading}
           >
             <Icon size={16} />
           </ActionIcon>
@@ -224,7 +226,7 @@ export function EnrollmentStatusCallActions({
             color="blue"
             size="sm"
             onClick={handleReturnToCalled}
-            loading={updateFlowMutation.isPending}
+            loading={updateFlowMutation.isLoading}
           >
             <IconArrowBack size={16} />
           </ActionIcon>

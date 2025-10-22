@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { CRUDProvider } from '@/contexts/CRUDContext';
+import { UsersProvider } from '@/hooks/useUsers';
 import { UsersForm } from './UsersForm';
 import { UsersTable } from './UsersTable';
 
@@ -13,7 +13,7 @@ export function UsersPage() {
   };
 
   return (
-    <CRUDProvider endpoint="users" enableFilters>
+    <UsersProvider>
       <UsersTable
         onPageChange={setCurrentPage}
         onPageSizeChange={handlePageSizeChange}
@@ -21,6 +21,6 @@ export function UsersPage() {
         pageSize={pageSize}
       />
       <UsersForm />
-    </CRUDProvider>
+    </UsersProvider>
   );
 }

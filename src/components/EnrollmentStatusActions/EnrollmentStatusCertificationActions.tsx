@@ -91,7 +91,7 @@ export function EnrollmentStatusCertificationActions({
             color="blue"
             size="sm"
             onClick={handleRevertStatus}
-            loading={updateFlowMutation.isPending}
+            loading={updateFlowMutation.isLoading}
           >
             <IconArrowBack size={16} />
           </ActionIcon>
@@ -110,7 +110,7 @@ export function EnrollmentStatusCertificationActions({
               color={color}
               size="sm"
               onClick={() => handleStatusUpdate(status)}
-              loading={updateFlowMutation.isPending}
+              loading={updateFlowMutation.isLoading}
             >
               <Icon size={16} />
             </ActionIcon>
@@ -126,7 +126,7 @@ export function EnrollmentStatusCertificationActions({
           <Button variant="outline" onClick={close}>
             Cancelar
           </Button>
-          <Button color="blue" onClick={confirmRevertStatus} loading={updateFlowMutation.isPending}>
+          <Button color="blue" onClick={confirmRevertStatus} loading={updateFlowMutation.isLoading}>
             Confirmar
           </Button>
         </Group>

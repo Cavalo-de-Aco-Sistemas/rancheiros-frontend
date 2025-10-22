@@ -6,10 +6,13 @@ import { CRUDTable } from '@/components/CRUDTable';
 import { EnrollmentStatusCertificationActions } from '@/components/EnrollmentStatusActions/EnrollmentStatusCertificationActions';
 import { StatusIcon } from '@/components/StatusIcon';
 import { useAuth } from '@/contexts/AuthContext';
-import { useCRUD } from '@/contexts/CRUDContext';
+import { useCertificationData } from '@/hooks/useSharedEnrollments';
+import { GraphQLCRUDProvider } from '@/contexts/GraphQLCRUDContext';
+import { GET_ENROLLMENTS } from '@/graphql/enrollments';
 import { Enrollment, EnrollmentStatus } from '@/model/enrollment';
 import { useEnrollmentFlowMutation } from '@/mutations/useEnrollmentFlowMutation';
 import { dateBR } from '@/utils/dates';
+import { normalizeEnrollments } from '@/utils/statusNormalizer';
 
 const tableHeaders = [
   'Fluxo',
@@ -40,7 +43,8 @@ export function CertificationManagementTable({
   currentPage: _currentPage,
   pageSize: _pageSize,
 }: CertificationManagementTableProps) {
-  const { query } = useCRUD();
+  const { data: certificationData, loading, error, refetch } = useCertificationData();
+  const query = { data: certificationData, isLoading: loading, isError: !!error, error, refetch };
   const { name } = useAuth();
   const updateFlowMutation = useEnrollmentFlowMutation();
 
@@ -81,7 +85,7 @@ export function CertificationManagementTable({
         icon: IconCheck,
         onClick: handleCertify,
         isVisible: canCertify,
-        isLoading: updateFlowMutation.isPending,
+        isLoading: updateFlowMutation.isLoading,
         requiresConfirmation: true,
         confirmationTitle: 'Confirmar Certificação',
         confirmationMessage: (enrollment: Enrollment) =>
@@ -94,7 +98,7 @@ export function CertificationManagementTable({
         icon: IconX,
         onClick: handleMarkAsMissed,
         isVisible: canMarkAsMissed,
-        isLoading: updateFlowMutation.isPending,
+        isLoading: updateFlowMutation.isLoading,
         requiresConfirmation: true,
         confirmationTitle: 'Confirmar Falta',
         confirmationMessage: (enrollment: Enrollment) =>
@@ -103,7 +107,7 @@ export function CertificationManagementTable({
         confirmationButtonColor: 'red',
       },
     ],
-    [handleCertify, handleMarkAsMissed, canCertify, canMarkAsMissed, updateFlowMutation.isPending]
+    [handleCertify, handleMarkAsMissed, canCertify, canMarkAsMissed, updateFlowMutation.isLoading]
   );
 
   const columns = useMemo<MRT_ColumnDef<Enrollment>[]>(
@@ -270,15 +274,18 @@ Deus abençoe grandemente.`;
   const paginatedData = query.data as any;
 
   // Tentar diferentes formas de extrair os dados
-  let data = [];
+  let rawData = [];
   if (paginatedData?.data && Array.isArray(paginatedData.data)) {
-    data = paginatedData.data;
+    rawData = paginatedData.data;
   } else if (Array.isArray(paginatedData)) {
-    data = paginatedData;
+    rawData = paginatedData;
   } else if (paginatedData && typeof paginatedData === 'object') {
     // Se não tem propriedade 'data', talvez os dados estejam diretamente no objeto
-    data = Object.values(paginatedData).find((value) => Array.isArray(value)) || [];
+    rawData = Object.values(paginatedData).find((value) => Array.isArray(value)) || [];
   }
+  
+  // Dados já vêm filtrados do hook compartilhado
+  const data = rawData;
 
   const pagination =
     paginatedData && !Array.isArray(paginatedData)
@@ -360,15 +367,15 @@ Deus abençoe grandemente.`;
   const pdfConfig = useMemo(() => ({ tableHeaders, rowMapper }), [rowMapper]);
 
   return (
-    <>
+    <GraphQLCRUDProvider query={GET_ENROLLMENTS} dataKey="enrollments">
       <CRUDTable<Enrollment>
         columns={columns}
         title="Gestão de Certificações"
         csvData={csvData}
         pdfConfig={pdfConfig}
         customActions={customActions}
-        enableFilters
-        enableRowNumbers
+        enableFilters={true}
+        enableRowNumbers={true}
         columnVisibility={{
           status: false,
           enrollment_date: false,
@@ -387,6 +394,6 @@ Deus abençoe grandemente.`;
         emptyStateMessage="Nenhuma inscrição confirmada encontrada"
         emptyStateDescription="As inscrições confirmadas aparecerão aqui para certificação"
       />
-    </>
+    </GraphQLCRUDProvider>
   );
 }

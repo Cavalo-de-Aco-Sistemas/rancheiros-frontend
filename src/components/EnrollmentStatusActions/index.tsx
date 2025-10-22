@@ -14,7 +14,8 @@ import { Class } from '@/model/class';
 import { Enrollment, EnrollmentStatus } from '@/model/enrollment';
 import { useEnrollmentAssignClassMutation } from '@/mutations/useEnrollmentAssignClassMutation';
 import { useEnrollmentFlowMutation } from '@/mutations/useEnrollmentFlowMutation';
-import useCRUDQuery from '@/queries/useCRUDQuery';
+import { useQuery } from '@apollo/client';
+import { GET_CLASSES } from '@/graphql/classes';
 import { extractData } from '@/utils/dataUtils';
 import { dateBR } from '@/utils/dates';
 
@@ -70,7 +71,8 @@ export function EnrollmentStatusActions({
 }: EnrollmentStatusActionsProps) {
   const updateFlowMutation = useEnrollmentFlowMutation();
   const assignClassMutation = useEnrollmentAssignClassMutation();
-  const classesQuery = useCRUDQuery<Class>('classes');
+  const { data: classesData } = useQuery(GET_CLASSES);
+  const classesQuery = { data: classesData?.classes };
   const [, { open }] = useDisclosure(false);
 
   const classesOptions = useMemo(() => {
@@ -173,7 +175,7 @@ export function EnrollmentStatusActions({
             handleAssignClass(value);
           }
         }}
-        disabled={assignClassMutation.isPending}
+        disabled={assignClassMutation.isLoading}
         size="xs"
         w={200}
       />
@@ -190,7 +192,7 @@ export function EnrollmentStatusActions({
             color={color}
             size="sm"
             onClick={() => handleStatusUpdate(status)}
-            loading={updateFlowMutation.isPending}
+            loading={updateFlowMutation.isLoading}
           >
             <Icon size={16} />
           </ActionIcon>
@@ -205,7 +207,7 @@ export function EnrollmentStatusActions({
             color="orange"
             size="sm"
             onClick={handleRevertStatus}
-            loading={updateFlowMutation.isPending}
+            loading={updateFlowMutation.isLoading}
           >
             <IconArrowBack size={16} />
           </ActionIcon>
@@ -264,7 +266,7 @@ export default function EnrollmentStatusActionsWithModal({
           <Button
             color="orange"
             onClick={confirmRevertStatus}
-            loading={updateFlowMutation.isPending}
+            loading={updateFlowMutation.isLoading}
           >
             Confirmar Reversão
           </Button>

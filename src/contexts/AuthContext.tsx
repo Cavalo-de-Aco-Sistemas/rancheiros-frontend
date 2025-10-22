@@ -1,13 +1,14 @@
 import { createContext, ReactNode, useCallback, useEffect, useMemo } from 'react';
-import axios, { AxiosInstance } from 'axios';
+import { ApolloClient, NormalizedCacheObject, ApolloProvider } from '@apollo/client';
 import { addHours, parseISO } from 'date-fns';
 import { useLocalStorage } from '@mantine/hooks';
 import { Ranch } from '@/model/ranch';
 import { LoginPage } from '@/pages/LoginPage';
 import { useContextProvider } from './useContextProvider';
+import { createApolloClient } from '@/apollo/client';
 
 export interface AuthContextType {
-  axiosInstance: AxiosInstance;
+  client: ApolloClient<NormalizedCacheObject>;
   logout: () => void;
   authToken: string | null;
   username: string | null;
@@ -51,6 +52,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [ranches, setRanches] = useLocalStorage<Ranch[] | null>({
     key: 'ranches',
     defaultValue: null,
+    getInitialValueInEffect: false,
+    serialize: (value) => JSON.stringify(value),
+    deserialize: (value) => {
+      try {
+        return value ? JSON.parse(value) : null;
+      } catch {
+        return null;
+      }
+    },
   });
 
   // the date and time from last login
@@ -130,49 +140,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [authDate, logout]);
 
-  // global axios instance
-  const axiosInstance: AxiosInstance = useMemo(() => {
-    const instance = axios.create({
-      headers: {
-        'Content-Type': 'application/json;charset=UTF-8',
-      },
-    });
-
-    // intercept all requests and add the auth token
-    instance.interceptors.request.use(
-      (config) => {
-        if (authToken) {
-          config.headers.Authorization = `Bearer ${authToken}`;
-        }
-        return config;
-      },
-      (error) => {
-        return Promise.reject(error);
-      }
-    );
-
-    // intercept all responses for token expired
-    instance.interceptors.response.use(
-      (response) => response,
-      async (error) => {
-        // Unauthorized
-        if (error.response && error.response.status === 401) {
-          logout();
-        }
-        if (error.response && error.response.status === 403) {
-          return Promise.reject(new Error('Você não tem permissão para manipular este recurso'));
-        }
-        // Error handling - could be logged to external service in production
-        return Promise.reject(error);
-      }
-    );
-
-    return instance;
+  // Apollo Client instance
+  const client = useMemo(() => {
+    return createApolloClient(authToken, logout);
   }, [authToken, logout]);
 
   // the value provided by auth context
   const value = {
-    axiosInstance,
+    client,
     logout,
     authToken,
     username,
@@ -183,8 +158,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={value}>
-      {authToken ? children : <LoginPage login={login} />}
-    </AuthContext.Provider>
+    <ApolloProvider client={client}>
+      <AuthContext.Provider value={value}>
+        {authToken ? children : <LoginPage login={login} />}
+      </AuthContext.Provider>
+    </ApolloProvider>
   );
 };

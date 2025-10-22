@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { CRUDProvider } from '@/contexts/CRUDContext';
 import { EnrollmentsForm } from './EnrollmentsForm';
 import { EnrollmentsTable } from './EnrollmentsTable';
 
@@ -13,16 +12,7 @@ export function EnrollmentsPage() {
   };
 
   return (
-    <CRUDProvider 
-      endpoint="enrollments" 
-      pageId="enrollments-overview" 
-      enableFilters
-      usePagination
-      params={{
-        page: currentPage,
-        limit: pageSize,
-      }}
-    >
+    <>
       <EnrollmentsTable
         onPageChange={setCurrentPage}
         onPageSizeChange={handlePageSizeChange}
@@ -30,6 +20,6 @@ export function EnrollmentsPage() {
         pageSize={pageSize}
       />
       <EnrollmentsForm />
-    </CRUDProvider>
+    </>
   );
 }

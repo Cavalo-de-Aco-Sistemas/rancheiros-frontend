@@ -2,10 +2,9 @@ import { useCallback, useMemo } from 'react';
 import { MRT_ColumnDef, MRT_Row } from 'mantine-react-table';
 import { Anchor, Badge } from '@mantine/core';
 import { CRUDTable } from '@/components/CRUDTable';
-import { useCRUD } from '@/contexts/CRUDContext';
+import { useGraphQLCRUD } from '@/contexts/GraphQLCRUDContext';
 import { Member } from '@/model/member';
-import { extractData } from '@/utils/dataUtils';
-import { dateBR } from '@/utils/dates';
+import { dateBR, birthdayBR } from '@/utils/dates';
 import { phasesOptions } from './MembersForm';
 
 const optionsToObject = (
@@ -51,7 +50,8 @@ export function MembersTable({
   currentPage = 1,
   pageSize = 10,
 }: MembersTableProps = {}) {
-  const { query } = useCRUD();
+  const { query } = useGraphQLCRUD();
+  const data = (query.data || []) as Member[];
 
   const columns = useMemo<MRT_ColumnDef<Member>[]>(
     () => [
@@ -84,7 +84,7 @@ export function MembersTable({
       {
         accessorKey: 'birthday',
         header: 'Aniversário',
-        Cell: ({ row }) => dateBR(row.original.birthday),
+        Cell: ({ row }) => birthdayBR(row.original.birthday),
       },
       {
         accessorKey: 'phone',
@@ -107,6 +107,7 @@ export function MembersTable({
       },
       {
         accessorKey: 'ranch.name',
+        accessorFn: (row) => row.ranch?.name || '',
         header: 'Rancho',
         Cell: ({ row }) =>
           row.original.ranch?.name && (
@@ -132,15 +133,23 @@ export function MembersTable({
         header: 'Data Full patch',
         Cell: ({ row }) => dateBR(row.original.dateFullPatch),
       },
-      { accessorKey: 'spouse.name', header: 'Cônjuge' },
-      { accessorKey: 'godfather.name', header: 'Padrinho' },
+      { 
+        accessorKey: 'spouse.name',
+        accessorFn: (row) => row.spouse?.name || '',
+        header: 'Cônjuge' 
+      },
+      { 
+        accessorKey: 'godfather.name',
+        accessorFn: (row) => row.godfather?.name || '',
+        header: 'Padrinho' 
+      },
     ],
     []
   );
 
   const csvData = useMemo(
     () =>
-      extractData(query.data).map(
+      data.map(
         ({
           name,
           patch,
@@ -156,12 +165,12 @@ export function MembersTable({
           dateFullPatch,
           spouse,
           godfather,
-        }: any) => ({
+        }: Member) => ({
           Nome: name,
           'Nome no Patch': patch ?? '',
           'Tipo sanguíneo': blood ?? '',
           Fase: phase ?? '',
-          Aniversário: birthday ? (dateBR(birthday) ?? '') : '',
+          Aniversário: birthday ? (birthdayBR(birthday) ?? '') : '',
           Telefone: phone ?? '',
           Rancho: ranch?.name ?? '',
           Residência: residence ?? '',
@@ -173,7 +182,7 @@ export function MembersTable({
           Padrinho: godfather?.name ?? '',
         })
       ),
-    [query.data]
+    [data]
   );
 
   const rowMapper = useCallback((row: MRT_Row<Member>): string[] => {
@@ -198,7 +207,7 @@ export function MembersTable({
       patch ?? '',
       blood ?? '',
       phase ?? '',
-      birthday ? (dateBR(birthday) ?? '') : '',
+      birthday ? (birthdayBR(birthday) ?? '') : '',
       phone ?? '',
       ranch?.name ?? '',
       residence ?? '',
@@ -214,22 +223,18 @@ export function MembersTable({
   const pdfConfig = useMemo(() => ({ tableHeaders, rowMapper }), [rowMapper]);
 
   // Paginação client-side
-  const allData = useMemo(() => {
-    return extractData(query.data) as unknown as Member[];
-  }, [query.data]);
-
   const paginatedData = useMemo(() => {
     const startIndex = (currentPage - 1) * pageSize;
     const endIndex = startIndex + pageSize;
-    return allData.slice(startIndex, endIndex);
-  }, [allData, currentPage, pageSize]);
+    return data.slice(startIndex, endIndex);
+  }, [data, currentPage, pageSize]);
 
   const pagination = useMemo(() => ({
     page: currentPage,
     limit: pageSize,
-    total: allData.length,
-    totalPages: Math.ceil(allData.length / pageSize),
-  }), [allData.length, currentPage, pageSize]);
+    total: data.length,
+    totalPages: Math.ceil(data.length / pageSize),
+  }), [data.length, currentPage, pageSize]);
 
   return (
     <CRUDTable 

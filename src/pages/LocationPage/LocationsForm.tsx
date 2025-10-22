@@ -1,11 +1,12 @@
 import { useMemo } from 'react';
 import { Select, TextInput } from '@mantine/core';
 import { useForm } from '@mantine/form';
-import { CRUDForm } from '@/components/CRUDForm';
+import { GraphQLCRUDForm } from '@/components/GraphQLCRUDForm';
 import { useAuth } from '@/contexts/AuthContext';
-import { useCRUD } from '@/contexts/CRUDContext';
+import { useGraphQLCRUD } from '@/contexts/GraphQLCRUDContext';
 import { Location, LocationDto } from '@/model/location';
 import { Ranch } from '@/model/ranch';
+import { CREATE_LOCATION, UPDATE_LOCATION, DELETE_LOCATION } from '@/graphql/locations';
 
 const INITIAL_VALUES = { name: '' };
 
@@ -18,8 +19,7 @@ const parseSelected = (location: Location): LocationDto => {
 };
 
 export function LocationsForm() {
-  const { query, action } = useCRUD();
-  const { isPending } = query;
+  const { query, action } = useGraphQLCRUD();
   const { ranches } = useAuth();
 
   const form = useForm<LocationDto>({
@@ -32,11 +32,13 @@ export function LocationsForm() {
   );
 
   return (
-    <CRUDForm<Location, LocationDto>
+    <GraphQLCRUDForm<Location, LocationDto>
       baseValues={INITIAL_VALUES}
       parseSelected={parseSelected}
       form={form}
-      endpoint="locations"
+      createMutation={CREATE_LOCATION}
+      updateMutation={UPDATE_LOCATION}
+      deleteMutation={DELETE_LOCATION}
       modalProps={{ title: 'Cadastro de Locais de Treinamento', size: 'xl' }}
     >
       <TextInput
@@ -44,7 +46,7 @@ export function LocationsForm() {
         label="Nome"
         key={form.key('name')}
         {...form.getInputProps('name')}
-        disabled={isPending || action === 'delete'}
+        disabled={query.isLoading || action === 'delete'}
       />
       <Select
         required
@@ -52,10 +54,10 @@ export function LocationsForm() {
         data={ranchesOptions}
         key={form.key('ranch')}
         {...form.getInputProps('ranch')}
-        disabled={isPending || action === 'delete'}
+        disabled={query.isLoading || action === 'delete'}
         searchable
         clearable
       />
-    </CRUDForm>
+    </GraphQLCRUDForm>
   );
 }

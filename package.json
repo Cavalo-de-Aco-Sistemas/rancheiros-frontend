@@ -20,6 +20,7 @@
     "storybook:build": "storybook build"
   },
   "dependencies": {
+    "@apollo/client": "^3.14.0",
     "@mantine/core": "^7.13.3",
     "@mantine/dates": "^7.13.3",
     "@mantine/form": "^7.13.3",
@@ -34,12 +35,14 @@
     "date-fns-tz": "^3.2.0",
     "dayjs": "^1.11.13",
     "export-to-csv": "^1.4.0",
+    "graphql": "^16.11.0",
     "jspdf": "^3.0.1",
     "jspdf-autotable": "^5.0.2",
     "mantine-react-table": "^2.0.0-beta.7",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "react-router-dom": "^6.27.0"
+    "react-router-dom": "^6.27.0",
+    "rxjs": "^7.8.2"
   },
   "devDependencies": {
     "@eslint/js": "^9.12.0",

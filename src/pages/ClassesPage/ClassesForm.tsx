@@ -2,12 +2,13 @@ import { useMemo } from 'react';
 import { Checkbox, Select, TextInput } from '@mantine/core';
 import { DateInput } from '@mantine/dates';
 import { useForm } from '@mantine/form';
-import { CRUDForm } from '@/components/CRUDForm';
-import { useCRUD } from '@/contexts/CRUDContext';
+import { useQuery } from '@apollo/client';
+import { GraphQLCRUDForm } from '@/components/GraphQLCRUDForm';
+import { useGraphQLCRUD } from '@/contexts/GraphQLCRUDContext';
 import { Class, ClassCreateDto, ClassDto } from '@/model/class';
 import { Location } from '@/model/location';
-import useCRUDQuery from '@/queries/useCRUDQuery';
-import { extractData } from '@/utils/dataUtils';
+import { GET_LOCATIONS } from '@/graphql/locations';
+import { GET_CLASSES, CREATE_CLASS, UPDATE_CLASS, DELETE_CLASS } from '@/graphql/classes';
 
 const INITIAL_VALUES = { location: null, date: null, mapsLink: '', active: true };
 
@@ -22,17 +23,18 @@ const parseSelected = (classs: Class): ClassDto => {
 };
 
 export function ClassesForm() {
-  const { query, action } = useCRUD();
-  const { isPending } = query;
-  const locationsQuery = useCRUDQuery<Location>('locations');
+  const { query, action } = useGraphQLCRUD();
+  const { data: locationsData } = useQuery(GET_LOCATIONS);
+
+  const locations = locationsData?.locations || [];
 
   const locationsOptions = useMemo(
     () =>
-      (extractData(locationsQuery.data) as unknown as Location[]).map((location) => ({
+      locations.map((location: Location) => ({
         label: location.name,
         value: location.id.toString(),
       })),
-    [locationsQuery.data]
+    [locations]
   );
 
   const form = useForm<ClassDto>({
@@ -45,11 +47,14 @@ export function ClassesForm() {
   });
 
   return (
-    <CRUDForm<Class, ClassDto, ClassCreateDto>
+    <GraphQLCRUDForm<Class, ClassDto>
       baseValues={INITIAL_VALUES}
       parseSelected={parseSelected}
       form={form}
-      endpoint="classes"
+      createMutation={CREATE_CLASS}
+      updateMutation={UPDATE_CLASS}
+      deleteMutation={DELETE_CLASS}
+      refetchQueries={[{ query: GET_CLASSES }]}
       modalProps={{ title: 'Cadastro de Turmas', size: 'xl' }}
       transformData={transformForAPI}
     >
@@ -58,7 +63,7 @@ export function ClassesForm() {
         label="Local do treinamento"
         key={form.key('location')}
         {...form.getInputProps('location')}
-        disabled={isPending || action === 'delete'}
+        disabled={query.isLoading || action === 'delete'}
         data={locationsOptions}
       />
       <DateInput
@@ -66,7 +71,7 @@ export function ClassesForm() {
         label="Data"
         key={form.key('date')}
         {...form.getInputProps('date')}
-        disabled={isPending || action === 'delete'}
+        disabled={query.isLoading || action === 'delete'}
         valueFormat="DD/MM/YYYY"
         placeholder="DD/MM/AAAA"
       />
@@ -75,16 +80,16 @@ export function ClassesForm() {
         label="Link do Google Maps"
         key={form.key('mapsLink')}
         {...form.getInputProps('mapsLink')}
-        disabled={isPending || action === 'delete'}
+        disabled={query.isLoading || action === 'delete'}
       />
       <Checkbox
         label="Ativo"
         key={form.key('active')}
         {...form.getInputProps('active')}
-        disabled={isPending || action === 'delete'}
+        disabled={query.isLoading || action === 'delete'}
         checked={form.values.active}
         onChange={(event) => form.setFieldValue('active', event.currentTarget.checked)}
       />
-    </CRUDForm>
+    </GraphQLCRUDForm>
   );
 }

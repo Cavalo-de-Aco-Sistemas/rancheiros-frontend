@@ -6,10 +6,13 @@ import { CRUDTable } from '@/components/CRUDTable';
 import { EnrollmentStatusCallActions } from '@/components/EnrollmentStatusActions/EnrollmentStatusCallActions';
 import { StatusIcon } from '@/components/StatusIcon';
 import { useAuth } from '@/contexts/AuthContext';
-import { useCRUD } from '@/contexts/CRUDContext';
+import { useCallManagementData } from '@/hooks/useSharedEnrollments';
+import { GraphQLCRUDProvider } from '@/contexts/GraphQLCRUDContext';
+import { GET_ENROLLMENTS } from '@/graphql/enrollments';
 import { Enrollment, EnrollmentStatus } from '@/model/enrollment';
 import { useEnrollmentFlowMutation } from '@/mutations/useEnrollmentFlowMutation';
 import { dateBR } from '@/utils/dates';
+import { normalizeEnrollments } from '@/utils/statusNormalizer';
 
 const tableHeaders = [
   'Fluxo',
@@ -40,7 +43,8 @@ export function CallManagementTable({
   currentPage: _currentPage,
   pageSize: _pageSize,
 }: CallManagementTableProps) {
-  const { query } = useCRUD();
+  const { data: callManagementData, loading, error, refetch } = useCallManagementData();
+  const query = { data: callManagementData, isLoading: loading, isError: !!error, error, refetch };
   const { name } = useAuth();
   const updateFlowMutation = useEnrollmentFlowMutation();
 
@@ -75,7 +79,7 @@ export function CallManagementTable({
         icon: IconClock,
         onClick: handleReturnToWaiting,
         isVisible: canReturnToWaiting,
-        isLoading: updateFlowMutation.isPending,
+        isLoading: updateFlowMutation.isLoading,
         requiresConfirmation: true,
         confirmationTitle: 'Confirmar Retorno para Lista de Espera',
         confirmationMessage: (enrollment: Enrollment) =>
@@ -84,7 +88,7 @@ export function CallManagementTable({
         confirmationButtonColor: 'blue',
       },
     ],
-    [handleReturnToWaiting, canReturnToWaiting, updateFlowMutation.isPending]
+    [handleReturnToWaiting, canReturnToWaiting, updateFlowMutation.isLoading]
   );
 
   const columns = useMemo<MRT_ColumnDef<Enrollment>[]>(
@@ -233,15 +237,18 @@ Deus abençoe grandemente.`;
   const paginatedData = query.data as any;
 
   // Tentar diferentes formas de extrair os dados
-  let data = [];
+  let rawData = [];
   if (paginatedData?.data && Array.isArray(paginatedData.data)) {
-    data = paginatedData.data;
+    rawData = paginatedData.data;
   } else if (Array.isArray(paginatedData)) {
-    data = paginatedData;
+    rawData = paginatedData;
   } else if (paginatedData && typeof paginatedData === 'object') {
     // Se não tem propriedade 'data', talvez os dados estejam diretamente no objeto
-    data = Object.values(paginatedData).find((value) => Array.isArray(value)) || [];
+    rawData = Object.values(paginatedData).find((value) => Array.isArray(value)) || [];
   }
+  
+  // Dados já vêm filtrados do hook compartilhado
+  const data = rawData;
 
   const pagination =
     paginatedData && !Array.isArray(paginatedData)
@@ -323,15 +330,15 @@ Deus abençoe grandemente.`;
   const pdfConfig = useMemo(() => ({ tableHeaders, rowMapper }), [rowMapper]);
 
   return (
-    <>
+    <GraphQLCRUDProvider query={GET_ENROLLMENTS} dataKey="enrollments">
       <CRUDTable<Enrollment>
         columns={columns}
         title="Gestão de Chamadas"
         csvData={csvData}
         pdfConfig={pdfConfig}
         customActions={customActions}
-        enableFilters
-        enableRowNumbers
+        enableFilters={true}
+        enableRowNumbers={true}
         columnVisibility={{
           cnh: false,
           email: false,
@@ -346,6 +353,6 @@ Deus abençoe grandemente.`;
         emptyStateMessage="Nenhuma inscrição em processo de chamada encontrada"
         emptyStateDescription="As inscrições em lista de espera, chamadas, confirmadas, ignoradas ou desistências aparecerão aqui"
       />
-    </>
+    </GraphQLCRUDProvider>
   );
 }

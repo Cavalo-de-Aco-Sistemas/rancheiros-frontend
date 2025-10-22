@@ -11,14 +11,13 @@ import {
   TextInput,
 } from '@mantine/core';
 import { useForm, UseFormReturnType } from '@mantine/form';
-import { CRUDForm } from '@/components/CRUDForm';
+import { GraphQLCRUDForm } from '@/components/GraphQLCRUDForm';
 import { PasswordStrength } from '@/components/PasswordStrength';
 import { useAuth } from '@/contexts/AuthContext';
-import { useCRUD } from '@/contexts/CRUDContext';
+import { useGraphQLCRUD } from '@/contexts/GraphQLCRUDContext';
 import { Ranch } from '@/model/ranch';
 import { User, UserDto, UserPermissions } from '@/model/user';
-import useCRUDQuery from '@/queries/useCRUDQuery';
-import { extractData } from '@/utils/dataUtils';
+import { GET_USERS, CREATE_USER, UPDATE_USER, DELETE_USER } from '@/graphql/users';
 
 const INITIAL_VALUES = {
   username: '',
@@ -167,20 +166,19 @@ function FlowPermissionRow({ form }: { form: UseFormReturnType<UserDto> }) {
 }
 
 export function UsersForm() {
-  const { query, action } = useCRUD();
-  const { isPending } = query;
+  const { query, action } = useGraphQLCRUD();
   const [passwordStrength, setPasswordStrength] = useState(0);
-  const { super_admin: currentUserIsSuperAdmin } = useAuth();
-
-  const ranchesQuery = useCRUDQuery<Ranch>('ranches');
+  const { super_admin: currentUserIsSuperAdmin, ranches } = useAuth();
 
   const ranchesOptions = useMemo(
     () =>
-      (extractData(ranchesQuery.data) as unknown as Ranch[]).map((ranch) => ({
-        label: ranch.name,
-        value: ranch.id.toString(),
-      })),
-    [ranchesQuery.data]
+      ranches
+        ?.filter((ranch): ranch is Ranch => !!ranch && !!ranch.id)
+        .map((ranch) => ({
+          label: ranch.name,
+          value: ranch.id.toString(),
+        })) || [],
+    [ranches]
   );
 
   const form = useForm<UserDto>({
@@ -220,11 +218,14 @@ export function UsersForm() {
   );
 
   return (
-    <CRUDForm<User, UserDto>
+    <GraphQLCRUDForm<User, UserDto>
       baseValues={INITIAL_VALUES}
       parseSelected={parseSelected}
       form={form}
-      endpoint="users"
+      createMutation={CREATE_USER}
+      updateMutation={UPDATE_USER}
+      deleteMutation={DELETE_USER}
+      refetchQueries={[{ query: GET_USERS }]}
       modalProps={{ title: 'Cadastro de Usuários', size: 'xl' }}
       validate={validate}
       transformData={transformData}
@@ -234,14 +235,14 @@ export function UsersForm() {
         label="Usuário"
         key={form.key('username')}
         {...form.getInputProps('username')}
-        disabled={isPending || action === 'delete'}
+        disabled={query.isLoading || action === 'delete'}
       />
       <TextInput
         required
         label="Nome"
         key={form.key('name')}
         {...form.getInputProps('name')}
-        disabled={isPending || action === 'delete'}
+        disabled={query.isLoading || action === 'delete'}
       />
       <Accordion defaultValue="senha">
         <Accordion.Item value="senha">
@@ -252,14 +253,14 @@ export function UsersForm() {
                 label="Senha"
                 key={form.key('password')}
                 {...form.getInputProps('password')}
-                disabled={isPending || action === 'delete'}
+                disabled={query.isLoading || action === 'delete'}
                 setPasswordStrength={setPasswordStrength}
               />
               <PasswordInput
                 label="Repetir senha"
                 key={form.key('repeatPassword')}
                 {...form.getInputProps('repeatPassword')}
-                disabled={isPending || action === 'delete'}
+                disabled={query.isLoading || action === 'delete'}
               />
             </SimpleGrid>
           </Accordion.Panel>
@@ -315,6 +316,6 @@ export function UsersForm() {
           </Accordion.Panel>
         </Accordion.Item>
       </Accordion>
-    </CRUDForm>
+    </GraphQLCRUDForm>
   );
 }

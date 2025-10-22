@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { CRUDProvider } from '@/contexts/CRUDContext';
+import { RanchesProvider } from '@/hooks/useRanches';
 import { RanchesForm } from './RanchesForm';
 import { RanchesTable } from './RanchesTable';
 
@@ -13,7 +13,7 @@ export function RanchesPage() {
   };
 
   return (
-    <CRUDProvider endpoint="ranches">
+    <RanchesProvider>
       <RanchesTable
         onPageChange={setCurrentPage}
         onPageSizeChange={handlePageSizeChange}
@@ -21,6 +21,6 @@ export function RanchesPage() {
         pageSize={pageSize}
       />
       <RanchesForm />
-    </CRUDProvider>
+    </RanchesProvider>
   );
 }

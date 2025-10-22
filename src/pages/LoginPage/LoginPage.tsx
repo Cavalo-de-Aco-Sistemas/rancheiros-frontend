@@ -20,7 +20,7 @@ import useLoginMutation from '@/mutations/useLoginMutation';
 export function LoginPage({ login }: { login: ({ token, username }: LoginProps) => void }) {
   const [errorMessage, setErrorMessage] = useState('');
 
-  const { mutate, isPending } = useLoginMutation();
+  const { mutate, loading } = useLoginMutation();
 
   const form = useForm({
     initialValues: {
@@ -50,7 +50,7 @@ export function LoginPage({ login }: { login: ({ token, username }: LoginProps) 
       <Flex justify="center" align="center" h="100vh" w="100vw">
         <Container size="xs" w="100%">
           <LoadingOverlay
-            visible={isPending}
+            visible={loading}
             overlayProps={{ radius: 'xl' }}
             loaderProps={{ size: 'xl', type: 'dots' }}
           />

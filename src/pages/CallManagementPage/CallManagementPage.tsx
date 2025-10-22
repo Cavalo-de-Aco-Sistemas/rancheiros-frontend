@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { CRUDProvider } from '@/contexts/CRUDContext';
 import { CallManagementForm, CallManagementTable } from './index';
 
 export function CallManagementPage() {
@@ -12,25 +11,14 @@ export function CallManagementPage() {
   };
 
   return (
-    <CRUDProvider
-      endpoint="enrollments"
-      params={{
-        status: 'waiting,called,confirmed,ignored,dropped',
-        activeClassesOnly: true,
-        page: currentPage,
-        limit: pageSize,
-      }}
-      usePagination
-      enableFilters
-      pageId="call-management"
-    >
-            <CallManagementTable
-              onPageChange={setCurrentPage}
-              onPageSizeChange={handlePageSizeChange}
-              currentPage={currentPage}
-              pageSize={pageSize}
-            />
+    <>
+      <CallManagementTable
+        onPageChange={setCurrentPage}
+        onPageSizeChange={handlePageSizeChange}
+        currentPage={currentPage}
+        pageSize={pageSize}
+      />
       <CallManagementForm />
-    </CRUDProvider>
+    </>
   );
 }

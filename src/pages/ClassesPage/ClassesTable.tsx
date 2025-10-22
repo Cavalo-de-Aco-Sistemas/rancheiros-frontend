@@ -4,9 +4,10 @@ import { MRT_ColumnDef, MRT_Row } from 'mantine-react-table';
 import { ActionIcon, Switch, Tooltip } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import { CRUDTable, CustomAction } from '@/components/CRUDTable';
-import { useCRUD } from '@/contexts/CRUDContext';
+import { useGraphQLCRUD } from '@/contexts/GraphQLCRUDContext';
 import { useAuth } from '@/contexts/AuthContext';
-import { BACKEND_ADDRESS } from '@/utils/constants';
+import { useApolloClient } from '@apollo/client';
+import { GET_CONFIRMED_ENROLLMENTS_BY_CLASS } from '@/graphql/enrollments';
 import { Class } from '@/model/class';
 import { useClassToggleActiveMutation } from '@/mutations/useClassToggleActiveMutation';
 import { extractData } from '@/utils/dataUtils';
@@ -28,14 +29,14 @@ export function ClassesTable({
   currentPage = 1,
   pageSize = 10,
 }: ClassesTableProps = {}) {
-  const { query } = useCRUD();
-  const { axiosInstance } = useAuth();
+  const { query } = useGraphQLCRUD();
+  const client = useApolloClient();
   const toggleActiveMutation = useClassToggleActiveMutation();
   const [downloadingClassId, setDownloadingClassId] = useState<string | null>(null);
 
   const handleToggleActive = useCallback(
     (classItem: Class) => {
-      toggleActiveMutation.mutate({
+      toggleActiveMutation.toggleActive({
         classId: classItem.id,
         active: !classItem.active,
       });
@@ -48,9 +49,12 @@ export function ClassesTable({
       try {
         setDownloadingClassId(classItem.id);
         
-        // Buscar as inscrições confirmadas usando o axiosInstance
-        const response = await axiosInstance.get(`${BACKEND_ADDRESS}/enrollments/confirmed/class/${classItem.id}`);
-        const enrollments = response.data; // A API retorna diretamente um array
+        // Buscar as inscrições confirmadas usando GraphQL
+        const { data } = await client.query({
+          query: GET_CONFIRMED_ENROLLMENTS_BY_CLASS,
+          variables: { classId: classItem.id }
+        });
+        const enrollments = data.confirmedEnrollmentsByClass || [];
         
         // Verificar se enrollments é um array
         if (!Array.isArray(enrollments)) {
@@ -98,7 +102,7 @@ export function ClassesTable({
         setDownloadingClassId(null);
       }
     },
-    [axiosInstance]
+    [client]
   );
 
 
@@ -138,7 +142,7 @@ export function ClassesTable({
           <Switch
             checked={row.original.active}
             onChange={() => handleToggleActive(row.original)}
-            disabled={toggleActiveMutation.isPending}
+            disabled={toggleActiveMutation.loading}
             size="sm"
             color="green"
           />

@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useContext, useMemo, useState } from 'react';
 import { IconCsv, IconEdit, IconPdf, IconPlus, IconTrash } from '@tabler/icons-react';
 import { download, generateCsv, mkConfig } from 'export-to-csv';
 import jsPDF from 'jspdf';
@@ -18,7 +18,8 @@ import { MRT_Localization_PT_BR } from 'mantine-react-table/locales/pt-BR/index.
 import { useLocation } from 'react-router-dom';
 import { ActionIcon, Button, Group, Menu, Modal, rem, Text, Title } from '@mantine/core';
 import { useAuth } from '@/contexts/AuthContext';
-import { useCRUD } from '@/contexts/CRUDContext';
+import { GraphQLCRUDContext } from '@/contexts/GraphQLCRUDContext';
+import { useSharedFilters } from '@/contexts/SharedFiltersContext';
 import { ROUTES_MAP } from '@/pages/MainPage/MainPage';
 
 type AcceptedData = number | string | boolean | null | undefined;
@@ -105,17 +106,41 @@ export function CRUDTable<T extends MRT_RowData>(props: CRUDTableProps<T>) {
     emptyStateMessage = 'Nenhum dado encontrado',
     emptyStateDescription,
   } = props;
+  // Use GraphQL context
+  const context = useContext(GraphQLCRUDContext);
+  
+  if (!context) {
+    throw new Error('CRUDTable must be used within a GraphQLCRUDProvider');
+  }
+  
   const { 
     query, 
     setSelected, 
     setAction, 
     open,
-    columnFilters,
-    setColumnFilters,
-    globalFilter,
-    setGlobalFilter,
-  } = useCRUD();
-
+    columnFilters: contextColumnFilters,
+    setColumnFilters: setContextColumnFilters,
+    globalFilter: contextGlobalFilter,
+    setGlobalFilter: setContextGlobalFilter,
+  } = context;
+  
+  // Try to use shared filters, fallback to context filters
+  let columnFilters, setColumnFilters, globalFilter, setGlobalFilter;
+  
+  try {
+    const sharedFilters = useSharedFilters();
+    columnFilters = sharedFilters.filters.columnFilters;
+    setColumnFilters = sharedFilters.setColumnFilters;
+    globalFilter = sharedFilters.filters.globalFilter;
+    setGlobalFilter = sharedFilters.setGlobalFilter;
+  } catch {
+    // Fallback to context filters
+    columnFilters = contextColumnFilters;
+    setColumnFilters = setContextColumnFilters;
+    globalFilter = contextGlobalFilter;
+    setGlobalFilter = setContextGlobalFilter;
+  }
+  
   // Estados para modal de confirmação
   const [confirmationModal, setConfirmationModal] = useState<{
     opened: boolean;
@@ -126,7 +151,7 @@ export function CRUDTable<T extends MRT_RowData>(props: CRUDTableProps<T>) {
     action: null,
     row: null,
   });
-  const { data, isLoading, isError, isFetching, error } = query;
+  const { data = [], isLoading, isError, isFetching, error } = query;
   const { tableHeaders, rowMapper } = pdfConfig;
 
   const { permissions } = useAuth();
@@ -328,7 +353,12 @@ export function CRUDTable<T extends MRT_RowData>(props: CRUDTableProps<T>) {
       // Sempre usar manual filtering quando filtros estão habilitados
       // para evitar dupla filtragem (backend + frontend)
       manualFiltering: enableFilters,
-      onColumnFiltersChange: enableFilters ? setColumnFilters : undefined,
+      onColumnFiltersChange: enableFilters ? (updaterOrValue: any) => {
+        const newFilters = typeof updaterOrValue === 'function' 
+          ? updaterOrValue(columnFilters) 
+          : updaterOrValue;
+        setColumnFilters(newFilters);
+      } : undefined,
       onGlobalFilterChange: enableFilters ? setGlobalFilter : undefined,
       // Desabilitar filtros locais quando manual filtering está ativo
       enableColumnFiltering: enableFilters,
@@ -445,7 +475,7 @@ export function CRUDTable<T extends MRT_RowData>(props: CRUDTableProps<T>) {
       </Title>
     ),
     renderRowActionMenuItems: ({ row }) => {
-      const actualData = Array.isArray(data) ? data : data?.data || [];
+      const actualData = query.data || [];
       const rowData = actualData[row.index];
       if (!rowData) {
         return null;

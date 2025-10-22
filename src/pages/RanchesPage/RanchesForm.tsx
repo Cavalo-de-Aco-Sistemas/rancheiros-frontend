@@ -1,27 +1,29 @@
 import { TextInput } from '@mantine/core';
 import { useForm } from '@mantine/form';
-import { CRUDForm } from '@/components/CRUDForm';
-import { useCRUD } from '@/contexts/CRUDContext';
+import { GraphQLCRUDForm } from '@/components/GraphQLCRUDForm';
+import { useGraphQLCRUD } from '@/contexts/GraphQLCRUDContext';
 import { Ranch, RanchDto } from '@/model/ranch';
+import { CREATE_RANCH, UPDATE_RANCH, DELETE_RANCH } from '@/graphql/ranches';
 
 const INITIAL_VALUES = { name: '' };
 
 const parseSelected = (ranch: Ranch): RanchDto => ranch;
 
 export function RanchesForm() {
-  const { query, action } = useCRUD();
-  const { isPending } = query;
+  const { query, action } = useGraphQLCRUD();
 
   const form = useForm<RanchDto>({
     initialValues: INITIAL_VALUES,
   });
 
   return (
-    <CRUDForm<Ranch, RanchDto>
+    <GraphQLCRUDForm<Ranch, RanchDto>
       baseValues={INITIAL_VALUES}
       parseSelected={parseSelected}
       form={form}
-      endpoint="ranches"
+      createMutation={CREATE_RANCH}
+      updateMutation={UPDATE_RANCH}
+      deleteMutation={DELETE_RANCH}
       modalProps={{ title: 'Cadastro de Ranchos', size: 'xl' }}
     >
       <TextInput
@@ -29,10 +31,10 @@ export function RanchesForm() {
         label="Nome"
         key={form.key('name')}
         {...form.getInputProps('name')}
-        disabled={isPending || action === 'delete'}
+        disabled={query.isLoading || action === 'delete'}
         onChange={(event) => form.setFieldValue('name', event.currentTarget.value.toUpperCase())}
         value={form.values.name.toUpperCase()}
       />
-    </CRUDForm>
+    </GraphQLCRUDForm>
   );
 }

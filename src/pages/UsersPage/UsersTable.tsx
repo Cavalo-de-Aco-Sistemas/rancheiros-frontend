@@ -12,7 +12,7 @@ import {
 import { MRT_ColumnDef, MRT_Row } from 'mantine-react-table';
 import { Badge, Group, Indicator, Tooltip } from '@mantine/core';
 import { CRUDTable } from '@/components/CRUDTable';
-import { useCRUD } from '@/contexts/CRUDContext';
+import { useGraphQLCRUD } from '@/contexts/GraphQLCRUDContext';
 import { Ranch } from '@/model/ranch';
 import { Permissions, User } from '@/model/user';
 import { extractData } from '@/utils/dataUtils';
@@ -75,7 +75,7 @@ export function UsersTable({
   currentPage = 1,
   pageSize = 10,
 }: UsersTableProps = {}) {
-  const { query } = useCRUD();
+  const { query } = useGraphQLCRUD();
 
   const columns = useMemo<MRT_ColumnDef<User>[]>(
     () => [
