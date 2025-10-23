@@ -365,7 +365,13 @@ export function CRUDTable<T extends MRT_RowData>(props: CRUDTableProps<T>) {
       },
       enableBottomToolbar: true, // Habilitar toolbar inferior para controles de paginação
       enableRowVirtualization: !pagination,
-      mantineTableContainerProps: { style: { maxHeight: 'calc(100vh - 128px)' } },
+      mantineTableContainerProps: { 
+        style: { 
+          maxHeight: 'calc(100vh - 200px)', // Aumentar espaço para paginação
+          minHeight: '400px', // Altura mínima para garantir visibilidade
+          overflow: 'auto' // Permitir scroll quando necessário
+        } 
+      },
       enableRowActions: true,
       // Configurações de filtros
       enableColumnFilters: enableFilters,
@@ -398,6 +404,8 @@ export function CRUDTable<T extends MRT_RowData>(props: CRUDTableProps<T>) {
       enablePaginationDisplay: true,
       // Mostrar contagem de linhas
       enableRowCount: true,
+      // Garantir que a paginação seja sempre visível
+      positionPagination: 'bottom',
       // Exibir informações de linha na parte inferior
       renderBottomToolbarCustomActions: pagination
         ? () => (

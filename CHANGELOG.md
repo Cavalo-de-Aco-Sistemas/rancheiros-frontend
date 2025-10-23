@@ -24,6 +24,20 @@ As mudanças em development estão documentadas em On Development, quando deseja
 ### Technical
 - **Mudanças técnicas e de infraestrutura serão documentadas aqui**
 
+
+## [Hotfix] - Enrollment Status Transition - 2025-10-23
+
+### Added
+- **Botão "Lista de Espera"**: Adicionado botão para voltar inscrições de "Chamado" para "Lista de Espera"
+  - Novo ícone `IconListSearch` para representar a lista de espera
+  - Botão aparece apenas quando o status atual é `CALLED`
+  - **Arquivo**: `src/components/EnrollmentStatusActions/EnrollmentStatusCallActions.tsx`
+
+### Fixed
+- **Transição de Status**: Corrigida funcionalidade de voltar inscrições para lista de espera
+  - Permite transição de `CALLED` → `WAITING`
+  - Sincronizada com correção do backend
+
 ## [unreleased]
 
 ### Fixed

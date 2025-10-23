@@ -7,7 +7,7 @@ import { Enrollment, EnrollmentStatus } from '@/model/enrollment';
 import { useEnrollmentAssignClassMutation } from '@/mutations/useEnrollmentAssignClassMutation';
 import { useEnrollmentFlowMutation } from '@/mutations/useEnrollmentFlowMutation';
 import { useQuery } from '@apollo/client';
-import { GET_CLASSES } from '@/graphql/classes';
+import { GET_ACTIVE_CLASSES } from '@/graphql/classes';
 import { dateBR } from '@/utils/dates';
 
 interface EnrollmentStatusCallActionsProps {
@@ -48,8 +48,8 @@ export function EnrollmentStatusCallActions({
 }: EnrollmentStatusCallActionsProps) {
   const updateFlowMutation = useEnrollmentFlowMutation();
   const assignClassMutation = useEnrollmentAssignClassMutation();
-  const { data: classesData } = useQuery(GET_CLASSES);
-  const classesQuery = { data: classesData?.classes };
+  const { data: classesData } = useQuery(GET_ACTIVE_CLASSES);
+  const classesQuery = { data: classesData?.activeClasses };
   const [, { open: _open }] = useDisclosure(false);
 
   const classesOptions = useMemo(() => {

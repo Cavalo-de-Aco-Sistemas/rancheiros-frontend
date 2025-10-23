@@ -24,6 +24,15 @@ export const GET_CLASSES = gql`
   }
 `;
 
+export const GET_ACTIVE_CLASSES = gql`
+  ${CLASS_FRAGMENT}
+  query GetActiveClasses {
+    activeClasses {
+      ...ClassFields
+    }
+  }
+`;
+
 export const GET_CLASS = gql`
   ${CLASS_FRAGMENT}
   query GetClass($id: ID!) {

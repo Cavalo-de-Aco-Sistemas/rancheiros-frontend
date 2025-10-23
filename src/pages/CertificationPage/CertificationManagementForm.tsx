@@ -8,7 +8,7 @@ import { GraphQLCRUDProvider } from '@/contexts/GraphQLCRUDContext';
 import { Class } from '@/model/class';
 import { Enrollment, EnrollmentDto, EnrollmentStatus } from '@/model/enrollment';
 import { Location } from '@/model/location';
-import { GET_CLASSES } from '@/graphql/classes';
+import { GET_ACTIVE_CLASSES } from '@/graphql/classes';
 import { GET_LOCATIONS } from '@/graphql/locations';
 import { GET_ENROLLMENTS, CREATE_ENROLLMENT, UPDATE_ENROLLMENT, DELETE_ENROLLMENT } from '@/graphql/enrollments';
 
@@ -35,10 +35,10 @@ const parseSelected = (enrollment: Enrollment): EnrollmentDto => {
 };
 
 export function CertificationManagementForm() {
-  const { data: classesData } = useQuery(GET_CLASSES);
+  const { data: classesData } = useQuery(GET_ACTIVE_CLASSES);
   const { data: locationsData } = useQuery(GET_LOCATIONS);
 
-  const classes = classesData?.classes || [];
+  const classes = classesData?.activeClasses || [];
   const locations = locationsData?.locations || [];
 
   const classesOptions = useMemo(
