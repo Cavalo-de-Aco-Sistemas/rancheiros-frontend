@@ -10,6 +10,7 @@ Esta pasta contém toda a documentação técnica do projeto, organizada por cat
 - **[DATE_FORMATTING_FIX.md](./DATE_FORMATTING_FIX.md)** - Correção de formatação de datas no frontend
 - **[GRAPHQL_INPUT_FIELDS_FIX.md](./GRAPHQL_INPUT_FIELDS_FIX.md)** - Correção de campos extras sendo enviados no GraphQL Input
 - **[PAGINATION_INDEX_FIX.md](./PAGINATION_INDEX_FIX.md)** - Correção de problema de paginação na tabela
+- **[CLASS_LOCATION_NULL_FIX.md](./CLASS_LOCATION_NULL_FIX.md)** - Correção de location null no updateClass
 - **[CRUD_PROVIDER_FIX.md](./CRUD_PROVIDER_FIX.md)** - Correção de erro "useCRUD must be used within a CRUDProvider"
 - **[STATUS_NORMALIZATION_FIX.md](./STATUS_NORMALIZATION_FIX.md)** - Correção de normalização de status de inscrições
 
@@ -42,6 +43,7 @@ docs/
 ├── DATE_FORMATTING_FIX.md                      # Correção de formatação de datas
 ├── GRAPHQL_INPUT_FIELDS_FIX.md                 # Correção de campos GraphQL
 ├── PAGINATION_INDEX_FIX.md                     # Correção de paginação
+├── CLASS_LOCATION_NULL_FIX.md                  # Correção de location null
 ├── CRUD_PROVIDER_FIX.md                        # Correção de CRUD Provider
 ├── STATUS_NORMALIZATION_FIX.md                 # Correção de normalização
 ├── GRAPHQL_MIGRATION_GUIDE.md                  # Guia de migração

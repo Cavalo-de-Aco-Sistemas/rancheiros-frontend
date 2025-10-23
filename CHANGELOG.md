@@ -51,6 +51,12 @@ As mudanças em development estão documentadas em On Development, quando deseja
   - Adicionada verificação de limites para prevenir erros
   - 📄 **Detalhes**: [docs/PAGINATION_INDEX_FIX.md](docs/PAGINATION_INDEX_FIX.md)
 
+- **Correção de Location Null no UpdateClass**: Resolvido erro "Cannot return null for non-nullable field Class.location"
+  - Corrigido carregamento da relação `location` no método `update` do `ClassesService`
+  - Implementado reload da classe após save para garantir relação carregada
+  - Adicionada validação de integridade de dados GraphQL
+  - 📄 **Detalhes**: [docs/CLASS_LOCATION_NULL_FIX.md](docs/CLASS_LOCATION_NULL_FIX.md)
+
 ### Enhanced
 - **Organização de Documentação**: Reestruturação da documentação técnica
   - Movidos todos os arquivos markdown para pasta `docs/`

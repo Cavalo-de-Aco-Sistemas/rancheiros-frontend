@@ -1,8 +1,8 @@
 import { EnrollmentStatus } from '@/model/enrollment';
 
 /**
- * Normaliza valores de status que vêm do GraphQL em maiúsculo
- * para os valores em minúsculo esperados pelo frontend
+ * Normaliza valores de status para garantir compatibilidade
+ * Agora o frontend usa maiúsculo, então apenas valida se é um status válido
  */
 export const normalizeStatus = (status: string): EnrollmentStatus => {
   const statusMap: Record<string, EnrollmentStatus> = {
@@ -13,7 +13,7 @@ export const normalizeStatus = (status: string): EnrollmentStatus => {
     'CERTIFIED': EnrollmentStatus.CERTIFIED,
     'MISSED': EnrollmentStatus.MISSED,
     'IGNORED': EnrollmentStatus.IGNORED,
-    // Fallback para valores já em minúsculo
+    // Fallback para valores em minúsculo (legacy)
     'waiting': EnrollmentStatus.WAITING,
     'called': EnrollmentStatus.CALLED,
     'dropped': EnrollmentStatus.DROPPED,
