@@ -6,8 +6,6 @@ import { CRUDTable } from '@/components/CRUDTable';
 import { StatusIcon } from '@/components/StatusIcon';
 import { useAuth } from '@/contexts/AuthContext';
 import { useEnrollmentsData } from '@/hooks/useSharedEnrollments';
-import { GraphQLCRUDProvider } from '@/contexts/GraphQLCRUDContext';
-import { GET_ENROLLMENTS } from '@/graphql/enrollments';
 import { Enrollment, EnrollmentStatus } from '@/model/enrollment';
 import { useEnrollmentFlowMutation } from '@/mutations/useEnrollmentFlowMutation';
 import { dateBR } from '@/utils/dates';
@@ -334,30 +332,28 @@ Deus abençoe grandemente.`;
 
 
   return (
-    <GraphQLCRUDProvider query={GET_ENROLLMENTS} dataKey="enrollments">
-      <CRUDTable<Enrollment>
-        columns={columns}
-        title="Visão Geral - Inscrições"
-        csvData={csvData}
-        pdfConfig={pdfConfig}
-        customActions={customActions}
-        enableEdit
-        enableFilters={true}
-        enableRowNumbers={true}
-        data={data}
-        pagination={pagination}
-        onPageChange={onPageChange}
-        onPageSizeChange={onPageSizeChange}
-        columnVisibility={{
-          cnh: false,
-          email: false,
-          motorcycle_usage: false,
-          brand: false,
-          model: false,
-        }}
-        emptyStateMessage="Nenhuma inscrição encontrada"
-        emptyStateDescription="As inscrições aparecerão aqui conforme forem sendo criadas"
-      />
-    </GraphQLCRUDProvider>
+    <CRUDTable<Enrollment>
+      columns={columns}
+      title="Visão Geral - Inscrições"
+      csvData={csvData}
+      pdfConfig={pdfConfig}
+      customActions={customActions}
+      enableEdit
+      enableFilters={true}
+      enableRowNumbers={true}
+      data={data}
+      pagination={pagination}
+      onPageChange={onPageChange}
+      onPageSizeChange={onPageSizeChange}
+      columnVisibility={{
+        cnh: false,
+        email: false,
+        motorcycle_usage: false,
+        brand: false,
+        model: false,
+      }}
+      emptyStateMessage="Nenhuma inscrição encontrada"
+      emptyStateDescription="As inscrições aparecerão aqui conforme forem sendo criadas"
+    />
   );
 }

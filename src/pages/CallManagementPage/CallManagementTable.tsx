@@ -7,8 +7,6 @@ import { EnrollmentStatusCallActions } from '@/components/EnrollmentStatusAction
 import { StatusIcon } from '@/components/StatusIcon';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCallManagementData } from '@/hooks/useSharedEnrollments';
-import { GraphQLCRUDProvider } from '@/contexts/GraphQLCRUDContext';
-import { GET_ENROLLMENTS } from '@/graphql/enrollments';
 import { Enrollment, EnrollmentStatus } from '@/model/enrollment';
 import { useEnrollmentFlowMutation } from '@/mutations/useEnrollmentFlowMutation';
 import { dateBR } from '@/utils/dates';
@@ -330,29 +328,27 @@ Deus abençoe grandemente.`;
   const pdfConfig = useMemo(() => ({ tableHeaders, rowMapper }), [rowMapper]);
 
   return (
-    <GraphQLCRUDProvider query={GET_ENROLLMENTS} dataKey="enrollments">
-      <CRUDTable<Enrollment>
-        columns={columns}
-        title="Gestão de Chamadas"
-        csvData={csvData}
-        pdfConfig={pdfConfig}
-        customActions={customActions}
-        enableFilters={true}
-        enableRowNumbers={true}
-        columnVisibility={{
-          cnh: false,
-          email: false,
-          motorcycle_usage: false,
-          brand: false,
-          model: false,
-        }}
-        data={data}
-        pagination={pagination}
-        onPageChange={onPageChange}
-        onPageSizeChange={onPageSizeChange}
-        emptyStateMessage="Nenhuma inscrição em processo de chamada encontrada"
-        emptyStateDescription="As inscrições em lista de espera, chamadas, confirmadas, ignoradas ou desistências aparecerão aqui"
-      />
-    </GraphQLCRUDProvider>
+    <CRUDTable<Enrollment>
+      columns={columns}
+      title="Gestão de Chamadas"
+      csvData={csvData}
+      pdfConfig={pdfConfig}
+      customActions={customActions}
+      enableFilters={true}
+      enableRowNumbers={true}
+      columnVisibility={{
+        cnh: false,
+        email: false,
+        motorcycle_usage: false,
+        brand: false,
+        model: false,
+      }}
+      data={data}
+      pagination={pagination}
+      onPageChange={onPageChange}
+      onPageSizeChange={onPageSizeChange}
+      emptyStateMessage="Nenhuma inscrição em processo de chamada encontrada"
+      emptyStateDescription="As inscrições em lista de espera, chamadas, confirmadas, ignoradas ou desistências aparecerão aqui"
+    />
   );
 }

@@ -106,12 +106,11 @@ export function CRUDTable<T extends MRT_RowData>(props: CRUDTableProps<T>) {
     emptyStateMessage = 'Nenhum dado encontrado',
     emptyStateDescription,
   } = props;
-  // Use GraphQL context
+  // Use GraphQL context (optional for read-only tables)
   const context = useContext(GraphQLCRUDContext);
   
-  if (!context) {
-    throw new Error('CRUDTable must be used within a GraphQLCRUDProvider');
-  }
+  // If no context, this is a read-only table (like Call Management, Certification)
+  const isReadOnly = !context;
   
   const { 
     query, 
@@ -122,23 +121,33 @@ export function CRUDTable<T extends MRT_RowData>(props: CRUDTableProps<T>) {
     setColumnFilters: setContextColumnFilters,
     globalFilter: contextGlobalFilter,
     setGlobalFilter: setContextGlobalFilter,
-  } = context;
+  } = context || {};
   
   // Try to use shared filters, fallback to context filters
   let columnFilters, setColumnFilters, globalFilter, setGlobalFilter;
   
-  try {
-    const sharedFilters = useSharedFilters();
-    columnFilters = sharedFilters.filters.columnFilters;
-    setColumnFilters = sharedFilters.setColumnFilters;
-    globalFilter = sharedFilters.filters.globalFilter;
-    setGlobalFilter = sharedFilters.setGlobalFilter;
-  } catch {
-    // Fallback to context filters
-    columnFilters = contextColumnFilters;
-    setColumnFilters = setContextColumnFilters;
-    globalFilter = contextGlobalFilter;
-    setGlobalFilter = setContextGlobalFilter;
+  if (isReadOnly) {
+    // For read-only tables, use local state for filters
+    const [localColumnFilters, setLocalColumnFilters] = useState([]);
+    const [localGlobalFilter, setLocalGlobalFilter] = useState('');
+    columnFilters = localColumnFilters;
+    setColumnFilters = setLocalColumnFilters;
+    globalFilter = localGlobalFilter;
+    setGlobalFilter = setLocalGlobalFilter;
+  } else {
+    try {
+      const sharedFilters = useSharedFilters();
+      columnFilters = sharedFilters.filters.columnFilters;
+      setColumnFilters = sharedFilters.setColumnFilters;
+      globalFilter = sharedFilters.filters.globalFilter;
+      setGlobalFilter = sharedFilters.setGlobalFilter;
+    } catch {
+      // Fallback to context filters
+      columnFilters = contextColumnFilters;
+      setColumnFilters = setContextColumnFilters;
+      globalFilter = contextGlobalFilter;
+      setGlobalFilter = setContextGlobalFilter;
+    }
   }
   
   // Estados para modal de confirmação
@@ -151,10 +160,14 @@ export function CRUDTable<T extends MRT_RowData>(props: CRUDTableProps<T>) {
     action: null,
     row: null,
   });
-  const { data = [], isLoading, isError, isFetching, error } = query;
+  // Use custom data if provided, otherwise use query data
+  const queryResult = customData ? 
+    { data: customData, isLoading: false, isError: false, isFetching: false, error: null } : 
+    query;
+  const { data = [], isLoading, isError, isFetching, error } = queryResult || { data: [], isLoading: false, isError: false, isFetching: false, error: null };
   const { tableHeaders, rowMapper } = pdfConfig;
 
-  const { permissions } = useAuth();
+  const { permissions, super_admin } = useAuth();
   const location = useLocation();
 
   // Funções para modal de confirmação
@@ -232,10 +245,19 @@ export function CRUDTable<T extends MRT_RowData>(props: CRUDTableProps<T>) {
     update,
     delete: remove, // delete is a reserved word
   } = useMemo(
-    () =>
-      permissions?.[ROUTES_MAP.get(location.pathname)?.entity as keyof typeof permissions] ??
-      DEFAULT_PERMISSIONS,
-    [permissions, location.pathname]
+    () => {
+      const entity = ROUTES_MAP.get(location.pathname)?.entity;
+      const entityPermissions = permissions?.[entity as keyof typeof permissions];
+      
+      // Se for super admin, tem todas as permissões
+      if (super_admin) {
+        return { create: true, update: true, delete: true };
+      }
+      
+      const result = entityPermissions ?? DEFAULT_PERMISSIONS;
+      return result;
+    },
+    [permissions, location.pathname, super_admin]
   );
 
   const handleExportRowsPDF = useCallback(
@@ -357,7 +379,7 @@ export function CRUDTable<T extends MRT_RowData>(props: CRUDTableProps<T>) {
         const newFilters = typeof updaterOrValue === 'function' 
           ? updaterOrValue(columnFilters) 
           : updaterOrValue;
-        setColumnFilters(newFilters);
+        setColumnFilters?.(newFilters);
       } : undefined,
       onGlobalFilterChange: enableFilters ? setGlobalFilter : undefined,
       // Desabilitar filtros locais quando manual filtering está ativo
@@ -475,7 +497,7 @@ export function CRUDTable<T extends MRT_RowData>(props: CRUDTableProps<T>) {
       </Title>
     ),
     renderRowActionMenuItems: ({ row }) => {
-      const actualData = query.data || [];
+      const actualData = query?.data || data || [];
       // Calcular o índice correto considerando a paginação
       const currentPage = table.getState().pagination.pageIndex;
       const pageSize = table.getState().pagination.pageSize;
@@ -490,9 +512,11 @@ export function CRUDTable<T extends MRT_RowData>(props: CRUDTableProps<T>) {
           {(update || enableEdit) && (
             <Menu.Item
               onClick={() => {
-                open();
-                setSelected(rowData as any);
-                setAction('update');
+                if (!isReadOnly && open && setSelected && setAction) {
+                  open();
+                  setSelected(rowData as any);
+                  setAction('update');
+                }
               }}
               leftSection={<IconEdit style={{ width: rem(16), height: rem(16) }} />}
             >
@@ -521,9 +545,11 @@ export function CRUDTable<T extends MRT_RowData>(props: CRUDTableProps<T>) {
           {remove && (
             <Menu.Item
               onClick={() => {
-                open();
-                setSelected(rowData as any);
-                setAction('delete');
+                if (!isReadOnly && open && setSelected && setAction) {
+                  open();
+                  setSelected(rowData as any);
+                  setAction('delete');
+                }
               }}
               color="red"
               leftSection={<IconTrash style={{ width: rem(16), height: rem(16) }} />}
@@ -551,7 +577,7 @@ export function CRUDTable<T extends MRT_RowData>(props: CRUDTableProps<T>) {
         <ActionIcon onClick={handleExportDataCSV} color="gray" variant="subtle">
           <IconCsv />
         </ActionIcon>
-        {create && (
+        {create && !isReadOnly && open && setSelected && setAction && (
           <ActionIcon
             onClick={() => {
               setSelected(undefined);

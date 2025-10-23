@@ -7,8 +7,6 @@ import { EnrollmentStatusCertificationActions } from '@/components/EnrollmentSta
 import { StatusIcon } from '@/components/StatusIcon';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCertificationData } from '@/hooks/useSharedEnrollments';
-import { GraphQLCRUDProvider } from '@/contexts/GraphQLCRUDContext';
-import { GET_ENROLLMENTS } from '@/graphql/enrollments';
 import { Enrollment, EnrollmentStatus } from '@/model/enrollment';
 import { useEnrollmentFlowMutation } from '@/mutations/useEnrollmentFlowMutation';
 import { dateBR } from '@/utils/dates';
@@ -367,33 +365,31 @@ Deus abençoe grandemente.`;
   const pdfConfig = useMemo(() => ({ tableHeaders, rowMapper }), [rowMapper]);
 
   return (
-    <GraphQLCRUDProvider query={GET_ENROLLMENTS} dataKey="enrollments">
-      <CRUDTable<Enrollment>
-        columns={columns}
-        title="Gestão de Certificações"
-        csvData={csvData}
-        pdfConfig={pdfConfig}
-        customActions={customActions}
-        enableFilters={true}
-        enableRowNumbers={true}
-        columnVisibility={{
-          status: false,
-          enrollment_date: false,
-          preferred_city: false,
-          uf_cnh: false,
-          cnh: false,
-          email: false,
-          motorcycle_usage: false,
-          brand: false,
-          model: false,
-        }}
-        data={data}
-        pagination={pagination}
-        onPageChange={onPageChange}
-        onPageSizeChange={onPageSizeChange}
-        emptyStateMessage="Nenhuma inscrição confirmada encontrada"
-        emptyStateDescription="As inscrições confirmadas aparecerão aqui para certificação"
-      />
-    </GraphQLCRUDProvider>
+    <CRUDTable<Enrollment>
+      columns={columns}
+      title="Gestão de Certificações"
+      csvData={csvData}
+      pdfConfig={pdfConfig}
+      customActions={customActions}
+      enableFilters={true}
+      enableRowNumbers={true}
+      columnVisibility={{
+        status: false,
+        enrollment_date: false,
+        preferred_city: false,
+        uf_cnh: false,
+        cnh: false,
+        email: false,
+        motorcycle_usage: false,
+        brand: false,
+        model: false,
+      }}
+      data={data}
+      pagination={pagination}
+      onPageChange={onPageChange}
+      onPageSizeChange={onPageSizeChange}
+      emptyStateMessage="Nenhuma inscrição confirmada encontrada"
+      emptyStateDescription="As inscrições confirmadas aparecerão aqui para certificação"
+    />
   );
 }

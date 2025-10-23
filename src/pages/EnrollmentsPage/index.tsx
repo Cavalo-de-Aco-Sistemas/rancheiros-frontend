@@ -1,4 +1,6 @@
 import { useState } from 'react';
+import { GraphQLCRUDProvider } from '@/contexts/GraphQLCRUDContext';
+import { GET_ENROLLMENTS } from '@/graphql/enrollments';
 import { EnrollmentsForm } from './EnrollmentsForm';
 import { EnrollmentsTable } from './EnrollmentsTable';
 
@@ -12,7 +14,7 @@ export function EnrollmentsPage() {
   };
 
   return (
-    <>
+    <GraphQLCRUDProvider query={GET_ENROLLMENTS} dataKey="enrollments">
       <EnrollmentsTable
         onPageChange={setCurrentPage}
         onPageSizeChange={handlePageSizeChange}
@@ -20,6 +22,6 @@ export function EnrollmentsPage() {
         pageSize={pageSize}
       />
       <EnrollmentsForm />
-    </>
+    </GraphQLCRUDProvider>
   );
 }

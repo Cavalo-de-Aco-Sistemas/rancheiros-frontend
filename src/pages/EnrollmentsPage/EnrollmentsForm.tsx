@@ -4,7 +4,6 @@ import { useForm } from '@mantine/form';
 import { useQuery } from '@apollo/client';
 import { GraphQLCRUDForm } from '@/components/GraphQLCRUDForm';
 import { useEnrollmentsData } from '@/hooks/useSharedEnrollments';
-import { GraphQLCRUDProvider } from '@/contexts/GraphQLCRUDContext';
 import { Class } from '@/model/class';
 import { Enrollment, EnrollmentDto, EnrollmentStatus } from '@/model/enrollment';
 import { Location } from '@/model/location';
@@ -86,18 +85,17 @@ export function EnrollmentsForm() {
   });
 
   return (
-    <GraphQLCRUDProvider query={GET_ENROLLMENTS} dataKey="enrollments">
-      <GraphQLCRUDForm<Enrollment, EnrollmentDto>
-        baseValues={INITIAL_VALUES}
-        parseSelected={parseSelected}
-        form={form}
-        createMutation={CREATE_ENROLLMENT}
-        updateMutation={UPDATE_ENROLLMENT}
-        deleteMutation={DELETE_ENROLLMENT}
-        refetchQueries={[{ query: GET_ENROLLMENTS }]}
-        modalProps={{ title: 'Cadastro de Inscrições', size: 'xl' }}
-        transformData={transformData}
-      >
+    <GraphQLCRUDForm<Enrollment, EnrollmentDto>
+      baseValues={INITIAL_VALUES}
+      parseSelected={parseSelected}
+      form={form}
+      createMutation={CREATE_ENROLLMENT}
+      updateMutation={UPDATE_ENROLLMENT}
+      deleteMutation={DELETE_ENROLLMENT}
+      refetchQueries={[{ query: GET_ENROLLMENTS }]}
+      modalProps={{ title: 'Cadastro de Inscrições', size: 'xl' }}
+      transformData={transformData}
+    >
       <TextInput
         required
         label="Nome"
@@ -165,6 +163,5 @@ export function EnrollmentsForm() {
         />
       )}
     </GraphQLCRUDForm>
-    </GraphQLCRUDProvider>
   );
 }
