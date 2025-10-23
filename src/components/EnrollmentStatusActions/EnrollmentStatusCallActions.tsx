@@ -73,9 +73,10 @@ export function EnrollmentStatusCallActions({
       assignClassMutation.mutate({
         enrollmentId: enrollment.id,
         classId,
+        enrollmentName: enrollment.name,
       });
     },
-    [assignClassMutation, enrollment.id]
+    [assignClassMutation, enrollment.id, enrollment.name]
   );
 
   const handleReturnToCalled = useCallback(() => {

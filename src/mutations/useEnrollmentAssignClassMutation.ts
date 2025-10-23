@@ -5,32 +5,40 @@ import { ASSIGN_CLASS_TO_ENROLLMENT, GET_ENROLLMENTS } from '@/graphql/enrollmen
 interface AssignClassParams {
   enrollmentId: string;
   classId: string;
+  enrollmentName?: string;
 }
 
 export function useEnrollmentAssignClassMutation() {
   const [assignClass, { loading }] = useMutation(ASSIGN_CLASS_TO_ENROLLMENT, {
-    onCompleted: () => {
+    onCompleted: (data, context) => {
+      const enrollmentName = context?.variables?.enrollmentName;
+      const nameText = enrollmentName ? ` para ${enrollmentName}` : '';
+      
       notifications.show({
         title: 'Sucesso',
-        message: 'Turma atribuída com sucesso!',
+        message: `Turma atribuída com sucesso${nameText}!`,
         color: 'green',
       });
     },
-    onError: (error) => {
+    onError: (error, context) => {
+      const enrollmentName = context?.variables?.enrollmentName;
+      const nameText = enrollmentName ? ` da inscrição ${enrollmentName}` : '';
+      
       notifications.show({
         title: 'Erro',
-        message: `Erro ao atribuir turma: ${error.message}`,
+        message: `Erro ao atribuir turma${nameText}: ${error.message}`,
         color: 'red',
       });
     },
     refetchQueries: [{ query: GET_ENROLLMENTS }],
   });
 
-  const mutate = ({ enrollmentId, classId }: AssignClassParams) => {
+  const mutate = ({ enrollmentId, classId, enrollmentName }: AssignClassParams) => {
     return assignClass({
       variables: {
         id: enrollmentId,
         input: { classId },
+        enrollmentName, // Pass enrollment name to variables for use in callbacks
       },
     });
   };
