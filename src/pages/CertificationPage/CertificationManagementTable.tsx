@@ -51,6 +51,7 @@ export function CertificationManagementTable({
       updateFlowMutation.mutate({
         enrollmentId: enrollment.id,
         status: EnrollmentStatus.CERTIFIED,
+        enrollmentName: enrollment.name,
       });
     },
     [updateFlowMutation]
@@ -61,6 +62,7 @@ export function CertificationManagementTable({
       updateFlowMutation.mutate({
         enrollmentId: enrollment.id,
         status: EnrollmentStatus.MISSED,
+        enrollmentName: enrollment.name,
       });
     },
     [updateFlowMutation]

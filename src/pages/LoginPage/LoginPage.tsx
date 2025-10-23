@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import axios from 'axios';
 import {
   Affix,
   Button,
@@ -37,7 +36,7 @@ export function LoginPage({ login }: { login: ({ token, username }: LoginProps) 
       },
       onError: (error) => {
         setErrorMessage(
-          axios.isAxiosError(error) && error.status === 401
+          error.message?.includes('Invalid credentials') || error.message?.includes('401')
             ? 'Verifique seu usuário e chave de acesso.'
             : 'Verifique sua conexão com a internet.'
         );

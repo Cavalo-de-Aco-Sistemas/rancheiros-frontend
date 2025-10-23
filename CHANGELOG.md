@@ -16,7 +16,22 @@ As mudanças em development estão documentadas em On Development, quando deseja
 - **Mudanças em funcionalidades existentes serão documentadas aqui**
 
 ### Fixed
-- **Correções de bugs serão documentadas aqui**
+- **Correção de Layout da Paginação**: Resolvido problema da paginação sendo empurrada pela tabela de enrollment
+  - Ajustada altura máxima do container da tabela de `calc(100vh - 128px)` para `calc(100vh - 200px)`
+  - Adicionada altura mínima de `400px` para garantir visibilidade adequada
+  - Configurado `overflow: 'auto'` para permitir scroll quando necessário
+  - Posicionamento da paginação garantido com `positionPagination: 'bottom'`
+  - **Arquivo**: `src/components/CRUDTable/index.tsx`
+
+- **Correção de Informações de Paginação**: Resolvido problema das tabelas de enrollment, call management e certification não exibirem informações de paginação
+  - Implementada paginação client-side nas três tabelas problemáticas
+  - Corrigida configuração de `pagination` para incluir `page`, `limit`, `total` e `totalPages`
+  - Dados agora são paginados no frontend usando `useMemo` para performance
+  - Informações de paginação agora exibem corretamente "Total: X registros • Página Y de Z"
+  - **Arquivos**: 
+    - `src/pages/EnrollmentsPage/EnrollmentsTable.tsx`
+    - `src/pages/CallManagementPage/CallManagementTable.tsx`
+    - `src/pages/CertificationPage/CertificationManagementTable.tsx`
 
 ### Enhanced
 - **Melhorias de performance e UX serão documentadas aqui**

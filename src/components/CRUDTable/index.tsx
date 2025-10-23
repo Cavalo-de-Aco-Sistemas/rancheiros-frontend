@@ -405,7 +405,7 @@ export function CRUDTable<T extends MRT_RowData>(props: CRUDTableProps<T>) {
       // Mostrar contagem de linhas
       enableRowCount: true,
       // Garantir que a paginação seja sempre visível
-      positionPagination: 'bottom',
+      positionPagination: 'bottom' as const,
       // Exibir informações de linha na parte inferior
       renderBottomToolbarCustomActions: pagination
         ? () => (

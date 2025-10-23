@@ -51,6 +51,7 @@ export function CallManagementTable({
       updateFlowMutation.mutate({
         enrollmentId: enrollment.id,
         status: EnrollmentStatus.WAITING,
+        enrollmentName: enrollment.name,
       });
     },
     [updateFlowMutation]

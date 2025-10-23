@@ -82,8 +82,9 @@ export function EnrollmentStatusCallActions({
     updateFlowMutation.mutate({
       enrollmentId: enrollment.id,
       status: EnrollmentStatus.CALLED,
+      enrollmentName: enrollment.name,
     });
-  }, [updateFlowMutation, enrollment.id]);
+  }, [updateFlowMutation, enrollment.id, enrollment.name]);
 
   const handleRevertStatus = useCallback(() => {
     if (onRevertClick) {
@@ -142,9 +143,10 @@ export function EnrollmentStatusCallActions({
       updateFlowMutation.mutate({
         enrollmentId: enrollment.id,
         status: newStatus,
+        enrollmentName: enrollment.name,
       });
     },
-    [updateFlowMutation, enrollment.id]
+    [updateFlowMutation, enrollment.id, enrollment.name]
   );
 
   // Se não tem turma atribuída E está em waiting, mostra seleção de turma

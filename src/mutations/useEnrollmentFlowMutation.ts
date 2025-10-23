@@ -6,6 +6,7 @@ import { EnrollmentStatus } from '@/model/enrollment';
 interface UpdateEnrollmentFlowParams {
   enrollmentId: string;
   status: EnrollmentStatus;
+  enrollmentName?: string;
 }
 
 const STATUS_LABELS = {
@@ -20,29 +21,36 @@ const STATUS_LABELS = {
 
 export function useEnrollmentFlowMutation() {
   const [updateStatus, { loading }] = useMutation(UPDATE_ENROLLMENT_STATUS, {
-    onCompleted: (data) => {
+    onCompleted: (data, context) => {
       const status = data.updateEnrollmentStatus.status;
+      const enrollmentName = context?.variables?.enrollmentName;
+      const nameText = enrollmentName ? ` de ${enrollmentName}` : '';
+      
       notifications.show({
         title: 'Sucesso',
-        message: `Status alterado para ${STATUS_LABELS[status as EnrollmentStatus]}`,
+        message: `Status ${nameText} alterado para ${STATUS_LABELS[status as EnrollmentStatus]}`,
         color: 'green',
       });
     },
-    onError: (error) => {
+    onError: (error, context) => {
+      const enrollmentName = context?.variables?.enrollmentName;
+      const nameText = enrollmentName ? ` da inscrição ${enrollmentName}` : ' da inscrição';
+      
       notifications.show({
         title: 'Erro',
-        message: `Erro ao atualizar status da inscrição: ${error.message}`,
+        message: `Erro ao atualizar status${nameText}: ${error.message}`,
         color: 'red',
       });
     },
     refetchQueries: [{ query: GET_ENROLLMENTS }],
   });
 
-  const mutate = ({ enrollmentId, status }: UpdateEnrollmentFlowParams) => {
+  const mutate = ({ enrollmentId, status, enrollmentName }: UpdateEnrollmentFlowParams) => {
     return updateStatus({
       variables: {
         id: enrollmentId,
         input: { status },
+        enrollmentName, // Pass enrollment name to variables for use in callbacks
       },
     });
   };

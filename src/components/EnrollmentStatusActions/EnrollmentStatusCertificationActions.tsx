@@ -67,9 +67,10 @@ export function EnrollmentStatusCertificationActions({
       updateFlowMutation.mutate({
         enrollmentId: enrollment.id,
         status: newStatus,
+        enrollmentName: enrollment.name,
       });
     },
-    [updateFlowMutation, enrollment.id]
+    [updateFlowMutation, enrollment.id, enrollment.name]
   );
 
   const confirmRevertStatus = useCallback(() => {
@@ -77,9 +78,10 @@ export function EnrollmentStatusCertificationActions({
     updateFlowMutation.mutate({
       enrollmentId: enrollment.id,
       status: EnrollmentStatus.CONFIRMED,
+      enrollmentName: enrollment.name,
     });
     close();
-  }, [updateFlowMutation, enrollment.id, close]);
+  }, [updateFlowMutation, enrollment.id, enrollment.name, close]);
 
   // Se não tem ações habilitadas, mostra botão de reverter
   if (enabledActions.length === 0) {
