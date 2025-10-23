@@ -38,8 +38,8 @@ interface CallManagementTableProps {
 export function CallManagementTable({
   onPageChange,
   onPageSizeChange,
-  currentPage: _currentPage,
-  pageSize: _pageSize,
+  currentPage: _currentPage = 1,
+  pageSize: _pageSize = 50,
 }: CallManagementTableProps) {
   const { data: callManagementData, loading, error, refetch } = useCallManagementData();
   const query = { data: callManagementData, isLoading: loading, isError: !!error, error, refetch };
@@ -231,36 +231,26 @@ Deus abençoe grandemente.`;
     []
   );
 
-  // Dados já filtrados pelo backend
-  const paginatedData = query.data as any;
-
-  // Tentar diferentes formas de extrair os dados
-  let rawData = [];
-  if (paginatedData?.data && Array.isArray(paginatedData.data)) {
-    rawData = paginatedData.data;
-  } else if (Array.isArray(paginatedData)) {
-    rawData = paginatedData;
-  } else if (paginatedData && typeof paginatedData === 'object') {
-    // Se não tem propriedade 'data', talvez os dados estejam diretamente no objeto
-    rawData = Object.values(paginatedData).find((value) => Array.isArray(value)) || [];
-  }
-  
   // Dados já vêm filtrados do hook compartilhado
-  const data = rawData;
+  const allData = query.data || [];
 
-  const pagination =
-    paginatedData && !Array.isArray(paginatedData)
-      ? {
-          page: paginatedData.page,
-          limit: paginatedData.limit,
-          total: paginatedData.total,
-          totalPages: paginatedData.totalPages,
-        }
-      : undefined;
+  // Paginação client-side
+  const paginatedData = useMemo(() => {
+    const startIndex = (_currentPage - 1) * _pageSize;
+    const endIndex = startIndex + _pageSize;
+    return allData.slice(startIndex, endIndex);
+  }, [allData, _currentPage, _pageSize]);
+
+  const pagination = useMemo(() => ({
+    page: _currentPage,
+    limit: _pageSize,
+    total: allData.length,
+    totalPages: Math.ceil(allData.length / _pageSize),
+  }), [allData.length, _currentPage, _pageSize]);
 
   const csvData = useMemo(
     () =>
-      data?.map(
+      allData?.map(
         ({
           name,
           phone,
@@ -290,7 +280,7 @@ Deus abençoe grandemente.`;
           Modelo: model,
         })
       ) ?? [],
-    [data]
+    [allData]
   );
 
   const rowMapper = useCallback((row: MRT_Row<Enrollment>): string[] => {
@@ -343,7 +333,7 @@ Deus abençoe grandemente.`;
         brand: false,
         model: false,
       }}
-      data={data}
+      data={paginatedData}
       pagination={pagination}
       onPageChange={onPageChange}
       onPageSizeChange={onPageSizeChange}

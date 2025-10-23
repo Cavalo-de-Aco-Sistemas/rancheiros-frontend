@@ -36,8 +36,8 @@ interface EnrollmentsTableProps {
 export function EnrollmentsTable({
   onPageChange,
   onPageSizeChange,
-  currentPage: _currentPage,
-  pageSize: _pageSize,
+  currentPage: _currentPage = 1,
+  pageSize: _pageSize = 50,
 }: EnrollmentsTableProps = {}) {
   const { data: enrollmentsData, loading, error, refetch } = useEnrollmentsData();
   const query = { data: enrollmentsData, isLoading: loading, isError: !!error, error, refetch };
@@ -318,17 +318,21 @@ Deus abençoe grandemente.`;
   const pdfConfig = useMemo(() => ({ tableHeaders, rowMapper }), [rowMapper]);
 
   // Dados já vêm filtrados do hook compartilhado
-  const data = query.data || [];
+  const allData = query.data || [];
 
-  // Configuração de paginação
-  const pagination = query.data && !Array.isArray(query.data)
-    ? {
-      page: (query.data as any).page,
-      limit: (query.data as any).limit,
-      total: (query.data as any).total,
-      totalPages: (query.data as any).totalPages,
-    }
-    : undefined;
+  // Paginação client-side
+  const paginatedData = useMemo(() => {
+    const startIndex = (_currentPage - 1) * _pageSize;
+    const endIndex = startIndex + _pageSize;
+    return allData.slice(startIndex, endIndex);
+  }, [allData, _currentPage, _pageSize]);
+
+  const pagination = useMemo(() => ({
+    page: _currentPage,
+    limit: _pageSize,
+    total: allData.length,
+    totalPages: Math.ceil(allData.length / _pageSize),
+  }), [allData.length, _currentPage, _pageSize]);
 
 
   return (
@@ -341,7 +345,7 @@ Deus abençoe grandemente.`;
       enableEdit
       enableFilters={true}
       enableRowNumbers={true}
-      data={data}
+      data={paginatedData}
       pagination={pagination}
       onPageChange={onPageChange}
       onPageSizeChange={onPageSizeChange}
