@@ -7,13 +7,31 @@ e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR
 
 As mudanças em development estão documentadas em On Development, quando desejamos criar um PR para production devemos criar uma nova versão na seção On Production com as atualizações da develop.
 
-## [Unreleased]
+## [PR #37] - Unreleased
 
 ### Added
-- **Novas funcionalidades serão documentadas aqui**
+- [PR #37] **Migração GraphQL**: Implementação completa de Apollo Client para substituir REST API
+- [PR #37] **Apollo Client**: Configuração completa do Apollo Client com cache
+- [PR #37] **GraphQL Hooks**: Hooks customizados para todas as operações GraphQL
+- [PR #37] **CRUD Context**: Sistema de contexto GraphQL para operações CRUD
+- [PR #37] **Shared Data**: Contexto compartilhado para dados de inscrições
+- [PR #37] **Mantine Filters**: Filtros nativos da tabela Mantine
+- [PR #37] **Status Normalization**: Normalização de status entre GraphQL e frontend
+- [PR #37] **Date Formatting**: Formatação de datas para exibição brasileira
+- [PR #37] **Notifications**: Notificações com nomes de inscrições
+- [PR #37] **GraphQLCRUDForm**: Formulário genérico para GraphQL
+- [PR #37] **Shared Data Context**: Dados compartilhados entre páginas
 
 ### Changed
-- **Mudanças em funcionalidades existentes serão documentadas aqui**
+- [PR #37] **Arquitetura**: Migração completa de REST para GraphQL
+- [PR #37] **Data Fetching**: Substituição de axios por Apollo Client
+- [PR #37] **State Management**: Sistema de estado migrado para GraphQL
+
+### Removed
+- [PR #37] **REST API**: Removidas todas as chamadas REST
+- [PR #37] **Axios**: Removida dependência axios
+- [PR #37] **React Query**: Removida dependência @tanstack/react-query
+- [PR #37] **REST Hooks**: Removidos hooks REST obsoletos
 
 ### Fixed
 - **Correção de Layout da Paginação**: Resolvido problema da paginação sendo empurrada pela tabela de enrollment
