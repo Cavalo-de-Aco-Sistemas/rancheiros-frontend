@@ -21,6 +21,12 @@ As mudanças em development estão documentadas em On Development, quando deseja
 - [PR #37] **Notifications**: Notificações com nomes de inscrições
 - [PR #37] **GraphQLCRUDForm**: Formulário genérico para GraphQL
 - [PR #37] **Shared Data Context**: Dados compartilhados entre páginas
+- **Storybook Stories**: Criadas stories para testar componentes de UI
+  - `PermissionRow.story.tsx` - Testa diferentes estados de permissões (incluindo null safety)
+  - `StatusIcon.story.tsx` - Testa todos os status de inscrições
+  - `Logo.story.tsx` - Testa diferentes tamanhos do logo
+  - `PasswordStrength.story.tsx` - Testa validação de senha interativa
+  - `OfflineIndicator.story.tsx` - Testa indicador de offline
 
 ### Changed
 - [PR #37] **Arquitetura**: Migração completa de REST para GraphQL
@@ -34,6 +40,18 @@ As mudanças em development estão documentadas em On Development, quando deseja
 - [PR #37] **REST Hooks**: Removidos hooks REST obsoletos
 
 ### Fixed
+- **Null Safety em UsersTable**: Corrigido erro "Cannot read properties of null (reading 'members')" na tabela de usuários
+  - Adicionado optional chaining (`?.`) para `permissions` em todas as colunas
+  - Adicionado optional chaining para `ranches` em todas as operações
+  - Implementado tratamento seguro para CSV export
+  - Implementado tratamento seguro para PDF export
+  - **Arquivo**: `src/pages/UsersPage/UsersTable.tsx`
+  - **Causa**: Backend retorna `permissions: null` quando a coluna não foi migrada ainda
+  - **Solução**: Usar null safety para lidar com valores null/undefined
+
+- **Melhoria de Qualidade**: Formatação automática de código com Prettier
+  - 49 arquivos formatados automaticamente
+  - Padronização de estilo de código em todo o projeto
 - **Correção de Layout da Paginação**: Resolvido problema da paginação sendo empurrada pela tabela de enrollment
   - Ajustada altura máxima do container da tabela de `calc(100vh - 128px)` para `calc(100vh - 200px)`
   - Adicionada altura mínima de `400px` para garantir visibilidade adequada
