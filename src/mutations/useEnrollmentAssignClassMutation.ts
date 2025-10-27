@@ -13,7 +13,7 @@ export function useEnrollmentAssignClassMutation() {
     onCompleted: (data, context) => {
       const enrollmentName = context?.variables?.enrollmentName;
       const nameText = enrollmentName ? ` para ${enrollmentName}` : '';
-      
+
       notifications.show({
         title: 'Sucesso',
         message: `Turma atribuída com sucesso${nameText}!`,
@@ -23,7 +23,7 @@ export function useEnrollmentAssignClassMutation() {
     onError: (error, context) => {
       const enrollmentName = context?.variables?.enrollmentName;
       const nameText = enrollmentName ? ` da inscrição ${enrollmentName}` : '';
-      
+
       notifications.show({
         title: 'Erro',
         message: `Erro ao atribuir turma${nameText}: ${error.message}`,

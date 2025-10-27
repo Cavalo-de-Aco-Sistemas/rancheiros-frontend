@@ -8,8 +8,8 @@ import { DatesProvider } from '@mantine/dates';
 import { ModalsProvider } from '@mantine/modals';
 import { Notifications } from '@mantine/notifications';
 import { AuthProvider } from './contexts/AuthContext';
-import { SharedEnrollmentsProvider } from './hooks/useSharedEnrollments';
 import { SharedFiltersProvider } from './contexts/SharedFiltersContext';
+import { SharedEnrollmentsProvider } from './hooks/useSharedEnrollments';
 import { Router } from './Router';
 import { theme } from './theme';
 

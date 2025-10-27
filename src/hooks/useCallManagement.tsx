@@ -4,10 +4,10 @@ import { GET_CALL_MANAGEMENT_ENROLLMENTS } from '@/graphql/enrollments';
 
 /**
  * CallManagementProvider
- * 
+ *
  * Provider para gerenciar o estado CRUD de Inscrições para Call Management.
  * Usa query específica que busca todos os enrollments (filtro aplicado na tabela).
- * 
+ *
  * @example
  * ```tsx
  * <CallManagementProvider>
@@ -26,7 +26,7 @@ export function CallManagementProvider({ children }: { children: ReactNode }) {
 
 /**
  * Hook para acessar o contexto de Call Management
- * 
+ *
  * @returns Contexto de Call Management com dados filtrados (exclui CERTIFIED e MISSED)
  */
 export { useGraphQLCRUD as useCallManagement } from '@/contexts/GraphQLCRUDContext';

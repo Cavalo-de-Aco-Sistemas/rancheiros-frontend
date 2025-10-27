@@ -4,9 +4,9 @@ import { GET_CLASSES } from '@/graphql/classes';
 
 /**
  * ClassesProvider
- * 
+ *
  * Provider para gerenciar o estado CRUD de Classes usando GraphQL.
- * 
+ *
  * @example
  * ```tsx
  * <ClassesProvider>
@@ -22,4 +22,3 @@ export function ClassesProvider({ children }: { children: ReactNode }) {
     </GraphQLCRUDProvider>
   );
 }
-

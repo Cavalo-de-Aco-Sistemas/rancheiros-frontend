@@ -4,9 +4,9 @@ import { GET_USERS } from '@/graphql/users';
 
 /**
  * UsersProvider
- * 
+ *
  * Provider para gerenciar o estado CRUD de Usuários usando GraphQL.
- * 
+ *
  * @example
  * ```tsx
  * <UsersProvider>
@@ -22,4 +22,3 @@ export function UsersProvider({ children }: { children: ReactNode }) {
     </GraphQLCRUDProvider>
   );
 }
-

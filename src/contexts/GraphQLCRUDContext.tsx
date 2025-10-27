@@ -39,9 +39,9 @@ export interface GraphQLCRUDContextType<T extends CRUDType> {
   setGlobalFilter: React.Dispatch<React.SetStateAction<string>>;
 }
 
-export const GraphQLCRUDContext = createContext<
-  GraphQLCRUDContextType<CRUDType> | undefined
->(undefined);
+export const GraphQLCRUDContext = createContext<GraphQLCRUDContextType<CRUDType> | undefined>(
+  undefined
+);
 
 interface GraphQLCRUDProviderProps {
   query: DocumentNode;
@@ -50,13 +50,13 @@ interface GraphQLCRUDProviderProps {
 
 /**
  * GraphQLCRUDProvider
- * 
+ *
  * Provider para CRUD usando Apollo Client/GraphQL, compatível com CRUDTable.
- * 
+ *
  * @example
  * ```tsx
  * import { GET_MEMBERS } from '@/graphql/members';
- * 
+ *
  * <GraphQLCRUDProvider query={GET_MEMBERS} dataKey="members">
  *   <MembersTable />
  *   <MembersForm />
@@ -112,27 +112,18 @@ export const GraphQLCRUDProvider = ({
       globalFilter,
       setGlobalFilter,
     }),
-    [
-      query,
-      selected,
-      action,
-      opened,
-      columnFilters,
-      globalFilter,
-    ]
+    [query, selected, action, opened, columnFilters, globalFilter]
   );
 
-  return (
-    <GraphQLCRUDContext.Provider value={value}>{children}</GraphQLCRUDContext.Provider>
-  );
+  return <GraphQLCRUDContext.Provider value={value}>{children}</GraphQLCRUDContext.Provider>;
 };
 
 /**
  * useGraphQLCRUD
- * 
+ *
  * Hook para acessar o contexto CRUD do GraphQL.
  * Compatível com useCRUD() do CRUDContext.
- * 
+ *
  * @example
  * ```tsx
  * const { query, selected, action, open, close } = useGraphQLCRUD();
@@ -141,4 +132,3 @@ export const GraphQLCRUDProvider = ({
 export const useGraphQLCRUD = (): GraphQLCRUDContextType<CRUDType> => {
   return useContextProvider(GraphQLCRUDContext, 'useGraphQLCRUD', 'GraphQLCRUDProvider');
 };
-

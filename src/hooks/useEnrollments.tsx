@@ -4,9 +4,9 @@ import { GET_ENROLLMENTS } from '@/graphql/enrollments';
 
 /**
  * EnrollmentsProvider
- * 
+ *
  * Provider para gerenciar o estado CRUD de Inscrições usando GraphQL.
- * 
+ *
  * @example
  * ```tsx
  * <EnrollmentsProvider>
@@ -22,4 +22,3 @@ export function EnrollmentsProvider({ children }: { children: ReactNode }) {
     </GraphQLCRUDProvider>
   );
 }
-

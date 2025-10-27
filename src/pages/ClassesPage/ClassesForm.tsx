@@ -1,14 +1,14 @@
 import { useMemo } from 'react';
+import { useQuery } from '@apollo/client';
 import { Checkbox, Select, TextInput } from '@mantine/core';
 import { DateInput } from '@mantine/dates';
 import { useForm } from '@mantine/form';
-import { useQuery } from '@apollo/client';
 import { GraphQLCRUDForm } from '@/components/GraphQLCRUDForm';
 import { useGraphQLCRUD } from '@/contexts/GraphQLCRUDContext';
+import { CREATE_CLASS, DELETE_CLASS, GET_CLASSES, UPDATE_CLASS } from '@/graphql/classes';
+import { GET_LOCATIONS } from '@/graphql/locations';
 import { Class, ClassCreateDto, ClassDto } from '@/model/class';
 import { Location } from '@/model/location';
-import { GET_LOCATIONS } from '@/graphql/locations';
-import { GET_CLASSES, CREATE_CLASS, UPDATE_CLASS, DELETE_CLASS } from '@/graphql/classes';
 
 const INITIAL_VALUES = { location: null, date: null, mapsLink: '', active: true };
 

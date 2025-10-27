@@ -1,15 +1,20 @@
 import { useMemo } from 'react';
+import { useQuery } from '@apollo/client';
 import { Select, TextInput } from '@mantine/core';
 import { useForm } from '@mantine/form';
-import { useQuery } from '@apollo/client';
 import { GraphQLCRUDForm } from '@/components/GraphQLCRUDForm';
+import { GET_ACTIVE_CLASSES } from '@/graphql/classes';
+import {
+  CREATE_ENROLLMENT,
+  DELETE_ENROLLMENT,
+  GET_ENROLLMENTS,
+  UPDATE_ENROLLMENT,
+} from '@/graphql/enrollments';
+import { GET_LOCATIONS } from '@/graphql/locations';
 import { useCallManagementData } from '@/hooks/useSharedEnrollments';
 import { Class } from '@/model/class';
 import { Enrollment, EnrollmentDto, EnrollmentStatus } from '@/model/enrollment';
 import { Location } from '@/model/location';
-import { GET_ACTIVE_CLASSES } from '@/graphql/classes';
-import { GET_LOCATIONS } from '@/graphql/locations';
-import { GET_ENROLLMENTS, CREATE_ENROLLMENT, UPDATE_ENROLLMENT, DELETE_ENROLLMENT } from '@/graphql/enrollments';
 
 const INITIAL_VALUES = {
   name: '',

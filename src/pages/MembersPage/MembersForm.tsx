@@ -5,9 +5,9 @@ import { useForm } from '@mantine/form';
 import { GraphQLCRUDForm } from '@/components/GraphQLCRUDForm';
 import { useAuth } from '@/contexts/AuthContext';
 import { useGraphQLCRUD } from '@/contexts/GraphQLCRUDContext';
+import { CREATE_MEMBER, DELETE_MEMBER, GET_MEMBERS, UPDATE_MEMBER } from '@/graphql/members';
 import { Member, MemberDto } from '@/model/member';
 import { Ranch } from '@/model/ranch';
-import { GET_MEMBERS, CREATE_MEMBER, UPDATE_MEMBER, DELETE_MEMBER } from '@/graphql/members';
 import { toDate } from '@/utils/dates';
 
 export const phasesOptions = [
@@ -85,7 +85,7 @@ export default function MembersForm() {
   );
 
   const ranchesOptions = useMemo(
-    () => 
+    () =>
       ranches
         ?.filter((ranch): ranch is Ranch => !!ranch && !!ranch.id)
         .map((ranch) => ({ label: ranch.name, value: ranch.id.toString() })) || [],
@@ -170,7 +170,11 @@ export default function MembersForm() {
           disabled={query.isLoading || action === 'delete'}
           valueFormat="DD/MM/YYYY"
           placeholder="DD/MM/AAAA"
-          value={form.values.birthday && form.values.birthday instanceof Date ? form.values.birthday : null}
+          value={
+            form.values.birthday && form.values.birthday instanceof Date
+              ? form.values.birthday
+              : null
+          }
         />
         <TextInput
           label="Celular/WhatsApp"
@@ -220,7 +224,11 @@ export default function MembersForm() {
           disabled={query.isLoading || action === 'delete'}
           valueFormat="DD/MM/YYYY"
           placeholder="DD/MM/AAAA"
-          value={form.values.dateProspect && form.values.dateProspect instanceof Date ? form.values.dateProspect : null}
+          value={
+            form.values.dateProspect && form.values.dateProspect instanceof Date
+              ? form.values.dateProspect
+              : null
+          }
         />
         <DateInput
           label="Data Meio escudo"
@@ -229,7 +237,11 @@ export default function MembersForm() {
           disabled={query.isLoading || action === 'delete'}
           valueFormat="DD/MM/YYYY"
           placeholder="DD/MM/AAAA"
-          value={form.values.dateHalfPatch && form.values.dateHalfPatch instanceof Date ? form.values.dateHalfPatch : null}
+          value={
+            form.values.dateHalfPatch && form.values.dateHalfPatch instanceof Date
+              ? form.values.dateHalfPatch
+              : null
+          }
         />
         <DateInput
           label="Data Full patch"
@@ -238,7 +250,11 @@ export default function MembersForm() {
           disabled={query.isLoading || action === 'delete'}
           valueFormat="DD/MM/YYYY"
           placeholder="DD/MM/AAAA"
-          value={form.values.dateFullPatch && form.values.dateFullPatch instanceof Date ? form.values.dateFullPatch : null}
+          value={
+            form.values.dateFullPatch && form.values.dateFullPatch instanceof Date
+              ? form.values.dateFullPatch
+              : null
+          }
         />
       </SimpleGrid>
     </GraphQLCRUDForm>

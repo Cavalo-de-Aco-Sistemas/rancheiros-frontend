@@ -1,11 +1,11 @@
 import { createContext, ReactNode, useCallback, useEffect, useMemo } from 'react';
-import { ApolloClient, NormalizedCacheObject, ApolloProvider } from '@apollo/client';
+import { ApolloClient, ApolloProvider, NormalizedCacheObject } from '@apollo/client';
 import { addHours, parseISO } from 'date-fns';
 import { useLocalStorage } from '@mantine/hooks';
+import { createApolloClient } from '@/apollo/client';
 import { Ranch } from '@/model/ranch';
 import { LoginPage } from '@/pages/LoginPage';
 import { useContextProvider } from './useContextProvider';
-import { createApolloClient } from '@/apollo/client';
 
 export interface AuthContextType {
   client: ApolloClient<NormalizedCacheObject>;

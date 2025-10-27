@@ -2,7 +2,13 @@
  * Generic GraphQL Mutation Hook
  * Wrapper around Apollo Client's useMutation with similar interface to useCRUDMutation
  */
-import { useMutation, DocumentNode, TypedDocumentNode, OperationVariables, ApolloError } from '@apollo/client';
+import {
+  ApolloError,
+  DocumentNode,
+  OperationVariables,
+  TypedDocumentNode,
+  useMutation,
+} from '@apollo/client';
 import { UseFormReturnType } from '@mantine/form';
 
 interface UseGraphQLMutationParams<TData, TVariables extends OperationVariables, TForm> {
@@ -15,9 +21,11 @@ interface UseGraphQLMutationParams<TData, TVariables extends OperationVariables,
   onCompleted?: (data: TData) => void;
 }
 
-export function useGraphQLMutation<TData = any, TVariables extends OperationVariables = OperationVariables, TForm = any>(
-  params: UseGraphQLMutationParams<TData, TVariables, TForm>
-) {
+export function useGraphQLMutation<
+  TData = any,
+  TVariables extends OperationVariables = OperationVariables,
+  TForm = any,
+>(params: UseGraphQLMutationParams<TData, TVariables, TForm>) {
   const { mutation, form, refetch, close, setError, handleError, onCompleted } = params;
 
   const [mutate, { loading, error, data }] = useMutation<TData, TVariables>(mutation, {
@@ -29,10 +37,7 @@ export function useGraphQLMutation<TData = any, TVariables extends OperationVari
       onCompleted?.(data);
     },
     onError: (error: ApolloError) => {
-      const errorMessage = 
-        handleError?.(error) ?? 
-        error.graphQLErrors[0]?.message ?? 
-        error.message;
+      const errorMessage = handleError?.(error) ?? error.graphQLErrors[0]?.message ?? error.message;
       setError(errorMessage);
     },
   });
@@ -45,4 +50,3 @@ export function useGraphQLMutation<TData = any, TVariables extends OperationVari
     data,
   };
 }
-

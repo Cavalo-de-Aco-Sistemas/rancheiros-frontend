@@ -2,8 +2,8 @@ import { TextInput } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { GraphQLCRUDForm } from '@/components/GraphQLCRUDForm';
 import { useGraphQLCRUD } from '@/contexts/GraphQLCRUDContext';
+import { CREATE_RANCH, DELETE_RANCH, UPDATE_RANCH } from '@/graphql/ranches';
 import { Ranch, RanchDto } from '@/model/ranch';
-import { CREATE_RANCH, UPDATE_RANCH, DELETE_RANCH } from '@/graphql/ranches';
 
 const INITIAL_VALUES = { name: '' };
 

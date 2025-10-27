@@ -70,12 +70,15 @@ export function LocationsTable({
     return allData.slice(startIndex, endIndex);
   }, [allData, currentPage, pageSize]);
 
-  const pagination = useMemo(() => ({
-    page: currentPage,
-    limit: pageSize,
-    total: allData.length,
-    totalPages: Math.ceil(allData.length / pageSize),
-  }), [allData.length, currentPage, pageSize]);
+  const pagination = useMemo(
+    () => ({
+      page: currentPage,
+      limit: pageSize,
+      total: allData.length,
+      totalPages: Math.ceil(allData.length / pageSize),
+    }),
+    [allData.length, currentPage, pageSize]
+  );
 
   return (
     <CRUDTable

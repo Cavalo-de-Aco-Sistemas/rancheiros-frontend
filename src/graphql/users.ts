@@ -9,13 +9,48 @@ const USER_FRAGMENT = gql`
     updated_at
     deleted
     permissions {
-      members { create read update delete }
-      classes { create read update delete }
-      users { create read update delete }
-      enrollments { create read update delete }
-      locations { create read update delete }
-      ranches { create read update delete }
-      flow { create read update delete }
+      members {
+        create
+        read
+        update
+        delete
+      }
+      classes {
+        create
+        read
+        update
+        delete
+      }
+      users {
+        create
+        read
+        update
+        delete
+      }
+      enrollments {
+        create
+        read
+        update
+        delete
+      }
+      locations {
+        create
+        read
+        update
+        delete
+      }
+      ranches {
+        create
+        read
+        update
+        delete
+      }
+      flow {
+        create
+        read
+        update
+        delete
+      }
     }
     ranches {
       id
@@ -77,4 +112,3 @@ export const CHANGE_PASSWORD = gql`
     }
   }
 `;
-

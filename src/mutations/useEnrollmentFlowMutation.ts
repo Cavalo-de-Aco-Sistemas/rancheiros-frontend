@@ -1,6 +1,6 @@
 import { useMutation } from '@apollo/client';
 import { notifications } from '@mantine/notifications';
-import { UPDATE_ENROLLMENT_STATUS, GET_ENROLLMENTS } from '@/graphql/enrollments';
+import { GET_ENROLLMENTS, UPDATE_ENROLLMENT_STATUS } from '@/graphql/enrollments';
 import { EnrollmentStatus } from '@/model/enrollment';
 
 interface UpdateEnrollmentFlowParams {
@@ -25,7 +25,7 @@ export function useEnrollmentFlowMutation() {
       const status = data.updateEnrollmentStatus.status;
       const enrollmentName = context?.variables?.enrollmentName;
       const nameText = enrollmentName ? ` de ${enrollmentName}` : '';
-      
+
       notifications.show({
         title: 'Sucesso',
         message: `Status ${nameText} alterado para ${STATUS_LABELS[status as EnrollmentStatus]}`,
@@ -35,7 +35,7 @@ export function useEnrollmentFlowMutation() {
     onError: (error, context) => {
       const enrollmentName = context?.variables?.enrollmentName;
       const nameText = enrollmentName ? ` da inscrição ${enrollmentName}` : ' da inscrição';
-      
+
       notifications.show({
         title: 'Erro',
         message: `Erro ao atualizar status${nameText}: ${error.message}`,

@@ -65,19 +65,22 @@ export function RanchesTable({
     return allData.slice(startIndex, endIndex);
   }, [allData, currentPage, pageSize]);
 
-  const pagination = useMemo(() => ({
-    page: currentPage,
-    limit: pageSize,
-    total: allData.length,
-    totalPages: Math.ceil(allData.length / pageSize),
-  }), [allData.length, currentPage, pageSize]);
+  const pagination = useMemo(
+    () => ({
+      page: currentPage,
+      limit: pageSize,
+      total: allData.length,
+      totalPages: Math.ceil(allData.length / pageSize),
+    }),
+    [allData.length, currentPage, pageSize]
+  );
 
   return (
-    <CRUDTable 
-      columns={columns} 
-      title="Ranchos" 
-      csvData={csvData} 
-      pdfConfig={pdfConfig} 
+    <CRUDTable
+      columns={columns}
+      title="Ranchos"
+      csvData={csvData}
+      pdfConfig={pdfConfig}
       data={paginatedData}
       pagination={pagination}
       onPageChange={onPageChange}

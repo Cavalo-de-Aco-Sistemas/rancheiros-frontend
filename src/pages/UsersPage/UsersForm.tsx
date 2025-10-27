@@ -15,9 +15,9 @@ import { GraphQLCRUDForm } from '@/components/GraphQLCRUDForm';
 import { PasswordStrength } from '@/components/PasswordStrength';
 import { useAuth } from '@/contexts/AuthContext';
 import { useGraphQLCRUD } from '@/contexts/GraphQLCRUDContext';
+import { CREATE_USER, DELETE_USER, GET_USERS, UPDATE_USER } from '@/graphql/users';
 import { Ranch } from '@/model/ranch';
 import { User, UserDto, UserPermissions } from '@/model/user';
-import { GET_USERS, CREATE_USER, UPDATE_USER, DELETE_USER } from '@/graphql/users';
 
 const INITIAL_VALUES = {
   username: '',

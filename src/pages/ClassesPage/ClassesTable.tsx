@@ -1,12 +1,12 @@
 import { useCallback, useMemo, useState } from 'react';
-import { IconMapPin, IconDownload } from '@tabler/icons-react';
+import { useApolloClient } from '@apollo/client';
+import { IconDownload, IconMapPin } from '@tabler/icons-react';
 import { MRT_ColumnDef, MRT_Row } from 'mantine-react-table';
 import { ActionIcon, Switch, Tooltip } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import { CRUDTable, CustomAction } from '@/components/CRUDTable';
-import { useGraphQLCRUD } from '@/contexts/GraphQLCRUDContext';
 import { useAuth } from '@/contexts/AuthContext';
-import { useApolloClient } from '@apollo/client';
+import { useGraphQLCRUD } from '@/contexts/GraphQLCRUDContext';
 import { GET_CONFIRMED_ENROLLMENTS_BY_CLASS } from '@/graphql/enrollments';
 import { Class } from '@/model/class';
 import { useClassToggleActiveMutation } from '@/mutations/useClassToggleActiveMutation';
@@ -48,19 +48,21 @@ export function ClassesTable({
     async (classItem: Class, format: 'csv' | 'pdf') => {
       try {
         setDownloadingClassId(classItem.id);
-        
+
         // Buscar as inscrições confirmadas usando GraphQL
         const { data } = await client.query({
           query: GET_CONFIRMED_ENROLLMENTS_BY_CLASS,
-          variables: { classId: classItem.id }
+          variables: { classId: classItem.id },
         });
         const enrollments = data.confirmedEnrollmentsByClass || [];
-        
+
         // Verificar se enrollments é um array
         if (!Array.isArray(enrollments)) {
-          throw new Error(`Resposta da API não é um array de inscrições. Tipo recebido: ${typeof enrollments}`);
+          throw new Error(
+            `Resposta da API não é um array de inscrições. Tipo recebido: ${typeof enrollments}`
+          );
         }
-        
+
         // Verificar se há inscrições confirmadas
         if (enrollments.length === 0) {
           notifications.show({
@@ -71,18 +73,18 @@ export function ClassesTable({
           });
           return;
         }
-        
+
         const reportData = {
           class: classItem,
           enrollments,
         };
-        
+
         if (format === 'csv') {
           generateEnrollmentCSV(reportData);
         } else {
           generateEnrollmentPDF(reportData);
         }
-        
+
         // Notificação de sucesso
         notifications.show({
           title: 'Download realizado com sucesso',
@@ -94,7 +96,10 @@ export function ClassesTable({
         console.error('Erro ao baixar inscrições:', error);
         notifications.show({
           title: 'Erro ao baixar lista',
-          message: error instanceof Error ? error.message : 'Ocorreu um erro inesperado ao baixar a lista de inscrições.',
+          message:
+            error instanceof Error
+              ? error.message
+              : 'Ocorreu um erro inesperado ao baixar a lista de inscrições.',
           color: 'red',
           autoClose: 5000,
         });
@@ -104,7 +109,6 @@ export function ClassesTable({
     },
     [client]
   );
-
 
   const columns = useMemo<MRT_ColumnDef<Class>[]>(
     () => [
@@ -119,7 +123,9 @@ export function ClassesTable({
         header: 'Link do Maps',
         Cell: ({ row }) => {
           const mapsLink = row.original.mapsLink;
-          if (!mapsLink) {return null;}
+          if (!mapsLink) {
+            return null;
+          }
 
           return (
             <Tooltip label="Abrir no Google Maps" position="top">
@@ -183,31 +189,37 @@ export function ClassesTable({
     return allData.slice(startIndex, endIndex);
   }, [allData, currentPage, pageSize]);
 
-  const pagination = useMemo(() => ({
-    page: currentPage,
-    limit: pageSize,
-    total: allData.length,
-    totalPages: Math.ceil(allData.length / pageSize),
-  }), [allData.length, currentPage, pageSize]);
+  const pagination = useMemo(
+    () => ({
+      page: currentPage,
+      limit: pageSize,
+      total: allData.length,
+      totalPages: Math.ceil(allData.length / pageSize),
+    }),
+    [allData.length, currentPage, pageSize]
+  );
 
-  const customActions: CustomAction<Class>[] = useMemo(() => [
-    {
-      label: 'Baixar Lista de Confirmados (PDF)',
-      icon: IconDownload,
-      color: 'blue',
-      onClick: (classItem: Class) => {
-        handleDownloadEnrollments(classItem, 'pdf');
+  const customActions: CustomAction<Class>[] = useMemo(
+    () => [
+      {
+        label: 'Baixar Lista de Confirmados (PDF)',
+        icon: IconDownload,
+        color: 'blue',
+        onClick: (classItem: Class) => {
+          handleDownloadEnrollments(classItem, 'pdf');
+        },
+        isVisible: () => true,
       },
-      isVisible: () => true,
-    },
-  ], [handleDownloadEnrollments]);
+    ],
+    [handleDownloadEnrollments]
+  );
 
   return (
-    <CRUDTable 
-      columns={columns} 
-      title="Turmas" 
-      csvData={csvData} 
-      pdfConfig={pdfConfig} 
+    <CRUDTable
+      columns={columns}
+      title="Turmas"
+      csvData={csvData}
+      pdfConfig={pdfConfig}
       customActions={customActions}
       data={paginatedData}
       pagination={pagination}

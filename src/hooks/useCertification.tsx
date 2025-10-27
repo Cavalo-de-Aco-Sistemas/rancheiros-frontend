@@ -4,10 +4,10 @@ import { GET_CERTIFICATION_ENROLLMENTS } from '@/graphql/enrollments';
 
 /**
  * CertificationProvider
- * 
+ *
  * Provider para gerenciar o estado CRUD de Inscrições para Certification Management.
  * Filtra automaticamente apenas inscrições com status CONFIRMED.
- * 
+ *
  * @example
  * ```tsx
  * <CertificationProvider>
@@ -26,7 +26,7 @@ export function CertificationProvider({ children }: { children: ReactNode }) {
 
 /**
  * Hook para acessar o contexto de Certification
- * 
+ *
  * @returns Contexto de Certification com dados filtrados por status CONFIRMED
  */
 export { useGraphQLCRUD as useCertification } from '@/contexts/GraphQLCRUDContext';

@@ -1,8 +1,8 @@
 import { download, generateCsv, mkConfig } from 'export-to-csv';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import { Enrollment } from '@/model/enrollment';
 import { Class } from '@/model/class';
+import { Enrollment } from '@/model/enrollment';
 import { dateBR } from '@/utils/dates';
 
 export interface EnrollmentReportData {
@@ -14,16 +14,19 @@ export function generateEnrollmentCSV({ class: classData, enrollments }: Enrollm
   if (!Array.isArray(enrollments)) {
     throw new Error('Enrollments deve ser um array');
   }
-  
+
   if (enrollments.length === 0) {
     throw new Error('Nenhuma inscrição confirmada encontrada para esta turma');
   }
-  
+
   const csvData = enrollments.map((enrollment, index) => ({
-    'Nº': index + 1,
-    'Nome': enrollment.name || '',
-    'Moto': enrollment.brand && enrollment.model ? `${enrollment.brand}/${enrollment.model}` : (enrollment.brand || enrollment.model || ''),
-    'Assinatura': '',
+    Nº: index + 1,
+    Nome: enrollment.name || '',
+    Moto:
+      enrollment.brand && enrollment.model
+        ? `${enrollment.brand}/${enrollment.model}`
+        : enrollment.brand || enrollment.model || '',
+    Assinatura: '',
   }));
 
   // Verificar se csvData é válido
@@ -33,7 +36,7 @@ export function generateEnrollmentCSV({ class: classData, enrollments }: Enrollm
 
   const locationName = classData.location?.name?.replace(/[^a-zA-Z0-9]/g, '-') || 'turma';
   const dateStr = dateBR(classData.date)?.replace(/\//g, '-') || 'data';
-  
+
   const config = mkConfig({
     fieldSeparator: ',',
     decimalSeparator: '.',
@@ -49,11 +52,11 @@ export function generateEnrollmentPDF({ class: classData, enrollments }: Enrollm
   if (!Array.isArray(enrollments)) {
     throw new Error('Enrollments deve ser um array');
   }
-  
+
   if (enrollments.length === 0) {
     throw new Error('Nenhuma inscrição confirmada encontrada para esta turma');
   }
-  
+
   const doc = new jsPDF({
     orientation: 'portrait',
     unit: 'mm',
@@ -70,7 +73,7 @@ export function generateEnrollmentPDF({ class: classData, enrollments }: Enrollm
   // Informações da turma
   doc.setFontSize(12);
   doc.setFont('helvetica', 'normal');
-  
+
   const classInfo = [
     `Local: ${classData.location?.name || 'Não informado'}`,
     `Data: ${dateBR(classData.date) || 'Não informado'}`,
@@ -78,14 +81,16 @@ export function generateEnrollmentPDF({ class: classData, enrollments }: Enrollm
   ];
 
   classInfo.forEach((info, index) => {
-    doc.text(info, 20, 35 + (index * 8));
+    doc.text(info, 20, 35 + index * 8);
   });
 
   // Tabela de inscrições
   const tableData = enrollments.map((enrollment, index) => [
     (index + 1).toString(),
     enrollment.name,
-    enrollment.brand && enrollment.model ? `${enrollment.brand}/${enrollment.model}` : (enrollment.brand || enrollment.model || ''),
+    enrollment.brand && enrollment.model
+      ? `${enrollment.brand}/${enrollment.model}`
+      : enrollment.brand || enrollment.model || '',
     '', // Coluna para assinatura
   ]);
 

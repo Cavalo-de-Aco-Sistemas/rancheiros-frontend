@@ -2,7 +2,7 @@
  * Generic GraphQL Query Hook
  * Wrapper around Apollo Client's useQuery with similar interface to useCRUDQuery
  */
-import { useQuery, DocumentNode, TypedDocumentNode, OperationVariables } from '@apollo/client';
+import { DocumentNode, OperationVariables, TypedDocumentNode, useQuery } from '@apollo/client';
 
 interface UseGraphQLQueryOptions {
   variables?: Record<string, any>;
@@ -10,10 +10,10 @@ interface UseGraphQLQueryOptions {
   pollInterval?: number;
 }
 
-export function useGraphQLQuery<TData = any, TVariables extends OperationVariables = OperationVariables>(
-  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options?: UseGraphQLQueryOptions
-) {
+export function useGraphQLQuery<
+  TData = any,
+  TVariables extends OperationVariables = OperationVariables,
+>(query: DocumentNode | TypedDocumentNode<TData, TVariables>, options?: UseGraphQLQueryOptions) {
   const { variables, skip, pollInterval } = options || {};
 
   const { data, loading, error, refetch, fetchMore } = useQuery<TData, TVariables>(query, {
@@ -33,4 +33,3 @@ export function useGraphQLQuery<TData = any, TVariables extends OperationVariabl
     fetchMore,
   };
 }
-

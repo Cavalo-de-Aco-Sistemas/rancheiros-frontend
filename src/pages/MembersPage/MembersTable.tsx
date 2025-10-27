@@ -4,7 +4,7 @@ import { Anchor, Badge } from '@mantine/core';
 import { CRUDTable } from '@/components/CRUDTable';
 import { useGraphQLCRUD } from '@/contexts/GraphQLCRUDContext';
 import { Member } from '@/model/member';
-import { dateBR, birthdayBR } from '@/utils/dates';
+import { birthdayBR, dateBR } from '@/utils/dates';
 import { phasesOptions } from './MembersForm';
 
 const optionsToObject = (
@@ -133,15 +133,15 @@ export function MembersTable({
         header: 'Data Full patch',
         Cell: ({ row }) => dateBR(row.original.dateFullPatch),
       },
-      { 
+      {
         accessorKey: 'spouse.name',
         accessorFn: (row) => row.spouse?.name || '',
-        header: 'Cônjuge' 
+        header: 'Cônjuge',
       },
-      { 
+      {
         accessorKey: 'godfather.name',
         accessorFn: (row) => row.godfather?.name || '',
-        header: 'Padrinho' 
+        header: 'Padrinho',
       },
     ],
     []
@@ -229,19 +229,22 @@ export function MembersTable({
     return data.slice(startIndex, endIndex);
   }, [data, currentPage, pageSize]);
 
-  const pagination = useMemo(() => ({
-    page: currentPage,
-    limit: pageSize,
-    total: data.length,
-    totalPages: Math.ceil(data.length / pageSize),
-  }), [data.length, currentPage, pageSize]);
+  const pagination = useMemo(
+    () => ({
+      page: currentPage,
+      limit: pageSize,
+      total: data.length,
+      totalPages: Math.ceil(data.length / pageSize),
+    }),
+    [data.length, currentPage, pageSize]
+  );
 
   return (
-    <CRUDTable 
-      columns={columns} 
-      title="Membros" 
-      csvData={csvData} 
-      pdfConfig={pdfConfig} 
+    <CRUDTable
+      columns={columns}
+      title="Membros"
+      csvData={csvData}
+      pdfConfig={pdfConfig}
       data={paginatedData}
       pagination={pagination}
       onPageChange={onPageChange}

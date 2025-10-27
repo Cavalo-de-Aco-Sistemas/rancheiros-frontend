@@ -1,6 +1,6 @@
 import { useMutation } from '@apollo/client';
 import { notifications } from '@mantine/notifications';
-import { UPDATE_CLASS, GET_CLASSES } from '@/graphql/classes';
+import { GET_CLASSES, UPDATE_CLASS } from '@/graphql/classes';
 
 interface ToggleClassActiveParams {
   classId: string;

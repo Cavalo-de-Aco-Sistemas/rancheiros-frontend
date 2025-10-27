@@ -1,10 +1,21 @@
 import { PropsWithChildren, useContext, useEffect, useState } from 'react';
+import {
+  ApolloError,
+  DocumentNode,
+  OperationVariables,
+  TypedDocumentNode,
+  useMutation,
+} from '@apollo/client';
 import { Button, Modal, ModalProps, Stack, Text } from '@mantine/core';
 import { UseFormReturnType } from '@mantine/form';
-import { useMutation, DocumentNode, TypedDocumentNode, OperationVariables, ApolloError } from '@apollo/client';
 import { GraphQLCRUDContext } from '@/contexts/GraphQLCRUDContext';
 
-export interface GraphQLCRUDFormProps<T extends { id: string }, D, TData = any, TVariables extends OperationVariables = OperationVariables> {
+export interface GraphQLCRUDFormProps<
+  T extends { id: string },
+  D,
+  TData = any,
+  TVariables extends OperationVariables = OperationVariables,
+> {
   baseValues: D;
   parseSelected: (selected: T) => D;
   form: UseFormReturnType<D, (values: D) => D>;
@@ -37,11 +48,11 @@ export function GraphQLCRUDForm<T extends { id: string }, D>(
   } = props;
   // Use GraphQL context
   const context = useContext(GraphQLCRUDContext);
-  
+
   if (!context) {
     throw new Error('GraphQLCRUDForm must be used within a GraphQLCRUDProvider');
   }
-  
+
   const { opened, close, selected, action, query } = context;
   const { refetch } = query;
   const [error, setError] = useState('');
@@ -165,4 +176,3 @@ export function GraphQLCRUDForm<T extends { id: string }, D>(
     </Modal>
   );
 }
-

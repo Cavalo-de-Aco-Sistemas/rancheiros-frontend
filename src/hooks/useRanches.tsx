@@ -4,9 +4,9 @@ import { GET_RANCHES } from '@/graphql/ranches';
 
 /**
  * RanchesProvider
- * 
+ *
  * Provider para gerenciar o estado CRUD de Ranchos usando GraphQL.
- * 
+ *
  * @example
  * ```tsx
  * <RanchesProvider>
@@ -22,4 +22,3 @@ export function RanchesProvider({ children }: { children: ReactNode }) {
     </GraphQLCRUDProvider>
   );
 }
-

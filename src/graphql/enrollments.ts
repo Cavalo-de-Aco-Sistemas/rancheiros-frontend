@@ -205,4 +205,3 @@ export const GET_CERTIFICATION_ENROLLMENTS = gql`
     }
   }
 `;
-

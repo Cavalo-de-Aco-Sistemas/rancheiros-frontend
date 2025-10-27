@@ -4,9 +4,9 @@ import { useForm } from '@mantine/form';
 import { GraphQLCRUDForm } from '@/components/GraphQLCRUDForm';
 import { useAuth } from '@/contexts/AuthContext';
 import { useGraphQLCRUD } from '@/contexts/GraphQLCRUDContext';
+import { CREATE_LOCATION, DELETE_LOCATION, UPDATE_LOCATION } from '@/graphql/locations';
 import { Location, LocationDto } from '@/model/location';
 import { Ranch } from '@/model/ranch';
-import { CREATE_LOCATION, UPDATE_LOCATION, DELETE_LOCATION } from '@/graphql/locations';
 
 const INITIAL_VALUES = { name: '' };
 

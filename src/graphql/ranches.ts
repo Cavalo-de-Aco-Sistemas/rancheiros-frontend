@@ -53,4 +53,3 @@ export const DELETE_RANCH = gql`
     }
   }
 `;
-

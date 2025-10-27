@@ -1,13 +1,13 @@
 import { useCallback, useMemo } from 'react';
+import { useQuery } from '@apollo/client';
 import { IconArrowBack, IconCheck, IconEyeOff, IconPhone, IconX } from '@tabler/icons-react';
 import { ActionIcon, Button, Group, Modal, Select, Text, Tooltip } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
+import { GET_ACTIVE_CLASSES } from '@/graphql/classes';
 import { Class } from '@/model/class';
 import { Enrollment, EnrollmentStatus } from '@/model/enrollment';
 import { useEnrollmentAssignClassMutation } from '@/mutations/useEnrollmentAssignClassMutation';
 import { useEnrollmentFlowMutation } from '@/mutations/useEnrollmentFlowMutation';
-import { useQuery } from '@apollo/client';
-import { GET_ACTIVE_CLASSES } from '@/graphql/classes';
 import { dateBR } from '@/utils/dates';
 
 interface EnrollmentStatusCallActionsProps {

@@ -1,15 +1,12 @@
-import { ApolloClient, InMemoryCache, createHttpLink, from } from '@apollo/client';
+import { ApolloClient, createHttpLink, from, InMemoryCache } from '@apollo/client';
 import { setContext } from '@apollo/client/link/context';
 import { onError } from '@apollo/client/link/error';
 
-const GRAPHQL_ENDPOINT = import.meta.env.VITE_BACKEND_ADDRESS 
+const GRAPHQL_ENDPOINT = import.meta.env.VITE_BACKEND_ADDRESS
   ? `${import.meta.env.VITE_BACKEND_ADDRESS}/graphql`
   : 'http://localhost:3000/graphql';
 
-export const createApolloClient = (
-  authToken: string | null,
-  onUnauthorized: () => void
-) => {
+export const createApolloClient = (authToken: string | null, onUnauthorized: () => void) => {
   const httpLink = createHttpLink({
     uri: GRAPHQL_ENDPOINT,
   });
@@ -30,7 +27,7 @@ export const createApolloClient = (
         console.error(
           `[GraphQL error]: Message: ${message}, Location: ${locations}, Path: ${path}`
         );
-        
+
         // Handle unauthorized errors
         if (extensions?.code === 'UNAUTHENTICATED' || message.includes('não autenticado')) {
           onUnauthorized();
@@ -60,4 +57,3 @@ export const createApolloClient = (
     },
   });
 };
-

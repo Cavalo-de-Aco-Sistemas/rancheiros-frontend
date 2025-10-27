@@ -1,4 +1,4 @@
-import { ReactNode, createContext, useContext, useMemo, useState, useCallback } from 'react';
+import { createContext, ReactNode, useCallback, useContext, useMemo, useState } from 'react';
 import { useQuery } from '@apollo/client';
 import { GET_ENROLLMENTS } from '@/graphql/enrollments';
 import { Enrollment, EnrollmentStatus } from '@/model/enrollment';
@@ -20,12 +20,12 @@ interface SharedEnrollmentsContextType {
   loading: boolean;
   error: any;
   refetch: () => void;
-  
+
   // Dados filtrados para cada página
   enrollmentsForEnrollmentsPage: Enrollment[];
   enrollmentsForCallManagementPage: Enrollment[];
   enrollmentsForCertificationPage: Enrollment[];
-  
+
   // Filtros compartilhados
   sharedFilters: SharedFilters;
   setSharedFilters: (filters: SharedFilters) => void;
@@ -36,10 +36,10 @@ const SharedEnrollmentsContext = createContext<SharedEnrollmentsContextType | un
 
 /**
  * SharedEnrollmentsProvider
- * 
+ *
  * Provider que busca os dados UMA ÚNICA VEZ e compartilha entre todas as páginas.
  * Cada página recebe os dados filtrados apropriados.
- * 
+ *
  * @example
  * ```tsx
  * <SharedEnrollmentsProvider>
@@ -51,7 +51,7 @@ const SharedEnrollmentsContext = createContext<SharedEnrollmentsContextType | un
  */
 export function SharedEnrollmentsProvider({ children }: { children: ReactNode }) {
   const [sharedFilters, setSharedFiltersState] = useState<SharedFilters>({});
-  
+
   const { data, loading, error, refetch } = useQuery(GET_ENROLLMENTS, {
     variables: {
       ...sharedFilters,
@@ -73,13 +73,13 @@ export function SharedEnrollmentsProvider({ children }: { children: ReactNode })
 
     // Filtros específicos para cada página
     const enrollmentsForEnrollmentsPage = rawEnrollments; // Todos os dados
-    
+
     const enrollmentsForCallManagementPage = rawEnrollments.filter(
-      (enrollment) => 
-        enrollment.status !== EnrollmentStatus.CERTIFIED && 
+      (enrollment) =>
+        enrollment.status !== EnrollmentStatus.CERTIFIED &&
         enrollment.status !== EnrollmentStatus.MISSED
     );
-    
+
     const enrollmentsForCertificationPage = rawEnrollments.filter(
       (enrollment) => enrollment.status === EnrollmentStatus.CONFIRMED
     );
@@ -120,16 +120,16 @@ export function useSharedEnrollments() {
  * Hook específico para EnrollmentsPage
  */
 export function useEnrollmentsData() {
-  const { 
-    enrollmentsForEnrollmentsPage, 
-    loading, 
-    error, 
+  const {
+    enrollmentsForEnrollmentsPage,
+    loading,
+    error,
     refetch,
     sharedFilters,
     setSharedFilters,
-    clearFilters
+    clearFilters,
   } = useSharedEnrollments();
-  
+
   return {
     data: enrollmentsForEnrollmentsPage,
     loading,
@@ -145,16 +145,16 @@ export function useEnrollmentsData() {
  * Hook específico para CallManagementPage
  */
 export function useCallManagementData() {
-  const { 
-    enrollmentsForCallManagementPage, 
-    loading, 
-    error, 
+  const {
+    enrollmentsForCallManagementPage,
+    loading,
+    error,
     refetch,
     sharedFilters,
     setSharedFilters,
-    clearFilters
+    clearFilters,
   } = useSharedEnrollments();
-  
+
   return {
     data: enrollmentsForCallManagementPage,
     loading,
@@ -170,16 +170,16 @@ export function useCallManagementData() {
  * Hook específico para CertificationPage
  */
 export function useCertificationData() {
-  const { 
-    enrollmentsForCertificationPage, 
-    loading, 
-    error, 
+  const {
+    enrollmentsForCertificationPage,
+    loading,
+    error,
     refetch,
     sharedFilters,
     setSharedFilters,
-    clearFilters
+    clearFilters,
   } = useSharedEnrollments();
-  
+
   return {
     data: enrollmentsForCertificationPage,
     loading,

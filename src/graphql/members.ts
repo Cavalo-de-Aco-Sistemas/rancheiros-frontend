@@ -75,4 +75,3 @@ export const DELETE_MEMBER = gql`
     }
   }
 `;
-

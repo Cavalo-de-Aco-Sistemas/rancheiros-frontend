@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useCallback, ReactNode } from 'react';
+import { createContext, ReactNode, useCallback, useContext, useState } from 'react';
 
 export interface SharedFiltersState {
   columnFilters: Array<{ id: string; value: any }>;
@@ -41,11 +41,7 @@ export function SharedFiltersProvider({ children }: { children: ReactNode }) {
     clearFilters,
   };
 
-  return (
-    <SharedFiltersContext.Provider value={value}>
-      {children}
-    </SharedFiltersContext.Provider>
-  );
+  return <SharedFiltersContext.Provider value={value}>{children}</SharedFiltersContext.Provider>;
 }
 
 export function useSharedFilters() {
