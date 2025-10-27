@@ -183,16 +183,22 @@ Este arquivo contém as tarefas de melhoria identificadas na revisão de código
 
 ## ✅ Bugs Críticos Resolvidos (Bloqueantes)
 
-- [x] **Bug Crítico 1**: Action hardcoded removido de todos os formulários
-  - ✅ `EnrollmentsForm.tsx` - Agora usa `useGraphQLCRUD`
-  - ✅ `CallManagementForm.tsx` - Agora usa `useGraphQLCRUD`
-  - ✅ `CertificationManagementForm.tsx` - Agora usa `useGraphQLCRUD`
-
-- [x] **Bug Crítico 2**: Arquitetura de contextos corrigida
+- [x] **Bug Crítico: Arquitetura de Contextos Corrigida**
   - ✅ `CallManagementPage.tsx` - Adicionado `GraphQLCRUDProvider`
   - ✅ `CertificationManagementPage.tsx` - Adicionado `GraphQLCRUDProvider`
   - ✅ `CallManagementForm.tsx` - Removido `GraphQLCRUDProvider` duplicado
   - ✅ `CertificationManagementForm.tsx` - Removido `GraphQLCRUDProvider` duplicado
+
+---
+
+## ⚠️ Regras de Produto (Não Alterar)
+
+- **Action Hardcoded como 'create'**: Os formulários mantêm `action = 'create'` como regra de produto
+  - `EnrollmentsForm.tsx` - Mantém `action = 'create'`
+  - `CallManagementForm.tsx` - Mantém `action = 'create'`
+  - `CertificationManagementForm.tsx` - Mantém `action = 'create'`
+  - **Justificativa**: Formulários são exclusivamente para criação de novos registros
+  - **Comportamento**: Campos `status` e `class` ocultos durante criação (intencional)
 
 ---
 

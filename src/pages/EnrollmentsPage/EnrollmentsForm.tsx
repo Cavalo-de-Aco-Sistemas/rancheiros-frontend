@@ -3,7 +3,7 @@ import { Select, TextInput } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { useQuery } from '@apollo/client';
 import { GraphQLCRUDForm } from '@/components/GraphQLCRUDForm';
-import { useGraphQLCRUD } from '@/contexts/GraphQLCRUDContext';
+import { useEnrollmentsData } from '@/hooks/useSharedEnrollments';
 import { Class } from '@/model/class';
 import { Enrollment, EnrollmentDto, EnrollmentStatus } from '@/model/enrollment';
 import { Location } from '@/model/location';
@@ -51,7 +51,6 @@ const transformData = (
 export function EnrollmentsForm() {
   const { data: classesData } = useQuery(GET_CLASSES);
   const { data: locationsData } = useQuery(GET_LOCATIONS);
-  const { action, query } = useGraphQLCRUD<Enrollment>();
 
   const classes = classesData?.classes || [];
   const locations = locationsData?.locations || [];
@@ -73,6 +72,10 @@ export function EnrollmentsForm() {
       })),
     [locations]
   );
+
+  const { data, loading, error, refetch } = useEnrollmentsData();
+  const query = { data, isLoading: loading, isError: !!error, error, refetch };
+  const action = 'create'; // Default action for form
 
   // Desabilitar campos durante criação
   const isCreating = action === 'create';

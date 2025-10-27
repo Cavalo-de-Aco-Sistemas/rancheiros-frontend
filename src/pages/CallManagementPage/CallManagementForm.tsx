@@ -3,7 +3,7 @@ import { Select, TextInput } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { useQuery } from '@apollo/client';
 import { GraphQLCRUDForm } from '@/components/GraphQLCRUDForm';
-import { useGraphQLCRUD } from '@/contexts/GraphQLCRUDContext';
+import { useCallManagementData } from '@/hooks/useSharedEnrollments';
 import { Class } from '@/model/class';
 import { Enrollment, EnrollmentDto, EnrollmentStatus } from '@/model/enrollment';
 import { Location } from '@/model/location';
@@ -36,7 +36,6 @@ const parseSelected = (enrollment: Enrollment): EnrollmentDto => {
 export function CallManagementForm() {
   const { data: classesData } = useQuery(GET_ACTIVE_CLASSES);
   const { data: locationsData } = useQuery(GET_LOCATIONS);
-  const { query } = useGraphQLCRUD<Enrollment>();
 
   const classes = classesData?.activeClasses || [];
   const locations = locationsData?.locations || [];
@@ -58,6 +57,10 @@ export function CallManagementForm() {
       })),
     [locations]
   );
+
+  const { data, loading, error, refetch } = useCallManagementData();
+  const query = { data, isLoading: loading, isError: !!error, error, refetch };
+  const action = 'create'; // Default action for form
 
   const form = useForm<EnrollmentDto>({
     initialValues: INITIAL_VALUES,
