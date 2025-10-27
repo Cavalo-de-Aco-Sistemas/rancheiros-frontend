@@ -1,4 +1,6 @@
 import { useState } from 'react';
+import { GraphQLCRUDProvider } from '@/contexts/GraphQLCRUDContext';
+import { GET_CERTIFICATION_ENROLLMENTS } from '@/graphql/enrollments';
 import { CertificationManagementForm, CertificationManagementTable } from './index';
 
 export function CertificationManagementPage() {
@@ -6,7 +8,7 @@ export function CertificationManagementPage() {
   const [pageSize, setPageSize] = useState(50);
 
   return (
-    <>
+    <GraphQLCRUDProvider query={GET_CERTIFICATION_ENROLLMENTS} dataKey="enrollments">
       <CertificationManagementTable
         onPageChange={setCurrentPage}
         onPageSizeChange={setPageSize}
@@ -14,6 +16,6 @@ export function CertificationManagementPage() {
         pageSize={pageSize}
       />
       <CertificationManagementForm />
-    </>
+    </GraphQLCRUDProvider>
   );
 }

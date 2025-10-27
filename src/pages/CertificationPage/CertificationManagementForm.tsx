@@ -3,8 +3,7 @@ import { Select, TextInput } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { useQuery } from '@apollo/client';
 import { GraphQLCRUDForm } from '@/components/GraphQLCRUDForm';
-import { useCertificationData } from '@/hooks/useSharedEnrollments';
-import { GraphQLCRUDProvider } from '@/contexts/GraphQLCRUDContext';
+import { useGraphQLCRUD } from '@/contexts/GraphQLCRUDContext';
 import { Class } from '@/model/class';
 import { Enrollment, EnrollmentDto, EnrollmentStatus } from '@/model/enrollment';
 import { Location } from '@/model/location';
@@ -37,6 +36,7 @@ const parseSelected = (enrollment: Enrollment): EnrollmentDto => {
 export function CertificationManagementForm() {
   const { data: classesData } = useQuery(GET_ACTIVE_CLASSES);
   const { data: locationsData } = useQuery(GET_LOCATIONS);
+  const { query } = useGraphQLCRUD<Enrollment>();
 
   const classes = classesData?.activeClasses || [];
   const locations = locationsData?.locations || [];
@@ -59,17 +59,12 @@ export function CertificationManagementForm() {
     [locations]
   );
 
-  const { data, loading, error, refetch } = useCertificationData();
-  const query = { data, isLoading: loading, isError: !!error, error, refetch };
-  const action = 'create'; // Default action for form
-
   const form = useForm<EnrollmentDto>({
     initialValues: INITIAL_VALUES,
   });
 
   return (
-    <GraphQLCRUDProvider query={GET_ENROLLMENTS} dataKey="enrollments">
-      <GraphQLCRUDForm<Enrollment, EnrollmentDto>
+    <GraphQLCRUDForm<Enrollment, EnrollmentDto>
       baseValues={INITIAL_VALUES}
       parseSelected={parseSelected}
       form={form}
@@ -142,6 +137,5 @@ export function CertificationManagementForm() {
         clearable
       />
     </GraphQLCRUDForm>
-    </GraphQLCRUDProvider>
   );
 }

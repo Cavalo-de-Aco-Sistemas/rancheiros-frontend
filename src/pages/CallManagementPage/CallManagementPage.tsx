@@ -1,4 +1,6 @@
 import { useState } from 'react';
+import { GraphQLCRUDProvider } from '@/contexts/GraphQLCRUDContext';
+import { GET_CALL_MANAGEMENT_ENROLLMENTS } from '@/graphql/enrollments';
 import { CallManagementForm, CallManagementTable } from './index';
 
 export function CallManagementPage() {
@@ -11,7 +13,7 @@ export function CallManagementPage() {
   };
 
   return (
-    <>
+    <GraphQLCRUDProvider query={GET_CALL_MANAGEMENT_ENROLLMENTS} dataKey="enrollments">
       <CallManagementTable
         onPageChange={setCurrentPage}
         onPageSizeChange={handlePageSizeChange}
@@ -19,6 +21,6 @@ export function CallManagementPage() {
         pageSize={pageSize}
       />
       <CallManagementForm />
-    </>
+    </GraphQLCRUDProvider>
   );
 }
