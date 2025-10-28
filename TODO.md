@@ -189,6 +189,16 @@ Este arquivo contém as tarefas de melhoria identificadas na revisão de código
   - ✅ `CallManagementForm.tsx` - Removido `GraphQLCRUDProvider` duplicado
   - ✅ `CertificationManagementForm.tsx` - Removido `GraphQLCRUDProvider` duplicado
 
+- [x] **Bug: Debug Statements Removidos**
+  - ✅ `MembersForm.tsx` - Removidos `console.log` e `console.warn`
+  - Limpeza de código para produção
+
+- [x] **Bug Crítico: enrollmentName em Mutations Corrigido**
+  - ✅ `useEnrollmentAssignClassMutation.ts` - `enrollmentName` movido de variables para context
+  - ✅ `useEnrollmentFlowMutation.ts` - `enrollmentName` movido de variables para context
+  - **Problema**: `enrollmentName` era passado como variável GraphQL, causando erros de validação
+  - **Solução**: Agora é passado via `context` para uso nos callbacks, não como input da mutation
+
 ---
 
 ## ⚠️ Regras de Produto (Não Alterar)

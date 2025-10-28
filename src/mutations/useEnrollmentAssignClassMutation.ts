@@ -10,8 +10,8 @@ interface AssignClassParams {
 
 export function useEnrollmentAssignClassMutation() {
   const [assignClass, { loading }] = useMutation(ASSIGN_CLASS_TO_ENROLLMENT, {
-    onCompleted: (data, context) => {
-      const enrollmentName = context?.variables?.enrollmentName;
+    onCompleted: (data, { context }) => {
+      const enrollmentName = context?.enrollmentName;
       const nameText = enrollmentName ? ` para ${enrollmentName}` : '';
 
       notifications.show({
@@ -20,8 +20,8 @@ export function useEnrollmentAssignClassMutation() {
         color: 'green',
       });
     },
-    onError: (error, context) => {
-      const enrollmentName = context?.variables?.enrollmentName;
+    onError: (error, { context }) => {
+      const enrollmentName = context?.enrollmentName;
       const nameText = enrollmentName ? ` da inscrição ${enrollmentName}` : '';
 
       notifications.show({

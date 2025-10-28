@@ -21,9 +21,9 @@ const STATUS_LABELS = {
 
 export function useEnrollmentFlowMutation() {
   const [updateStatus, { loading }] = useMutation(UPDATE_ENROLLMENT_STATUS, {
-    onCompleted: (data, context) => {
+    onCompleted: (data, { context }) => {
       const status = data.updateEnrollmentStatus.status;
-      const enrollmentName = context?.variables?.enrollmentName;
+      const enrollmentName = context?.enrollmentName;
       const nameText = enrollmentName ? ` de ${enrollmentName}` : '';
 
       notifications.show({
@@ -32,8 +32,8 @@ export function useEnrollmentFlowMutation() {
         color: 'green',
       });
     },
-    onError: (error, context) => {
-      const enrollmentName = context?.variables?.enrollmentName;
+    onError: (error, { context }) => {
+      const enrollmentName = context?.enrollmentName;
       const nameText = enrollmentName ? ` da inscrição ${enrollmentName}` : ' da inscrição';
 
       notifications.show({
@@ -50,7 +50,9 @@ export function useEnrollmentFlowMutation() {
       variables: {
         id: enrollmentId,
         input: { status },
-        enrollmentName, // Pass enrollment name to variables for use in callbacks
+      },
+      context: {
+        enrollmentName, // Pass enrollment name via context for use in callbacks
       },
     });
   };
