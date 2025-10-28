@@ -2,10 +2,12 @@ import { useMemo } from 'react';
 import { Select, SimpleGrid, TextInput } from '@mantine/core';
 import { DateInput } from '@mantine/dates';
 import { useForm } from '@mantine/form';
+import { useQuery } from '@apollo/client';
 import { GraphQLCRUDForm } from '@/components/GraphQLCRUDForm';
 import { useAuth } from '@/contexts/AuthContext';
 import { useGraphQLCRUD } from '@/contexts/GraphQLCRUDContext';
 import { CREATE_MEMBER, DELETE_MEMBER, GET_MEMBERS, UPDATE_MEMBER } from '@/graphql/members';
+import { GET_RANCHES } from '@/graphql/ranches';
 import { Member, MemberDto } from '@/model/member';
 import { Ranch } from '@/model/ranch';
 import { toDate } from '@/utils/dates';
@@ -71,7 +73,12 @@ const parseSelected = (member: Member): MemberDto => {
 
 export default function MembersForm() {
   const { query, action } = useGraphQLCRUD();
-  const { ranches } = useAuth();
+  const { ranches: authRanches, super_admin } = useAuth();
+  
+  // Query all ranches (for super_admin) or use auth ranches (for regular users)
+  const { data: ranchesData } = useQuery(GET_RANCHES, {
+    skip: !super_admin, // Only query if super_admin
+  });
 
   const members = (query.data || []) as Member[];
 
@@ -84,13 +91,27 @@ export default function MembersForm() {
     [members]
   );
 
-  const ranchesOptions = useMemo(
-    () =>
-      ranches
-        ?.filter((ranch): ranch is Ranch => !!ranch && !!ranch.id)
-        .map((ranch) => ({ label: ranch.name, value: ranch.id.toString() })) || [],
-    [ranches]
-  );
+  const ranchesOptions = useMemo(() => {
+    // For super_admin, use all ranches from query; for regular users, use from auth
+    const sourceRanches = super_admin 
+      ? (ranchesData?.ranches || [])
+      : (authRanches || []);
+    
+    // Debug: log ranches
+    console.log('Ranches source:', { super_admin, authRanches, ranchesData });
+    
+    if (!sourceRanches || sourceRanches.length === 0) {
+      console.warn('No ranches available, using empty array');
+      return [];
+    }
+    
+    const options = sourceRanches
+      .filter((ranch): ranch is Ranch => !!ranch && !!ranch.id)
+      .map((ranch) => ({ label: ranch.name, value: ranch.id.toString() }));
+    
+    console.log('Ranches options:', options);
+    return options;
+  }, [super_admin, authRanches, ranchesData]);
 
   const form = useForm<MemberDto>({
     initialValues: INITIAL_VALUES,

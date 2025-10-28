@@ -49,6 +49,32 @@ As mudanças em development estão documentadas em On Development, quando deseja
   - **Causa**: Backend retorna `permissions: null` quando a coluna não foi migrada ainda
   - **Solução**: Usar null safety para lidar com valores null/undefined
 
+- **Null Safety em UsersForm**: Corrigidos erros "Cannot read properties of null (reading 'flow')" e "Cannot read properties of null (reading 'ranches')" no formulário de usuários
+  - Adicionado null safety em `PermissionRow` para todas as operações CRUD
+  - Adicionado null safety em `FlowPermissionRow` para permissões de fluxo
+  - Adicionado null safety em `parseSelected` para ranches
+  - **Arquivo**: `src/pages/UsersPage/UsersForm.tsx`
+  - **Solução**: Usar optional chaining (`?.`) e nullish coalescing (`??`) para valores padrão
+
+- **Checkboxes de Permissões Funcionais**: Corrigido problema onde checkboxes de permissões não funcionavam ao editar usuários sem permissões
+  - Implementado `handleChange` que inicializa estrutura de permissões se `null`
+  - Cria estrutura completa de permissões com todos os campos ao primeiro clique
+  - Aplica mudança no campo específico e atualiza o form
+  - Checkboxes agora funcionam corretamente mesmo quando `permissions` é `null`
+  - **Arquivos**: `src/pages/UsersPage/UsersForm.tsx`
+  - **Componentes**: `PermissionRow`, `FlowPermissionRow`
+
+- **Super Admin - Lista Completa de Ranches**: Corrigido problema onde super_admin não via todos os ranches nos dropdowns
+  - Implementado query `GET_RANCHES` para super_admin em formulários que usam ranches
+  - `MembersForm`: Super admin agora vê todos os ranches no select
+  - `LocationsForm`: Super admin agora vê todos os ranches no select
+  - `UsersForm`: Super admin agora vê todos os ranches no MultiSelect
+  - Usuários normais continuam usando ranches do token
+  - **Arquivos**: 
+    - `src/pages/MembersPage/MembersForm.tsx`
+    - `src/pages/LocationPage/LocationsForm.tsx`
+    - `src/pages/UsersPage/UsersForm.tsx`
+
 - **Melhoria de Qualidade**: Formatação automática de código com Prettier
   - 49 arquivos formatados automaticamente
   - Padronização de estilo de código em todo o projeto
