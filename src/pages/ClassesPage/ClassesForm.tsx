@@ -56,6 +56,7 @@ export function ClassesForm() {
       deleteMutation={DELETE_CLASS}
       refetchQueries={[{ query: GET_CLASSES }]}
       modalProps={{ title: 'Cadastro de Turmas', size: 'xl' }}
+      entityName="Turma"
       transformData={transformForAPI}
     >
       <Select

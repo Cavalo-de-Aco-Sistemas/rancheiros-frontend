@@ -99,6 +99,7 @@ export function EnrollmentsForm() {
       deleteMutation={DELETE_ENROLLMENT}
       refetchQueries={[{ query: GET_ENROLLMENTS }]}
       modalProps={{ title: 'Cadastro de Inscrições', size: 'xl' }}
+      entityName="Inscrição"
       transformData={transformData}
     >
       <TextInput

@@ -27,6 +27,7 @@ export function RanchesForm() {
       updateMutation={UPDATE_RANCH}
       deleteMutation={DELETE_RANCH}
       modalProps={{ title: 'Cadastro de Ranchos', size: 'xl' }}
+      entityName="Rancho"
     >
       <TextInput
         required

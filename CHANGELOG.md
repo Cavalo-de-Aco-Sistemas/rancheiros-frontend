@@ -122,6 +122,17 @@ As mudanças em development estão documentadas em On Development, quando deseja
       - Filtros de coluna agora aparecem automaticamente quando `enableFilters={true}`
       - Usuários veem os selectboxes de filtro sem precisar clicar no botão "Toggle Filters"
       - **Arquivo**: `src/components/CRUDTable/index.tsx`
+
+    - **Notificações de Sucesso em CRUD**: Adicionadas notificações de sucesso para todas as operações CRUD
+      - Create: Notifica "Membro cadastrado com sucesso" quando criar um membro
+      - Update: Notifica "Membro atualizado com sucesso" quando atualizar um membro
+      - Delete: Notifica "Membro excluído com sucesso" quando excluir um membro
+      - Notificações aparecem com cor verde e título "Sucesso"
+      - Nome da entidade é usado nas mensagens (configurável via prop `entityName`)
+      - Todas as operações CRUD agora têm feedback visual claro para o usuário
+      - **Arquivos**: 
+        - `src/components/GraphQLCRUDForm/index.tsx`
+        - `src/pages/MembersPage/MembersForm.tsx`
   - **Arquivo**: `src/components/CRUDTable/index.tsx`
 
 - **Correção de Informações de Paginação**: Resolvido problema das tabelas de enrollment, call management e certification não exibirem informações de paginação

@@ -51,6 +51,7 @@ export function LocationsForm() {
       updateMutation={UPDATE_LOCATION}
       deleteMutation={DELETE_LOCATION}
       modalProps={{ title: 'Cadastro de Locais de Treinamento', size: 'xl' }}
+      entityName="Local de Treinamento"
     >
       <TextInput
         required

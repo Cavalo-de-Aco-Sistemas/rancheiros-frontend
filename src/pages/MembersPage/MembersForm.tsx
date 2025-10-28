@@ -127,6 +127,7 @@ export default function MembersForm() {
       deleteMutation={DELETE_MEMBER}
       refetchQueries={[{ query: GET_MEMBERS }]}
       modalProps={{ title: 'Cadastro de Membros', size: 'xl' }}
+      entityName="Membro"
       handleError={(error) => {
         const message = error.message.toLowerCase();
         if (message.includes('unique') || message.includes('duplicate')) {

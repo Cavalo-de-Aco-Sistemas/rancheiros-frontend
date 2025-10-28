@@ -8,6 +8,7 @@ import {
 } from '@apollo/client';
 import { Button, Modal, ModalProps, Stack, Text } from '@mantine/core';
 import { UseFormReturnType } from '@mantine/form';
+import { notifications } from '@mantine/notifications';
 import { GraphQLCRUDContext } from '@/contexts/GraphQLCRUDContext';
 
 export interface GraphQLCRUDFormProps<
@@ -27,6 +28,7 @@ export interface GraphQLCRUDFormProps<
   modalProps: Omit<ModalProps, 'opened' | 'onClose' | 'children'>;
   validate?: (data: D) => string | undefined;
   transformData?: (data: D, isCreate?: boolean) => any;
+  entityName?: string; // Nome da entidade para notificações personalizadas
 }
 
 export function GraphQLCRUDForm<T extends { id: string }, D>(
@@ -45,6 +47,7 @@ export function GraphQLCRUDForm<T extends { id: string }, D>(
     children,
     validate,
     transformData,
+    entityName = 'Item',
   } = props;
   // Use GraphQL context
   const context = useContext(GraphQLCRUDContext);
@@ -64,6 +67,11 @@ export function GraphQLCRUDForm<T extends { id: string }, D>(
       form.reset();
       setError('');
       await refetch();
+      notifications.show({
+        title: 'Sucesso',
+        message: `${entityName} cadastrado com sucesso`,
+        color: 'green',
+      });
       close();
     },
     onError: (error) => {
@@ -79,6 +87,11 @@ export function GraphQLCRUDForm<T extends { id: string }, D>(
       form.reset();
       setError('');
       await refetch();
+      notifications.show({
+        title: 'Sucesso',
+        message: `${entityName} atualizado com sucesso`,
+        color: 'green',
+      });
       close();
     },
     onError: (error) => {
@@ -94,6 +107,11 @@ export function GraphQLCRUDForm<T extends { id: string }, D>(
       form.reset();
       setError('');
       await refetch();
+      notifications.show({
+        title: 'Sucesso',
+        message: `${entityName} excluído com sucesso`,
+        color: 'green',
+      });
       close();
     },
     onError: (error) => {

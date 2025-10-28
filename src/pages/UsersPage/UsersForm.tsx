@@ -315,6 +315,7 @@ export function UsersForm() {
       deleteMutation={DELETE_USER}
       refetchQueries={[{ query: GET_USERS }]}
       modalProps={{ title: 'Cadastro de Usuários', size: 'xl' }}
+      entityName="Usuário"
       validate={validate}
       transformData={transformData}
     >
