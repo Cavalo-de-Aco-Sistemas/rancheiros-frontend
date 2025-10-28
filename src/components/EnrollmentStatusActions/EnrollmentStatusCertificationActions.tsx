@@ -4,6 +4,7 @@ import { ActionIcon, Button, Group, Modal, Text, Tooltip } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import { Enrollment, EnrollmentStatus } from '@/model/enrollment';
 import { useEnrollmentFlowMutation } from '@/mutations/useEnrollmentFlowMutation';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface EnrollmentStatusCertificationActionsProps {
   enrollment: Enrollment;
@@ -31,6 +32,10 @@ export function EnrollmentStatusCertificationActions({
 }: EnrollmentStatusCertificationActionsProps) {
   const updateFlowMutation = useEnrollmentFlowMutation();
   const [opened, { open, close }] = useDisclosure(false);
+  const { permissions } = useAuth();
+
+  // Check if user has permission to update flow
+  const canUpdateFlow = permissions?.flow?.update || false;
 
   const handleRevertStatus = useCallback(() => {
     if (onRevertClick) {
@@ -82,6 +87,11 @@ export function EnrollmentStatusCertificationActions({
     });
     close();
   }, [updateFlowMutation, enrollment.id, enrollment.name, close]);
+
+  // Se não tem permissão de editar fluxo, não mostra nenhum botão
+  if (!canUpdateFlow) {
+    return <Text size="xs" c="dimmed">Sem permissão</Text>;
+  }
 
   // Se não tem ações habilitadas, mostra botão de reverter
   if (enabledActions.length === 0) {

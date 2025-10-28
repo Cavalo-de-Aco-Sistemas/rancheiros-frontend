@@ -9,6 +9,7 @@ import { Enrollment, EnrollmentStatus } from '@/model/enrollment';
 import { useEnrollmentAssignClassMutation } from '@/mutations/useEnrollmentAssignClassMutation';
 import { useEnrollmentFlowMutation } from '@/mutations/useEnrollmentFlowMutation';
 import { dateBR } from '@/utils/dates';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface EnrollmentStatusCallActionsProps {
   enrollment: Enrollment;
@@ -51,6 +52,10 @@ export function EnrollmentStatusCallActions({
   const { data: classesData } = useQuery(GET_ACTIVE_CLASSES);
   const classesQuery = { data: classesData?.activeClasses };
   const [, { open: _open }] = useDisclosure(false);
+  const { permissions } = useAuth();
+
+  // Check if user has permission to update flow
+  const canUpdateFlow = permissions?.flow?.update || false;
 
   const classesOptions = useMemo(() => {
     if (!classesQuery.data) {
@@ -149,6 +154,11 @@ export function EnrollmentStatusCallActions({
     },
     [updateFlowMutation, enrollment.id, enrollment.name]
   );
+
+  // Se não tem permissão de editar fluxo, não mostra nenhum botão
+  if (!canUpdateFlow) {
+    return <Text size="xs" c="dimmed">Sem permissão</Text>;
+  }
 
   // Se não tem turma atribuída E está em waiting, mostra seleção de turma
   if (!enrollment.class && enrollment.status === EnrollmentStatus.WAITING) {

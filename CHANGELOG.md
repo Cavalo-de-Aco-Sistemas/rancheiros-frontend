@@ -75,9 +75,20 @@ As mudanças em development estão documentadas em On Development, quando deseja
     - `src/pages/LocationPage/LocationsForm.tsx`
     - `src/pages/UsersPage/UsersForm.tsx`
 
-- **Melhoria de Qualidade**: Formatação automática de código com Prettier
-  - 49 arquivos formatados automaticamente
-  - Padronização de estilo de código em todo o projeto
+    - **Melhoria de Qualidade**: Formatação automática de código com Prettier
+      - 49 arquivos formatados automaticamente
+      - Padronização de estilo de código em todo o projeto
+
+    - **Validação de Permissões de Fluxo no Frontend**: Adicionada checagem de permissões nos componentes de ações de fluxo e navegação
+      - `EnrollmentStatusCallActions`: Esconde botões se usuário não tem `flow.update` permission
+      - `EnrollmentStatusCertificationActions`: Esconde botões se usuário não tem `flow.update` permission
+      - Usuários sem permissão veem mensagem "Sem permissão" ao invés de botões de ação
+      - `NavLinks`: Filtro para esconder páginas "Gestão de Chamadas" e "Certificações" para usuários sem `flow.update` permission
+      - Usuários sem permissão `flow.update` não veem links para essas páginas no menu de navegação
+      - **Arquivos**:
+        - `src/components/EnrollmentStatusActions/EnrollmentStatusCallActions.tsx`
+        - `src/components/EnrollmentStatusActions/EnrollmentStatusCertificationActions.tsx`
+        - `src/components/NavLinks/NavLinks.tsx`
 - **Correção de Layout da Paginação**: Resolvido problema da paginação sendo empurrada pela tabela de enrollment
   - Ajustada altura máxima do container da tabela de `calc(100vh - 128px)` para `calc(100vh - 200px)`
   - Adicionada altura mínima de `400px` para garantir visibilidade adequada
