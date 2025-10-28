@@ -33,6 +33,10 @@ export function ClassesTable({
   const client = useApolloClient();
   const toggleActiveMutation = useClassToggleActiveMutation();
   const [downloadingClassId, setDownloadingClassId] = useState<string | null>(null);
+  const { permissions } = useAuth();
+
+  // Check if user has permission to update classes
+  const canUpdateClasses = permissions?.classes?.update || false;
 
   const handleToggleActive = useCallback(
     (classItem: Class) => {
@@ -148,7 +152,7 @@ export function ClassesTable({
           <Switch
             checked={row.original.active}
             onChange={() => handleToggleActive(row.original)}
-            disabled={toggleActiveMutation.loading}
+            disabled={toggleActiveMutation.loading || !canUpdateClasses}
             size="sm"
             color="green"
           />

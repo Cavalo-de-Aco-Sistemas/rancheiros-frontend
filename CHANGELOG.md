@@ -133,6 +133,17 @@ As mudanças em development estão documentadas em On Development, quando deseja
       - **Arquivos**: 
         - `src/components/GraphQLCRUDForm/index.tsx`
         - `src/pages/MembersPage/MembersForm.tsx`
+        - `src/pages/UsersPage/UsersForm.tsx`
+        - `src/pages/LocationPage/LocationsForm.tsx`
+        - `src/pages/RanchesPage/RanchesForm.tsx`
+        - `src/pages/ClassesPage/ClassesForm.tsx`
+        - `src/pages/EnrollmentsPage/EnrollmentsForm.tsx`
+
+    - **Validação de Permissão para Ativar/Desativar Turma**: Adicionada checagem de permissão no switch de ativar/desativar turma
+      - Switch de ativar/desativar turma agora verifica permissão `classes.update`
+      - Usuários sem permissão de editar turmas não podem ativar/desativar turmas
+      - Switch fica desabilitado para usuários sem permissão
+      - **Arquivo**: `src/pages/ClassesPage/ClassesTable.tsx`
   - **Arquivo**: `src/components/CRUDTable/index.tsx`
 
 - **Correção de Informações de Paginação**: Resolvido problema das tabelas de enrollment, call management e certification não exibirem informações de paginação
