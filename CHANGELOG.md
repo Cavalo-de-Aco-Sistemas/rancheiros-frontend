@@ -89,11 +89,29 @@ As mudanças em development estão documentadas em On Development, quando deseja
         - `src/components/EnrollmentStatusActions/EnrollmentStatusCallActions.tsx`
         - `src/components/EnrollmentStatusActions/EnrollmentStatusCertificationActions.tsx`
         - `src/components/NavLinks/NavLinks.tsx`
-- **Correção de Layout da Paginação**: Resolvido problema da paginação sendo empurrada pela tabela de enrollment
-  - Ajustada altura máxima do container da tabela de `calc(100vh - 128px)` para `calc(100vh - 200px)`
-  - Adicionada altura mínima de `400px` para garantir visibilidade adequada
-  - Configurado `overflow: 'auto'` para permitir scroll quando necessário
-  - Posicionamento da paginação garantido com `positionPagination: 'bottom'`
+    - **Correção de Layout da Paginação**: Resolvido problema da paginação sendo empurrada pela tabela de enrollment
+      - Ajustada altura máxima do container da tabela de `calc(100vh - 128px)` para `calc(100vh - 200px)`
+      - Adicionada altura mínima de `400px` para garantir visibilidade adequada
+      - Configurado `overflow: 'auto'` para permitir scroll quando necessário
+      - Posicionamento da paginação garantido com `positionPagination: 'bottom'`
+
+    - **Filtro de Status em Tabelas**: Adicionado selectbox para filtrar por status nas tabelas de inscrições
+      - `CallManagementTable`: Adicionado filtro select com todas as opções de status
+      - `CertificationManagementTable`: Adicionado filtro select com todas as opções de status
+      - `EnrollmentsTable`: Já possuía o filtro implementado
+      - Todas as três tabelas de inscrições agora têm filtro select na coluna de status
+      - Usuários podem filtrar inscrições por status usando o selectbox do Mantine Table
+      - Opções de filtro: Aguardando, Chamado, Confirmado, Ignorado, Desistiu, Faltou, Certificado
+      - **Arquivos**:
+        - `src/pages/EnrollmentsPage/EnrollmentsTable.tsx`
+        - `src/pages/CallManagementPage/CallManagementTable.tsx`
+        - `src/pages/CertificationPage/CertificationManagementTable.tsx`
+
+    - **Exibição de Filtros de Coluna**: Adicionada configuração para exibir filtros de coluna inicialmente
+      - Adicionado `initialShowColumnFilters: enableFilters` ao CRUDTable
+      - Filtros de coluna agora aparecem automaticamente quando `enableFilters={true}`
+      - Usuários veem os selectboxes de filtro sem precisar clicar no botão "Toggle Filters"
+      - **Arquivo**: `src/components/CRUDTable/index.tsx`
   - **Arquivo**: `src/components/CRUDTable/index.tsx`
 
 - **Correção de Informações de Paginação**: Resolvido problema das tabelas de enrollment, call management e certification não exibirem informações de paginação

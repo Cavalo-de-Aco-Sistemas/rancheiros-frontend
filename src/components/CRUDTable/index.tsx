@@ -384,6 +384,7 @@ export function CRUDTable<T extends MRT_RowData>(props: CRUDTableProps<T>) {
       enableRowActions: true,
       // Configurações de filtros
       enableColumnFilters: enableFilters,
+      initialShowColumnFilters: enableFilters,
       enableGlobalFilter: enableFilters,
       enableColumnFilterModes: enableFilters,
       enableFilterMatchHighlighting: enableFilters,

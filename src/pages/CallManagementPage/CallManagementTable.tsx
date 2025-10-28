@@ -125,6 +125,17 @@ export function CallManagementTable({
       {
         accessorKey: 'status',
         header: 'Status',
+        filterVariant: 'select',
+        filterSelectOptions: [
+          { label: 'Aguardando', value: 'waiting' },
+          { label: 'Chamado', value: 'called' },
+          { label: 'Confirmado', value: 'confirmed' },
+          { label: 'Ignorado', value: 'ignored' },
+          { label: 'Desistiu', value: 'dropped' },
+          { label: 'Faltou', value: 'missed' },
+          { label: 'Certificado', value: 'certified' },
+        ],
+        filterFn: 'equals',
         Cell: ({ row }) => <StatusIcon status={row.original.status} />,
       },
       {
