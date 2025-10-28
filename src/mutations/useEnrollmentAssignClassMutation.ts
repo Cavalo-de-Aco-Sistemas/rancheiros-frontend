@@ -38,7 +38,9 @@ export function useEnrollmentAssignClassMutation() {
       variables: {
         id: enrollmentId,
         input: { classId },
-        enrollmentName, // Pass enrollment name to variables for use in callbacks
+      },
+      context: {
+        enrollmentName, // Pass enrollment name via context for use in callbacks
       },
     });
   };

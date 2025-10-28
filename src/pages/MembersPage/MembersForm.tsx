@@ -97,11 +97,7 @@ export default function MembersForm() {
       ? (ranchesData?.ranches || [])
       : (authRanches || []);
     
-    // Debug: log ranches
-    console.log('Ranches source:', { super_admin, authRanches, ranchesData });
-    
     if (!sourceRanches || sourceRanches.length === 0) {
-      console.warn('No ranches available, using empty array');
       return [];
     }
     
@@ -109,7 +105,6 @@ export default function MembersForm() {
       .filter((ranch): ranch is Ranch => !!ranch && !!ranch.id)
       .map((ranch) => ({ label: ranch.name, value: ranch.id.toString() }));
     
-    console.log('Ranches options:', options);
     return options;
   }, [super_admin, authRanches, ranchesData]);
 
