@@ -56,13 +56,23 @@ As mudanças em development estão documentadas em On Development, quando deseja
   - **Arquivo**: `src/pages/UsersPage/UsersForm.tsx`
   - **Solução**: Usar optional chaining (`?.`) e nullish coalescing (`??`) para valores padrão
 
-- **Checkboxes de Permissões Funcionais**: Corrigido problema onde checkboxes de permissões não funcionavam ao editar usuários sem permissões
-  - Implementado `handleChange` que inicializa estrutura de permissões se `null`
-  - Cria estrutura completa de permissões com todos os campos ao primeiro clique
-  - Aplica mudança no campo específico e atualiza o form
-  - Checkboxes agora funcionam corretamente mesmo quando `permissions` é `null`
-  - **Arquivos**: `src/pages/UsersPage/UsersForm.tsx`
-  - **Componentes**: `PermissionRow`, `FlowPermissionRow`
+    - **Checkboxes de Permissões Funcionais**: Corrigido problema onde checkboxes de permissões não funcionavam ao editar usuários sem permissões
+      - Implementado `handleChange` que inicializa estrutura de permissões se `null`
+      - Cria estrutura completa de permissões com todos os campos ao primeiro clique
+      - Aplica mudança no campo específico e atualiza o form
+      - Checkboxes agora funcionam corretamente mesmo quando `permissions` é `null`
+      - Melhorado `handleChange` do `FlowPermissionRow` para garantir que a permissão de `flow.update` seja atualizada corretamente
+      - Migrado `handleChange` do `PermissionRow` para usar objeto completo ao invés de caminho de string
+      - Garantir que todas as permissões sejam atualizadas usando spread operator para criar novo objeto imutável
+      - **Arquivos**: `src/pages/UsersPage/UsersForm.tsx`
+      - **Componentes**: `PermissionRow`, `FlowPermissionRow`
+
+    - **Remoção de __typename nas Permissões**: Corrigido erro "Field __typename is not defined by type PermissionsInput" ao atualizar usuários
+      - Adicionada função `removeTypename` recursiva para remover todos os campos `__typename` do objeto de permissões
+      - Função processa objetos aninhados e arrays para garantir remoção completa
+      - `transformData` agora remove `__typename` antes de enviar dados ao backend
+      - Resolve erro GraphQL ao atualizar permissões de usuários
+      - **Arquivo**: `src/pages/UsersPage/UsersForm.tsx`
 
 - **Super Admin - Lista Completa de Ranches**: Corrigido problema onde super_admin não via todos os ranches nos dropdowns
   - Implementado query `GET_RANCHES` para super_admin em formulários que usam ranches

@@ -105,22 +105,25 @@ function PermissionRow({ title, entity, form }: PermissionRowProps) {
   
   // Initialize permissions structure if null
   const handleChange = (field: 'create' | 'read' | 'update' | 'delete', value: boolean) => {
-    if (!permissions) {
-      // Initialize permissions structure
-      const initialPermissions = {
-        members: { create: false, read: false, update: false, delete: false },
-        classes: { create: false, read: false, update: false, delete: false },
-        users: { create: false, read: false, update: false, delete: false },
-        enrollments: { create: false, read: false, update: false, delete: false },
-        locations: { create: false, read: false, update: false, delete: false },
-        ranches: { create: false, read: false, update: false, delete: false },
-        flow: { create: false, read: false, update: false, delete: false },
-      };
-      initialPermissions[entity][field] = value;
-      form.setFieldValue('permissions', initialPermissions);
-    } else {
-      form.setFieldValue(`permissions.${entity}.${field}`, value);
-    }
+    const currentPermissions = form.values.permissions || {
+      members: { create: false, read: false, update: false, delete: false },
+      classes: { create: false, read: false, update: false, delete: false },
+      users: { create: false, read: false, update: false, delete: false },
+      enrollments: { create: false, read: false, update: false, delete: false },
+      locations: { create: false, read: false, update: false, delete: false },
+      ranches: { create: false, read: false, update: false, delete: false },
+      flow: { create: false, read: false, update: false, delete: false },
+    };
+    
+    const updatedPermissions = {
+      ...currentPermissions,
+      [entity]: {
+        ...currentPermissions[entity],
+        [field]: value,
+      },
+    };
+    
+    form.setFieldValue('permissions', updatedPermissions);
   };
   
   return (
@@ -176,22 +179,25 @@ function FlowPermissionRow({ form }: { form: UseFormReturnType<UserDto> }) {
   const flowUpdate = permissions?.flow?.update ?? false;
   
   const handleChange = (value: boolean) => {
-    if (!permissions) {
-      // Initialize permissions structure
-      const initialPermissions = {
-        members: { create: false, read: false, update: false, delete: false },
-        classes: { create: false, read: false, update: false, delete: false },
-        users: { create: false, read: false, update: false, delete: false },
-        enrollments: { create: false, read: false, update: false, delete: false },
-        locations: { create: false, read: false, update: false, delete: false },
-        ranches: { create: false, read: false, update: false, delete: false },
-        flow: { create: false, read: false, update: false, delete: false },
-      };
-      initialPermissions.flow.update = value;
-      form.setFieldValue('permissions', initialPermissions);
-    } else {
-      form.setFieldValue('permissions.flow.update', value);
-    }
+    const currentPermissions = form.values.permissions || {
+      members: { create: false, read: false, update: false, delete: false },
+      classes: { create: false, read: false, update: false, delete: false },
+      users: { create: false, read: false, update: false, delete: false },
+      enrollments: { create: false, read: false, update: false, delete: false },
+      locations: { create: false, read: false, update: false, delete: false },
+      ranches: { create: false, read: false, update: false, delete: false },
+      flow: { create: false, read: false, update: false, delete: false },
+    };
+    
+    const updatedPermissions = {
+      ...currentPermissions,
+      flow: {
+        ...currentPermissions.flow,
+        update: value,
+      },
+    };
+    
+    form.setFieldValue('permissions', updatedPermissions);
   };
   
   return (
@@ -266,16 +272,35 @@ export function UsersForm() {
 
   const transformData = useCallback(
     (data: UserDto) => {
+      // Helper function to recursively remove __typename
+      const removeTypename = (obj: any): any => {
+        if (obj === null || obj === undefined) return obj;
+        if (Array.isArray(obj)) {
+          return obj.map(removeTypename);
+        }
+        if (typeof obj === 'object') {
+          const { __typename, ...rest } = obj;
+          return Object.entries(rest).reduce((acc, [key, value]) => {
+            acc[key] = removeTypename(value);
+            return acc;
+          }, {} as any);
+        }
+        return obj;
+      };
+
       // Remove repeatPassword (usado apenas para validação no frontend)
       const { repeatPassword, ...rest } = data;
 
+      // Remove __typename from permissions recursively
+      const cleanedData = removeTypename(rest);
+
       // Se for edição e não há senha, remove o campo password
       if (action === 'update' && !data.password) {
-        const { password, ...dataWithoutPassword } = rest;
+        const { password, ...dataWithoutPassword } = cleanedData;
         return dataWithoutPassword;
       }
 
-      return rest;
+      return cleanedData;
     },
     [action]
   );
