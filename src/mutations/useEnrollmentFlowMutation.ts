@@ -21,40 +21,34 @@ const STATUS_LABELS = {
 
 export function useEnrollmentFlowMutation() {
   const [updateStatus, { loading }] = useMutation(UPDATE_ENROLLMENT_STATUS, {
-    onCompleted: (data, { context }) => {
-      const status = data.updateEnrollmentStatus.status;
-      const enrollmentName = context?.enrollmentName;
-      const nameText = enrollmentName ? ` de ${enrollmentName}` : '';
-
-      notifications.show({
-        title: 'Sucesso',
-        message: `Status ${nameText} alterado para ${STATUS_LABELS[status as EnrollmentStatus]}`,
-        color: 'green',
-      });
-    },
-    onError: (error, { context }) => {
-      const enrollmentName = context?.enrollmentName;
-      const nameText = enrollmentName ? ` da inscrição ${enrollmentName}` : ' da inscrição';
-
-      notifications.show({
-        title: 'Erro',
-        message: `Erro ao atualizar status${nameText}: ${error.message}`,
-        color: 'red',
-      });
-    },
     refetchQueries: [{ query: GET_ENROLLMENTS }],
   });
 
   const mutate = ({ enrollmentId, status, enrollmentName }: UpdateEnrollmentFlowParams) => {
+    const successNameText = enrollmentName ? ` de ${enrollmentName}` : '';
+    const errorNameText = enrollmentName ? ` da inscrição ${enrollmentName}` : ' da inscrição';
     return updateStatus({
       variables: {
         id: enrollmentId,
         input: { status },
       },
-      context: {
-        enrollmentName, // Pass enrollment name via context for use in callbacks
-      },
-    });
+    })
+      .then((result) => {
+        const updatedStatus: EnrollmentStatus = result.data.updateEnrollmentStatus.status as EnrollmentStatus;
+        notifications.show({
+          title: 'Sucesso',
+          message: `Status ${successNameText} alterado para ${STATUS_LABELS[updatedStatus]}`,
+          color: 'green',
+        });
+      })
+      .catch((error) => {
+        notifications.show({
+          title: 'Erro',
+          message: `Erro ao atualizar status${errorNameText}: ${error.message}`,
+          color: 'red',
+        });
+        throw error;
+      });
   };
 
   return { mutate, isLoading: loading };

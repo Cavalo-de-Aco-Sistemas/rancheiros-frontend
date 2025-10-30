@@ -243,8 +243,8 @@ export function UsersForm() {
       : (authRanches || []);
     
     return sourceRanches
-      .filter((ranch): ranch is Ranch => !!ranch && !!ranch.id)
-      .map((ranch) => ({
+      .filter((ranch: Ranch | null | undefined): ranch is Ranch => !!ranch && !!ranch.id)
+      .map((ranch: Ranch) => ({
         label: ranch.name,
         value: ranch.id.toString(),
       }));

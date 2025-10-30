@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { Group } from '@mantine/core';
 import { StatusIcon } from './index';
+import { EnrollmentStatus } from '@/model/enrollment';
 
 const meta = {
   component: StatusIcon,
@@ -9,7 +10,15 @@ const meta = {
   argTypes: {
     status: {
       control: 'select',
-      options: ['waiting', 'called', 'dropped', 'confirmed', 'certified', 'missed', 'ignored'],
+      options: [
+        EnrollmentStatus.WAITING,
+        EnrollmentStatus.CALLED,
+        EnrollmentStatus.DROPPED,
+        EnrollmentStatus.CONFIRMED,
+        EnrollmentStatus.CERTIFIED,
+        EnrollmentStatus.MISSED,
+        EnrollmentStatus.IGNORED,
+      ],
     },
   },
 } satisfies Meta<typeof StatusIcon>;
@@ -19,56 +28,57 @@ type Story = StoryObj<typeof meta>;
 
 export const Waiting: Story = {
   args: {
-    status: 'waiting',
+    status: EnrollmentStatus.WAITING,
   },
 };
 
 export const Called: Story = {
   args: {
-    status: 'called',
+    status: EnrollmentStatus.CALLED,
   },
 };
 
 export const Dropped: Story = {
   args: {
-    status: 'dropped',
+    status: EnrollmentStatus.DROPPED,
   },
 };
 
 export const Confirmed: Story = {
   args: {
-    status: 'confirmed',
+    status: EnrollmentStatus.CONFIRMED,
   },
 };
 
 export const Certified: Story = {
   args: {
-    status: 'certified',
+    status: EnrollmentStatus.CERTIFIED,
   },
 };
 
 export const Missed: Story = {
   args: {
-    status: 'missed',
+    status: EnrollmentStatus.MISSED,
   },
 };
 
 export const Ignored: Story = {
   args: {
-    status: 'ignored',
+    status: EnrollmentStatus.IGNORED,
   },
 };
 
 export const AllStatuses: Story = {
+  args: { status: EnrollmentStatus.WAITING },
   render: () => (
     <Group>
-      <StatusIcon status="waiting" />
-      <StatusIcon status="called" />
-      <StatusIcon status="dropped" />
-      <StatusIcon status="confirmed" />
-      <StatusIcon status="certified" />
-      <StatusIcon status="missed" />
-      <StatusIcon status="ignored" />
+      <StatusIcon status={EnrollmentStatus.WAITING} />
+      <StatusIcon status={EnrollmentStatus.CALLED} />
+      <StatusIcon status={EnrollmentStatus.DROPPED} />
+      <StatusIcon status={EnrollmentStatus.CONFIRMED} />
+      <StatusIcon status={EnrollmentStatus.CERTIFIED} />
+      <StatusIcon status={EnrollmentStatus.MISSED} />
+      <StatusIcon status={EnrollmentStatus.IGNORED} />
     </Group>
   ),
   name: 'All Statuses Together',

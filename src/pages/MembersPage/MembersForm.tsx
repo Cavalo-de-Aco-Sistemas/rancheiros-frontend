@@ -102,8 +102,8 @@ export default function MembersForm() {
     }
     
     const options = sourceRanches
-      .filter((ranch): ranch is Ranch => !!ranch && !!ranch.id)
-      .map((ranch) => ({ label: ranch.name, value: ranch.id.toString() }));
+      .filter((ranch: Ranch | null | undefined): ranch is Ranch => !!ranch && !!ranch.id)
+      .map((ranch: Ranch) => ({ label: ranch.name, value: ranch.id.toString() }));
     
     return options;
   }, [super_admin, authRanches, ranchesData]);

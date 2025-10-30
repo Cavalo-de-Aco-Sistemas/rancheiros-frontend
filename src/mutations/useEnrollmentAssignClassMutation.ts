@@ -10,39 +10,33 @@ interface AssignClassParams {
 
 export function useEnrollmentAssignClassMutation() {
   const [assignClass, { loading }] = useMutation(ASSIGN_CLASS_TO_ENROLLMENT, {
-    onCompleted: (data, { context }) => {
-      const enrollmentName = context?.enrollmentName;
-      const nameText = enrollmentName ? ` para ${enrollmentName}` : '';
-
-      notifications.show({
-        title: 'Sucesso',
-        message: `Turma atribuída com sucesso${nameText}!`,
-        color: 'green',
-      });
-    },
-    onError: (error, { context }) => {
-      const enrollmentName = context?.enrollmentName;
-      const nameText = enrollmentName ? ` da inscrição ${enrollmentName}` : '';
-
-      notifications.show({
-        title: 'Erro',
-        message: `Erro ao atribuir turma${nameText}: ${error.message}`,
-        color: 'red',
-      });
-    },
     refetchQueries: [{ query: GET_ENROLLMENTS }],
   });
 
   const mutate = ({ enrollmentId, classId, enrollmentName }: AssignClassParams) => {
+    const nameText = enrollmentName ? ` para ${enrollmentName}` : '';
     return assignClass({
       variables: {
         id: enrollmentId,
         input: { classId },
       },
-      context: {
-        enrollmentName, // Pass enrollment name via context for use in callbacks
-      },
-    });
+    })
+      .then(() => {
+        notifications.show({
+          title: 'Sucesso',
+          message: `Turma atribuída com sucesso${nameText}!`,
+          color: 'green',
+        });
+      })
+      .catch((error) => {
+        const errorNameText = enrollmentName ? ` da inscrição ${enrollmentName}` : '';
+        notifications.show({
+          title: 'Erro',
+          message: `Erro ao atribuir turma${errorNameText}: ${error.message}`,
+          color: 'red',
+        });
+        throw error;
+      });
   };
 
   return { mutate, isLoading: loading };
