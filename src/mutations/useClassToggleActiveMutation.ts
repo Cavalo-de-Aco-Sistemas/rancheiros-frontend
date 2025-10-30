@@ -1,4 +1,4 @@
-import { useMutation } from '@apollo/client';
+import { useApolloClient, useMutation } from '@apollo/client';
 import { notifications } from '@mantine/notifications';
 import { GET_CLASSES, UPDATE_CLASS } from '@/graphql/classes';
 
@@ -8,6 +8,7 @@ interface ToggleClassActiveParams {
 }
 
 export function useClassToggleActiveMutation() {
+  const client = useApolloClient();
   const [updateClass, { loading }] = useMutation(UPDATE_CLASS, {
     onCompleted: (data) => {
       const active = data.updateClass.active;
@@ -29,6 +30,10 @@ export function useClassToggleActiveMutation() {
   });
 
   const toggleActive = ({ classId, active }: ToggleClassActiveParams) => {
+    // Try to read current class fields from cache to build a realistic optimistic response
+    const classesData = client.readQuery<{ classes: any[] }>({ query: GET_CLASSES });
+    const cachedClass = classesData?.classes?.find((c) => c.id === classId);
+
     return updateClass({
       variables: {
         id: classId,
@@ -38,17 +43,15 @@ export function useClassToggleActiveMutation() {
         updateClass: {
           __typename: 'Class',
           id: classId,
+          // Preserve existing fields from cache when available to avoid placeholder flicker
+          date: cachedClass?.date ?? null,
+          mapsLink: cachedClass?.mapsLink ?? null,
+          updated_at: cachedClass?.updated_at ?? null,
+          deleted: cachedClass?.deleted ?? false,
+          location: cachedClass?.location
+            ? { __typename: 'Location', id: cachedClass.location.id, name: cachedClass.location.name }
+            : { __typename: 'Location', id: '', name: '' },
           active,
-          date: new Date().toISOString(),
-          mapsLink: '',
-          updated_at: new Date().toISOString(),
-          deleted: false,
-          location: {
-            __typename: 'Location',
-            id: '',
-            name: '',
-          },
-          enrollments: [],
         },
       },
     });

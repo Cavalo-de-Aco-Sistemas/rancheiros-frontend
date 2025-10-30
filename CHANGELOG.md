@@ -41,6 +41,11 @@ As mudanças em development estão documentadas em On Development, quando deseja
 ### Technical
 - **Deploy SPA (Coolify/Docker)**: Documentada configuração de rewrite no Nginx para suportar refresh em rotas
   - Guia adicionado no `README.md` com exemplo de `nginx` e `Dockerfile`
+  
+- **CI (GitHub Actions)**: Ajuste no workflow para Yarn 4/Corepack
+  - Habilitado Corepack no job de testes (`corepack enable`)
+  - Alterado passo de instalação para `yarn install --immutable=false` para evitar falha "lockfile would have been modified" em PRs
+  - Arquivo: `.github/workflows/npm_test.yml`
 
 ### Changed
 - [PR #37] **Arquitetura**: Migração completa de REST para GraphQL
