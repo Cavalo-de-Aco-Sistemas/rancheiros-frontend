@@ -44,7 +44,8 @@ As mudanças em development estão documentadas em On Development, quando deseja
   
 - **CI (GitHub Actions)**: Ajuste no workflow para Yarn 4/Corepack
   - Habilitado Corepack no job de testes (`corepack enable`)
-  - Alterado passo de instalação para `yarn install --immutable=false` para evitar falha "lockfile would have been modified" em PRs
+  - Passo de instalação agora usa `yarn install --immutable`
+  - Atualizado `yarn.lock` no repositório para garantir instalações imutáveis no CI e no Coolify
   - Arquivo: `.github/workflows/npm_test.yml`
 
 ### Changed
