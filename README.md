@@ -120,3 +120,61 @@ This project uses GraphQL for all API communication via Apollo Client. The backe
 - Optimistic updates
 - Real-time subscriptions (if needed)
 - Type-safe queries and mutations
+
+## Deployment (Coolify + Docker)
+
+This is a SPA using `react-router-dom` `createBrowserRouter`. In production, the web server must rewrite all unknown routes to `index.html` to support page refresh and deep links.
+
+### Nginx config (recommended)
+
+Add a server block with SPA fallback:
+
+```nginx
+server {
+    listen 80;
+    server_name _;
+    root /usr/share/nginx/html;
+    index index.html;
+
+    # Static assets cached by fingerprint
+    location ~* \.(?:css|js|woff2?|ttf|otf|eot|gif|jpg|jpeg|png|svg)$ {
+        try_files $uri =404;
+        expires 1y;
+        add_header Cache-Control "public, immutable";
+        access_log off;
+    }
+
+    # SPA fallback
+    location / {
+        try_files $uri /index.html;
+    }
+}
+```
+
+Example Dockerfile serving the Vite `dist` via Nginx:
+
+```dockerfile
+FROM node:20-alpine AS build
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci
+COPY . .
+RUN npm run build
+
+FROM nginx:1.27-alpine
+COPY --from=build /app/dist/ /usr/share/nginx/html/
+# If you keep nginx.conf in project root, uncomment next line
+# COPY nginx.conf /etc/nginx/nginx.conf
+EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]
+```
+
+If you deploy under a subpath (e.g. `https://example.com/app`), set the Vite base in `vite.config.mjs`:
+
+```ts
+export default defineConfig({ base: '/app/', /* ... */ })
+```
+
+### Troubleshooting
+- Refresh returns 404 on non-root routes: ensure SPA fallback (`try_files $uri /index.html;`) is configured.
+- White screen on refresh behind proxy: verify `root` points to the built `dist` directory.

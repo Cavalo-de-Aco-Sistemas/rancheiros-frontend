@@ -28,6 +28,20 @@ As mudanças em development estão documentadas em On Development, quando deseja
   - `PasswordStrength.story.tsx` - Testa validação de senha interativa
   - `OfflineIndicator.story.tsx` - Testa indicador de offline
 
+### Fixed
+- **Storybook/Type Safety**: `StatusIcon.story.tsx` agora usa `EnrollmentStatus` (enum) em vez de strings
+  - Corrige erros TS2820 em args e em `AllStatuses`
+  - Control options atualizadas para os valores do enum
+- **Apollo Mutation Callbacks**: Removido uso inválido de `context` nos callbacks `onCompleted/onError`
+  - `useEnrollmentAssignClassMutation` e `useEnrollmentFlowMutation` agora exibem notificações no wrapper `mutate()`
+  - Corrige erros TS2339 e mantém comportamento de notificação
+- **Implicit any**: Tipagem explícita para `ranch` em filtros/maps dos formulários
+  - `MembersForm` e `UsersForm` atualizados para eliminar TS7006
+
+### Technical
+- **Deploy SPA (Coolify/Docker)**: Documentada configuração de rewrite no Nginx para suportar refresh em rotas
+  - Guia adicionado no `README.md` com exemplo de `nginx` e `Dockerfile`
+
 ### Changed
 - [PR #37] **Arquitetura**: Migração completa de REST para GraphQL
 - [PR #37] **Data Fetching**: Substituição de axios por Apollo Client
