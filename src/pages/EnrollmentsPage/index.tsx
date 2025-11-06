@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { CRUDProvider } from '@/contexts/CRUDContext';
+import { GraphQLCRUDProvider } from '@/contexts/GraphQLCRUDContext';
+import { GET_ENROLLMENTS } from '@/graphql/enrollments';
 import { EnrollmentsForm } from './EnrollmentsForm';
 import { EnrollmentsTable } from './EnrollmentsTable';
 
@@ -13,16 +14,7 @@ export function EnrollmentsPage() {
   };
 
   return (
-    <CRUDProvider 
-      endpoint="enrollments" 
-      pageId="enrollments-overview" 
-      enableFilters
-      usePagination
-      params={{
-        page: currentPage,
-        limit: pageSize,
-      }}
-    >
+    <GraphQLCRUDProvider query={GET_ENROLLMENTS} dataKey="enrollments">
       <EnrollmentsTable
         onPageChange={setCurrentPage}
         onPageSizeChange={handlePageSizeChange}
@@ -30,6 +22,6 @@ export function EnrollmentsPage() {
         pageSize={pageSize}
       />
       <EnrollmentsForm />
-    </CRUDProvider>
+    </GraphQLCRUDProvider>
   );
 }

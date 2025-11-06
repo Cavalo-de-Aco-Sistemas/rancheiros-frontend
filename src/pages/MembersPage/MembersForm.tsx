@@ -2,13 +2,14 @@ import { useMemo } from 'react';
 import { Select, SimpleGrid, TextInput } from '@mantine/core';
 import { DateInput } from '@mantine/dates';
 import { useForm } from '@mantine/form';
-import { CRUDForm } from '@/components/CRUDForm';
+import { useQuery } from '@apollo/client';
+import { GraphQLCRUDForm } from '@/components/GraphQLCRUDForm';
 import { useAuth } from '@/contexts/AuthContext';
-import { useCRUD } from '@/contexts/CRUDContext';
+import { useGraphQLCRUD } from '@/contexts/GraphQLCRUDContext';
+import { CREATE_MEMBER, DELETE_MEMBER, GET_MEMBERS, UPDATE_MEMBER } from '@/graphql/members';
+import { GET_RANCHES } from '@/graphql/ranches';
 import { Member, MemberDto } from '@/model/member';
 import { Ranch } from '@/model/ranch';
-import useCRUDQuery from '@/queries/useCRUDQuery';
-import { extractData } from '@/utils/dataUtils';
 import { toDate } from '@/utils/dates';
 
 export const phasesOptions = [
@@ -71,41 +72,62 @@ const parseSelected = (member: Member): MemberDto => {
 };
 
 export default function MembersForm() {
-  const membersQuery = useCRUDQuery<Member>('members');
-  const { ranches } = useAuth();
+  const { query, action } = useGraphQLCRUD();
+  const { ranches: authRanches, super_admin } = useAuth();
+  
+  // Query all ranches (for super_admin) or use auth ranches (for regular users)
+  const { data: ranchesData } = useQuery(GET_RANCHES, {
+    skip: !super_admin, // Only query if super_admin
+  });
+
+  const members = (query.data || []) as Member[];
 
   const membersOptions = useMemo(
     () =>
-      (extractData(membersQuery.data) as unknown as Member[]).map((member) => ({
+      members.map((member: Member) => ({
         label: member.name,
         value: member.id.toString(),
       })),
-    [membersQuery.data]
+    [members]
   );
 
-  const ranchesOptions = useMemo(
-    () => ranches?.map((ranch: Ranch) => ({ label: ranch.name, value: ranch.id.toString() })),
-    [ranches]
-  );
-
-  const { query, action } = useCRUD();
-  const { isPending } = query;
+  const ranchesOptions = useMemo(() => {
+    // For super_admin, use all ranches from query; for regular users, use from auth
+    const sourceRanches = super_admin 
+      ? (ranchesData?.ranches || [])
+      : (authRanches || []);
+    
+    if (!sourceRanches || sourceRanches.length === 0) {
+      return [];
+    }
+    
+    const options = sourceRanches
+      .filter((ranch: Ranch | null | undefined): ranch is Ranch => !!ranch && !!ranch.id)
+      .map((ranch: Ranch) => ({ label: ranch.name, value: ranch.id.toString() }));
+    
+    return options;
+  }, [super_admin, authRanches, ranchesData]);
 
   const form = useForm<MemberDto>({
     initialValues: INITIAL_VALUES,
   });
 
   return (
-    <CRUDForm<Member, MemberDto>
+    <GraphQLCRUDForm<Member, MemberDto>
       baseValues={INITIAL_VALUES}
       parseSelected={parseSelected}
       form={form}
-      endpoint="members"
+      createMutation={CREATE_MEMBER}
+      updateMutation={UPDATE_MEMBER}
+      deleteMutation={DELETE_MEMBER}
+      refetchQueries={[{ query: GET_MEMBERS }]}
       modalProps={{ title: 'Cadastro de Membros', size: 'xl' }}
+      entityName="Membro"
       handleError={(error) => {
-        if (error.status === 409) {
+        const message = error.message.toLowerCase();
+        if (message.includes('unique') || message.includes('duplicate')) {
           return 'O campo cônjuge deve ser único.';
-        } else if (error.status === 422) {
+        } else if (message.includes('foreign key') || message.includes('referenced')) {
           return 'O item não pode ser excluído pois é referenciado por outros itens';
         }
         return undefined;
@@ -117,7 +139,7 @@ export default function MembersForm() {
           label="Nome"
           key={form.key('name')}
           {...form.getInputProps('name')}
-          disabled={isPending || action === 'delete'}
+          disabled={query.isLoading || action === 'delete'}
         />
         <Select
           required
@@ -125,7 +147,7 @@ export default function MembersForm() {
           data={ranchesOptions}
           key={form.key('ranch')}
           {...form.getInputProps('ranch')}
-          disabled={isPending || action === 'delete'}
+          disabled={query.isLoading || action === 'delete'}
           searchable
           clearable
         />
@@ -138,14 +160,14 @@ export default function MembersForm() {
           onChange={({ currentTarget }) =>
             form.setFieldValue('patch', currentTarget.value.toLocaleUpperCase())
           }
-          disabled={isPending || action === 'delete'}
+          disabled={query.isLoading || action === 'delete'}
         />
         <Select
           data={['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-']}
           label="Tipo sanguíneo"
           key={form.key('blood')}
           {...form.getInputProps('blood')}
-          disabled={isPending || action === 'delete'}
+          disabled={query.isLoading || action === 'delete'}
           searchable
           clearable
         />
@@ -154,7 +176,7 @@ export default function MembersForm() {
           label="Fase"
           key={form.key('phase')}
           {...form.getInputProps('phase')}
-          disabled={isPending || action === 'delete'}
+          disabled={query.isLoading || action === 'delete'}
           searchable
           clearable
         />
@@ -162,23 +184,28 @@ export default function MembersForm() {
           label="Nascimento"
           key={form.key('birthday')}
           {...form.getInputProps('birthday')}
-          disabled={isPending || action === 'delete'}
+          disabled={query.isLoading || action === 'delete'}
           valueFormat="DD/MM/YYYY"
           placeholder="DD/MM/AAAA"
+          value={
+            form.values.birthday && form.values.birthday instanceof Date
+              ? form.values.birthday
+              : null
+          }
         />
         <TextInput
           label="Celular/WhatsApp"
           placeholder="(99) 99999-9999"
           key={form.key('phone')}
           {...form.getInputProps('phone')}
-          disabled={isPending || action === 'delete'}
+          disabled={query.isLoading || action === 'delete'}
         />
         <Select
           label="Cônjuge"
           data={membersOptions}
           key={form.key('spouse')}
           {...form.getInputProps('spouse')}
-          disabled={isPending || action === 'delete'}
+          disabled={query.isLoading || action === 'delete'}
           searchable
           clearable
         />
@@ -187,7 +214,7 @@ export default function MembersForm() {
           data={membersOptions}
           key={form.key('godfather')}
           {...form.getInputProps('godfather')}
-          disabled={isPending || action === 'delete'}
+          disabled={query.isLoading || action === 'delete'}
           searchable
           clearable
         />
@@ -195,7 +222,7 @@ export default function MembersForm() {
           label="Encargo"
           key={form.key('responsibility')}
           {...form.getInputProps('responsibility')}
-          disabled={isPending || action === 'delete'}
+          disabled={query.isLoading || action === 'delete'}
         />
         <TextInput
           label="Residência"
@@ -205,33 +232,48 @@ export default function MembersForm() {
           onChange={({ currentTarget }) =>
             form.setFieldValue('residence', currentTarget.value.toLocaleUpperCase())
           }
-          disabled={isPending || action === 'delete'}
+          disabled={query.isLoading || action === 'delete'}
         />
         <DateInput
           label="Data que prospectou"
           key={form.key('dateProspect')}
           {...form.getInputProps('dateProspect')}
-          disabled={isPending || action === 'delete'}
+          disabled={query.isLoading || action === 'delete'}
           valueFormat="DD/MM/YYYY"
           placeholder="DD/MM/AAAA"
+          value={
+            form.values.dateProspect && form.values.dateProspect instanceof Date
+              ? form.values.dateProspect
+              : null
+          }
         />
         <DateInput
           label="Data Meio escudo"
           key={form.key('dateHalfPatch')}
           {...form.getInputProps('dateHalfPatch')}
-          disabled={isPending || action === 'delete'}
+          disabled={query.isLoading || action === 'delete'}
           valueFormat="DD/MM/YYYY"
           placeholder="DD/MM/AAAA"
+          value={
+            form.values.dateHalfPatch && form.values.dateHalfPatch instanceof Date
+              ? form.values.dateHalfPatch
+              : null
+          }
         />
         <DateInput
           label="Data Full patch"
           key={form.key('dateFullPatch')}
           {...form.getInputProps('dateFullPatch')}
-          disabled={isPending || action === 'delete'}
+          disabled={query.isLoading || action === 'delete'}
           valueFormat="DD/MM/YYYY"
           placeholder="DD/MM/AAAA"
+          value={
+            form.values.dateFullPatch && form.values.dateFullPatch instanceof Date
+              ? form.values.dateFullPatch
+              : null
+          }
         />
       </SimpleGrid>
-    </CRUDForm>
+    </GraphQLCRUDForm>
   );
 }

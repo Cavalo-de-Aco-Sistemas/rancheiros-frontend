@@ -1,24 +1,36 @@
-import { useMemo } from 'react';
-import { useMutation } from '@tanstack/react-query';
-import axios, { AxiosInstance } from 'axios';
-import { Credentials } from '@/model/models';
-import { BACKEND_ADDRESS } from '@/utils/constants';
+import { useMutation } from '@apollo/client';
+import { LOGIN_MUTATION } from '@/graphql/auth';
 
 export default function useLoginMutation() {
-  // we do not use the global axios instance configured with auth
-  // because we don't have the auth done yet here
-  const axiosInstance: AxiosInstance = useMemo(() => {
-    return axios.create({
-      headers: {
-        'Content-Type': 'application/json;charset=UTF-8',
-      },
-    });
-  }, []);
+  const [loginMutation, { data, loading, error }] = useMutation(LOGIN_MUTATION);
 
-  const mutation = useMutation({
-    mutationFn: async (credentials: Credentials) => {
-      return (await axiosInstance.post(`${BACKEND_ADDRESS}/auth/login`, credentials)).data;
+  return {
+    mutate: (
+      credentials: { username: string; password: string },
+      options?: {
+        onSuccess?: (data: any) => void;
+        onError?: (error: any) => void;
+      }
+    ) => {
+      loginMutation({ variables: { input: credentials } })
+        .then((result) => {
+          if (options?.onSuccess) {
+            options.onSuccess(result.data?.login);
+          }
+        })
+        .catch((err) => {
+          if (options?.onError) {
+            options.onError(err);
+          }
+        });
     },
-  });
-  return mutation;
+    mutateAsync: async (credentials: { username: string; password: string }) => {
+      const result = await loginMutation({ variables: { input: credentials } });
+      return result.data?.login;
+    },
+    data: data?.login,
+    isPending: loading,
+    loading,
+    error,
+  };
 }

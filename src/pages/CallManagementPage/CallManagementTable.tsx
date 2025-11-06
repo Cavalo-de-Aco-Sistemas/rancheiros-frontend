@@ -6,10 +6,11 @@ import { CRUDTable } from '@/components/CRUDTable';
 import { EnrollmentStatusCallActions } from '@/components/EnrollmentStatusActions/EnrollmentStatusCallActions';
 import { StatusIcon } from '@/components/StatusIcon';
 import { useAuth } from '@/contexts/AuthContext';
-import { useCRUD } from '@/contexts/CRUDContext';
+import { useCallManagementData } from '@/hooks/useSharedEnrollments';
 import { Enrollment, EnrollmentStatus } from '@/model/enrollment';
 import { useEnrollmentFlowMutation } from '@/mutations/useEnrollmentFlowMutation';
 import { dateBR } from '@/utils/dates';
+import { normalizeEnrollments } from '@/utils/statusNormalizer';
 
 const tableHeaders = [
   'Fluxo',
@@ -37,10 +38,11 @@ interface CallManagementTableProps {
 export function CallManagementTable({
   onPageChange,
   onPageSizeChange,
-  currentPage: _currentPage,
-  pageSize: _pageSize,
+  currentPage: _currentPage = 1,
+  pageSize: _pageSize = 50,
 }: CallManagementTableProps) {
-  const { query } = useCRUD();
+  const { data: callManagementData, loading, error, refetch } = useCallManagementData();
+  const query = { data: callManagementData, isLoading: loading, isError: !!error, error, refetch };
   const { name } = useAuth();
   const updateFlowMutation = useEnrollmentFlowMutation();
 
@@ -49,6 +51,7 @@ export function CallManagementTable({
       updateFlowMutation.mutate({
         enrollmentId: enrollment.id,
         status: EnrollmentStatus.WAITING,
+        enrollmentName: enrollment.name,
       });
     },
     [updateFlowMutation]
@@ -75,7 +78,7 @@ export function CallManagementTable({
         icon: IconClock,
         onClick: handleReturnToWaiting,
         isVisible: canReturnToWaiting,
-        isLoading: updateFlowMutation.isPending,
+        isLoading: updateFlowMutation.isLoading,
         requiresConfirmation: true,
         confirmationTitle: 'Confirmar Retorno para Lista de Espera',
         confirmationMessage: (enrollment: Enrollment) =>
@@ -84,7 +87,7 @@ export function CallManagementTable({
         confirmationButtonColor: 'blue',
       },
     ],
-    [handleReturnToWaiting, canReturnToWaiting, updateFlowMutation.isPending]
+    [handleReturnToWaiting, canReturnToWaiting, updateFlowMutation.isLoading]
   );
 
   const columns = useMemo<MRT_ColumnDef<Enrollment>[]>(
@@ -122,15 +125,26 @@ export function CallManagementTable({
       {
         accessorKey: 'status',
         header: 'Status',
+        filterVariant: 'select',
+        filterSelectOptions: [
+          { label: 'Aguardando', value: 'waiting' },
+          { label: 'Chamado', value: 'called' },
+          { label: 'Confirmado', value: 'confirmed' },
+          { label: 'Ignorado', value: 'ignored' },
+          { label: 'Desistiu', value: 'dropped' },
+          { label: 'Faltou', value: 'missed' },
+          { label: 'Certificado', value: 'certified' },
+        ],
+        filterFn: 'equals',
         Cell: ({ row }) => <StatusIcon status={row.original.status} />,
       },
-      { 
-        accessorKey: 'enrollment_date', 
+      {
+        accessorKey: 'enrollment_date',
         header: 'Data de Inscrição',
         Cell: ({ row }) => {
           const date = row.original.enrollment_date;
           if (!date) return '';
-          
+
           try {
             // Converter para Date e formatar para DD/MM/YYYY
             const dateObj = new Date(date);
@@ -155,13 +169,17 @@ export function CallManagementTable({
         Cell: ({ row }) => {
           const phone = row.original.phone;
           const enrollment = row.original;
-          if (!phone) {return '';}
+          if (!phone) {
+            return '';
+          }
 
           // Regex para extrair apenas números do telefone
           const regex = /\d/g;
           const phoneNumbers = phone.match(regex)?.join('');
 
-          if (!phoneNumbers) {return phone;}
+          if (!phoneNumbers) {
+            return phone;
+          }
 
           // Formatar telefone para exibição (XX) XXXXX-XXXX
           const formattedPhone = phone.replace(/^(\d{2})(\d{5})(\d{4}).*/, '($1) $2-$3');
@@ -204,12 +222,9 @@ Deus abençoe grandemente.`;
           };
 
           // URL do WhatsApp com mensagem
-          const whatsappUrl =
-            `${(isMobile ? 'whatsapp://wa.me/55' : 'https://wa.me/55') +
-            phoneNumbers 
-            }?text=${ 
-            createWhatsAppMessage() 
-            }&type=phone_number&app_absent=0`;
+          const whatsappUrl = `${
+            (isMobile ? 'whatsapp://wa.me/55' : 'https://wa.me/55') + phoneNumbers
+          }?text=${createWhatsAppMessage()}&type=phone_number&app_absent=0`;
 
           return (
             <Anchor href={whatsappUrl} target="_blank" rel="noreferrer">
@@ -229,33 +244,29 @@ Deus abençoe grandemente.`;
     []
   );
 
-  // Dados já filtrados pelo backend
-  const paginatedData = query.data as any;
+  // Dados já vêm filtrados do hook compartilhado
+  const allData = query.data || [];
 
-  // Tentar diferentes formas de extrair os dados
-  let data = [];
-  if (paginatedData?.data && Array.isArray(paginatedData.data)) {
-    data = paginatedData.data;
-  } else if (Array.isArray(paginatedData)) {
-    data = paginatedData;
-  } else if (paginatedData && typeof paginatedData === 'object') {
-    // Se não tem propriedade 'data', talvez os dados estejam diretamente no objeto
-    data = Object.values(paginatedData).find((value) => Array.isArray(value)) || [];
-  }
+  // Paginação client-side
+  const paginatedData = useMemo(() => {
+    const startIndex = (_currentPage - 1) * _pageSize;
+    const endIndex = startIndex + _pageSize;
+    return allData.slice(startIndex, endIndex);
+  }, [allData, _currentPage, _pageSize]);
 
-  const pagination =
-    paginatedData && !Array.isArray(paginatedData)
-      ? {
-          page: paginatedData.page,
-          limit: paginatedData.limit,
-          total: paginatedData.total,
-          totalPages: paginatedData.totalPages,
-        }
-      : undefined;
+  const pagination = useMemo(
+    () => ({
+      page: _currentPage,
+      limit: _pageSize,
+      total: allData.length,
+      totalPages: Math.ceil(allData.length / _pageSize),
+    }),
+    [allData.length, _currentPage, _pageSize]
+  );
 
   const csvData = useMemo(
     () =>
-      data?.map(
+      allData?.map(
         ({
           name,
           phone,
@@ -285,7 +296,7 @@ Deus abençoe grandemente.`;
           Modelo: model,
         })
       ) ?? [],
-    [data]
+    [allData]
   );
 
   const rowMapper = useCallback((row: MRT_Row<Enrollment>): string[] => {
@@ -323,29 +334,27 @@ Deus abençoe grandemente.`;
   const pdfConfig = useMemo(() => ({ tableHeaders, rowMapper }), [rowMapper]);
 
   return (
-    <>
-      <CRUDTable<Enrollment>
-        columns={columns}
-        title="Gestão de Chamadas"
-        csvData={csvData}
-        pdfConfig={pdfConfig}
-        customActions={customActions}
-        enableFilters
-        enableRowNumbers
-        columnVisibility={{
-          cnh: false,
-          email: false,
-          motorcycle_usage: false,
-          brand: false,
-          model: false,
-        }}
-        data={data}
-        pagination={pagination}
-        onPageChange={onPageChange}
-        onPageSizeChange={onPageSizeChange}
-        emptyStateMessage="Nenhuma inscrição em processo de chamada encontrada"
-        emptyStateDescription="As inscrições em lista de espera, chamadas, confirmadas, ignoradas ou desistências aparecerão aqui"
-      />
-    </>
+    <CRUDTable<Enrollment>
+      columns={columns}
+      title="Gestão de Chamadas"
+      csvData={csvData}
+      pdfConfig={pdfConfig}
+      customActions={customActions}
+      enableFilters={true}
+      enableRowNumbers={true}
+      columnVisibility={{
+        cnh: false,
+        email: false,
+        motorcycle_usage: false,
+        brand: false,
+        model: false,
+      }}
+      data={paginatedData}
+      pagination={pagination}
+      onPageChange={onPageChange}
+      onPageSizeChange={onPageSizeChange}
+      emptyStateMessage="Nenhuma inscrição em processo de chamada encontrada"
+      emptyStateDescription="As inscrições em lista de espera, chamadas, confirmadas, ignoradas ou desistências aparecerão aqui"
+    />
   );
 }

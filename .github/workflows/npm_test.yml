@@ -19,7 +19,9 @@ jobs:
           node-version-file: '.nvmrc'
           cache: 'yarn'
           cache-dependency-path: '**/yarn.lock'
+      - name: Enable corepack (Yarn 4)
+        run: corepack enable
       - name: Install dependencies
-        run: yarn
+        run: yarn install --immutable
       - name: Run build
         run: npm run build

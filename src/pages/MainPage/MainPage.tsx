@@ -2,7 +2,6 @@ import { Link, Outlet, useLocation } from 'react-router-dom';
 import { AppShell, Burger, Group, LoadingOverlay, ScrollArea } from '@mantine/core';
 import { useDisclosure, useMounted } from '@mantine/hooks';
 import AffixStack from '@/components/AffixStack';
-import FetchingLoader from '@/components/FetchingLoader';
 import { Logo } from '@/components/Logo';
 import NavLinks from '@/components/NavLinks/NavLinks';
 import OfflineIndicator from '@/components/OfflineIndicator';
@@ -117,7 +116,6 @@ export function MainPage() {
       <AppShell.Main>
         <Outlet />
         <AffixStack>
-          <FetchingLoader />
           <OfflineIndicator />
         </AffixStack>
       </AppShell.Main>

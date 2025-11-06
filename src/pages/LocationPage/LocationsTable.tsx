@@ -2,7 +2,7 @@ import { useCallback, useMemo } from 'react';
 import { MRT_ColumnDef, MRT_Row } from 'mantine-react-table';
 import { Badge } from '@mantine/core';
 import { CRUDTable } from '@/components/CRUDTable';
-import { useCRUD } from '@/contexts/CRUDContext';
+import { useGraphQLCRUD } from '@/contexts/GraphQLCRUDContext';
 import { Location } from '@/model/location';
 import { extractData } from '@/utils/dataUtils';
 
@@ -21,7 +21,7 @@ export function LocationsTable({
   currentPage = 1,
   pageSize = 10,
 }: LocationsTableProps = {}) {
-  const { query } = useCRUD();
+  const { query } = useGraphQLCRUD();
 
   const columns = useMemo<MRT_ColumnDef<Location>[]>(
     () => [
@@ -70,12 +70,15 @@ export function LocationsTable({
     return allData.slice(startIndex, endIndex);
   }, [allData, currentPage, pageSize]);
 
-  const pagination = useMemo(() => ({
-    page: currentPage,
-    limit: pageSize,
-    total: allData.length,
-    totalPages: Math.ceil(allData.length / pageSize),
-  }), [allData.length, currentPage, pageSize]);
+  const pagination = useMemo(
+    () => ({
+      page: currentPage,
+      limit: pageSize,
+      total: allData.length,
+      totalPages: Math.ceil(allData.length / pageSize),
+    }),
+    [allData.length, currentPage, pageSize]
+  );
 
   return (
     <CRUDTable

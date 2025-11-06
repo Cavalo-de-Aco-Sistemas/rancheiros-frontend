@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { CRUDProvider } from '@/contexts/CRUDContext';
+import { GraphQLCRUDProvider } from '@/contexts/GraphQLCRUDContext';
+import { GET_CERTIFICATION_ENROLLMENTS } from '@/graphql/enrollments';
 import { CertificationManagementForm, CertificationManagementTable } from './index';
 
 export function CertificationManagementPage() {
@@ -7,25 +8,14 @@ export function CertificationManagementPage() {
   const [pageSize, setPageSize] = useState(50);
 
   return (
-    <CRUDProvider
-      endpoint="enrollments"
-      params={{
-        status: 'confirmed',
-        activeClassesOnly: true,
-        page: currentPage,
-        limit: pageSize,
-      }}
-      usePagination
-      enableFilters
-      pageId="certification-management"
-    >
-            <CertificationManagementTable
-              onPageChange={setCurrentPage}
-              onPageSizeChange={setPageSize}
-              currentPage={currentPage}
-              pageSize={pageSize}
-            />
+    <GraphQLCRUDProvider query={GET_CERTIFICATION_ENROLLMENTS} dataKey="enrollments">
+      <CertificationManagementTable
+        onPageChange={setCurrentPage}
+        onPageSizeChange={setPageSize}
+        currentPage={currentPage}
+        pageSize={pageSize}
+      />
       <CertificationManagementForm />
-    </CRUDProvider>
+    </GraphQLCRUDProvider>
   );
 }

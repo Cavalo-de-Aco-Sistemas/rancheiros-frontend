@@ -1,9 +1,6 @@
-import { useMutation } from '@tanstack/react-query';
+import { useApolloClient, useMutation } from '@apollo/client';
 import { notifications } from '@mantine/notifications';
-import { useAuth } from '@/contexts/AuthContext';
-import { useOptimizedQueries } from '@/hooks/useOptimizedQueries';
-import { Class } from '@/model/class';
-import { BACKEND_ADDRESS } from '@/utils/constants';
+import { GET_CLASSES, UPDATE_CLASS } from '@/graphql/classes';
 
 interface ToggleClassActiveParams {
   classId: string;
@@ -11,56 +8,54 @@ interface ToggleClassActiveParams {
 }
 
 export function useClassToggleActiveMutation() {
-  const { axiosInstance } = useAuth();
-  const { invalidateQuery, updateQueryData, getQueryData, cancelQueries } = useOptimizedQueries();
-
-  return useMutation({
-    mutationFn: async ({ classId, active }: ToggleClassActiveParams) => {
-      const response = await axiosInstance.patch(`${BACKEND_ADDRESS}/classes/${classId}`, {
-        active,
-      });
-      return { classId, active, updatedClass: response.data };
-    },
-    onMutate: async ({ classId, active }) => {
-      // Cancel outgoing refetches to avoid overwriting optimistic update
-      await cancelQueries('classes');
-
-      // Snapshot previous value
-      const previousClasses = getQueryData<Class>('classes');
-
-      // Optimistically update the class active status
-      updateQueryData<Class>('classes', (old) => {
-        if (!old) {
-          return [];
-        }
-        return old.map((classItem) =>
-          classItem.id === classId ? { ...classItem, active } : classItem
-        );
-      });
-
-      return { previousClasses };
-    },
-    onSuccess: (_data, { active }) => {
+  const client = useApolloClient();
+  const [updateClass, { loading }] = useMutation(UPDATE_CLASS, {
+    onCompleted: (data) => {
+      const active = data.updateClass.active;
       notifications.show({
         title: 'Sucesso',
         message: `Turma ${active ? 'ativada' : 'desativada'} com sucesso`,
         color: 'green',
       });
-
-      // Invalidate classes query to ensure data consistency
-      invalidateQuery('classes');
     },
-    onError: (error: any, { classId }, context) => {
-      // Revert optimistic update on error
-      if (context?.previousClasses) {
-        updateQueryData<Class>('classes', () => context.previousClasses || []);
-      }
-
+    onError: (error) => {
       notifications.show({
         title: 'Erro',
-        message: `Erro ao ${classId ? 'ativar' : 'desativar'} turma: ${error.response?.data?.message || error.message}`,
+        message: `Erro ao atualizar turma: ${error.message}`,
         color: 'red',
       });
     },
+    refetchQueries: [{ query: GET_CLASSES }],
+    awaitRefetchQueries: true,
   });
+
+  const toggleActive = ({ classId, active }: ToggleClassActiveParams) => {
+    // Try to read current class fields from cache to build a realistic optimistic response
+    const classesData = client.readQuery<{ classes: any[] }>({ query: GET_CLASSES });
+    const cachedClass = classesData?.classes?.find((c) => c.id === classId);
+
+    return updateClass({
+      variables: {
+        id: classId,
+        input: { active },
+      },
+      optimisticResponse: {
+        updateClass: {
+          __typename: 'Class',
+          id: classId,
+          // Preserve existing fields from cache when available to avoid placeholder flicker
+          date: cachedClass?.date ?? null,
+          mapsLink: cachedClass?.mapsLink ?? null,
+          updated_at: cachedClass?.updated_at ?? null,
+          deleted: cachedClass?.deleted ?? false,
+          location: cachedClass?.location
+            ? { __typename: 'Location', id: cachedClass.location.id, name: cachedClass.location.name }
+            : { __typename: 'Location', id: '', name: '' },
+          active,
+        },
+      },
+    });
+  };
+
+  return { toggleActive, loading };
 }

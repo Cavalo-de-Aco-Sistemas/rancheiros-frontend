@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { CRUDProvider } from '@/contexts/CRUDContext';
+import { MembersProvider } from '@/hooks/useMembers';
 import MembersForm from './MembersForm';
 import { MembersTable } from './MembersTable';
 
@@ -13,7 +13,7 @@ export function MembersPage() {
   };
 
   return (
-    <CRUDProvider endpoint="members">
+    <MembersProvider>
       <MembersTable
         onPageChange={setCurrentPage}
         onPageSizeChange={handlePageSizeChange}
@@ -21,6 +21,6 @@ export function MembersPage() {
         pageSize={pageSize}
       />
       <MembersForm />
-    </CRUDProvider>
+    </MembersProvider>
   );
 }

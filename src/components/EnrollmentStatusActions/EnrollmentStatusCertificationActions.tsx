@@ -4,6 +4,7 @@ import { ActionIcon, Button, Group, Modal, Text, Tooltip } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import { Enrollment, EnrollmentStatus } from '@/model/enrollment';
 import { useEnrollmentFlowMutation } from '@/mutations/useEnrollmentFlowMutation';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface EnrollmentStatusCertificationActionsProps {
   enrollment: Enrollment;
@@ -31,6 +32,10 @@ export function EnrollmentStatusCertificationActions({
 }: EnrollmentStatusCertificationActionsProps) {
   const updateFlowMutation = useEnrollmentFlowMutation();
   const [opened, { open, close }] = useDisclosure(false);
+  const { permissions } = useAuth();
+
+  // Check if user has permission to update flow
+  const canUpdateFlow = permissions?.flow?.update || false;
 
   const handleRevertStatus = useCallback(() => {
     if (onRevertClick) {
@@ -67,9 +72,10 @@ export function EnrollmentStatusCertificationActions({
       updateFlowMutation.mutate({
         enrollmentId: enrollment.id,
         status: newStatus,
+        enrollmentName: enrollment.name,
       });
     },
-    [updateFlowMutation, enrollment.id]
+    [updateFlowMutation, enrollment.id, enrollment.name]
   );
 
   const confirmRevertStatus = useCallback(() => {
@@ -77,9 +83,15 @@ export function EnrollmentStatusCertificationActions({
     updateFlowMutation.mutate({
       enrollmentId: enrollment.id,
       status: EnrollmentStatus.CONFIRMED,
+      enrollmentName: enrollment.name,
     });
     close();
-  }, [updateFlowMutation, enrollment.id, close]);
+  }, [updateFlowMutation, enrollment.id, enrollment.name, close]);
+
+  // Se não tem permissão de editar fluxo, não mostra nenhum botão
+  if (!canUpdateFlow) {
+    return <Text size="xs" c="dimmed">Sem permissão</Text>;
+  }
 
   // Se não tem ações habilitadas, mostra botão de reverter
   if (enabledActions.length === 0) {
@@ -91,7 +103,7 @@ export function EnrollmentStatusCertificationActions({
             color="blue"
             size="sm"
             onClick={handleRevertStatus}
-            loading={updateFlowMutation.isPending}
+            loading={updateFlowMutation.isLoading}
           >
             <IconArrowBack size={16} />
           </ActionIcon>
@@ -110,7 +122,7 @@ export function EnrollmentStatusCertificationActions({
               color={color}
               size="sm"
               onClick={() => handleStatusUpdate(status)}
-              loading={updateFlowMutation.isPending}
+              loading={updateFlowMutation.isLoading}
             >
               <Icon size={16} />
             </ActionIcon>
@@ -126,7 +138,7 @@ export function EnrollmentStatusCertificationActions({
           <Button variant="outline" onClick={close}>
             Cancelar
           </Button>
-          <Button color="blue" onClick={confirmRevertStatus} loading={updateFlowMutation.isPending}>
+          <Button color="blue" onClick={confirmRevertStatus} loading={updateFlowMutation.isLoading}>
             Confirmar
           </Button>
         </Group>
