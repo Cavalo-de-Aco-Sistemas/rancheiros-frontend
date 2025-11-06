@@ -11,14 +11,15 @@ import {
   TextInput,
 } from '@mantine/core';
 import { useForm, UseFormReturnType } from '@mantine/form';
-import { CRUDForm } from '@/components/CRUDForm';
+import { useQuery } from '@apollo/client';
+import { GraphQLCRUDForm } from '@/components/GraphQLCRUDForm';
 import { PasswordStrength } from '@/components/PasswordStrength';
 import { useAuth } from '@/contexts/AuthContext';
-import { useCRUD } from '@/contexts/CRUDContext';
+import { useGraphQLCRUD } from '@/contexts/GraphQLCRUDContext';
+import { CREATE_USER, DELETE_USER, GET_USERS, UPDATE_USER } from '@/graphql/users';
+import { GET_RANCHES } from '@/graphql/ranches';
 import { Ranch } from '@/model/ranch';
 import { User, UserDto, UserPermissions } from '@/model/user';
-import useCRUDQuery from '@/queries/useCRUDQuery';
-import { extractData } from '@/utils/dataUtils';
 
 const INITIAL_VALUES = {
   username: '',
@@ -80,7 +81,7 @@ const parseSelected = (user: User): UserDto => {
     password: '',
     repeatPassword: '',
     permissions: user.permissions,
-    ranches: user.ranches.map((ranch) => ranch.id),
+    ranches: user.ranches?.map((ranch) => ranch.id) || [],
     super_admin: user.super_admin,
   };
 };
@@ -92,6 +93,39 @@ interface PermissionRowProps {
 }
 
 function PermissionRow({ title, entity, form }: PermissionRowProps) {
+  // Null safety check for permissions and initialize if needed
+  const permissions = form.values.permissions;
+  const entityPermission = permissions?.[entity];
+  
+  // Default values if permissions are null
+  const createValue = entityPermission?.create ?? false;
+  const readValue = entityPermission?.read ?? false;
+  const updateValue = entityPermission?.update ?? false;
+  const deleteValue = entityPermission?.delete ?? false;
+  
+  // Initialize permissions structure if null
+  const handleChange = (field: 'create' | 'read' | 'update' | 'delete', value: boolean) => {
+    const currentPermissions = form.values.permissions || {
+      members: { create: false, read: false, update: false, delete: false },
+      classes: { create: false, read: false, update: false, delete: false },
+      users: { create: false, read: false, update: false, delete: false },
+      enrollments: { create: false, read: false, update: false, delete: false },
+      locations: { create: false, read: false, update: false, delete: false },
+      ranches: { create: false, read: false, update: false, delete: false },
+      flow: { create: false, read: false, update: false, delete: false },
+    };
+    
+    const updatedPermissions = {
+      ...currentPermissions,
+      [entity]: {
+        ...currentPermissions[entity],
+        [field]: value,
+      },
+    };
+    
+    form.setFieldValue('permissions', updatedPermissions);
+  };
+  
   return (
     <Table.Tr>
       <Table.Td>{title}</Table.Td>
@@ -99,9 +133,9 @@ function PermissionRow({ title, entity, form }: PermissionRowProps) {
         <Checkbox
           key={form.key(`permissions.${entity}.create`)}
           {...form.getInputProps(`permissions.${entity}.create`)}
-          checked={form.values.permissions[entity].create}
+          checked={createValue}
           onChange={(event) => {
-            form.setFieldValue(`permissions.${entity}.create`, event.currentTarget.checked);
+            handleChange('create', event.currentTarget.checked);
           }}
         />
       </Table.Td>
@@ -109,9 +143,9 @@ function PermissionRow({ title, entity, form }: PermissionRowProps) {
         <Checkbox
           key={form.key(`permissions.${entity}.read`)}
           {...form.getInputProps(`permissions.${entity}.read`)}
-          checked={form.values.permissions[entity].read}
+          checked={readValue}
           onChange={(event) => {
-            form.setFieldValue(`permissions.${entity}.read`, event.currentTarget.checked);
+            handleChange('read', event.currentTarget.checked);
           }}
         />
       </Table.Td>
@@ -119,9 +153,9 @@ function PermissionRow({ title, entity, form }: PermissionRowProps) {
         <Checkbox
           key={form.key(`permissions.${entity}.update`)}
           {...form.getInputProps(`permissions.${entity}.update`)}
-          checked={form.values.permissions[entity].update}
+          checked={updateValue}
           onChange={(event) => {
-            form.setFieldValue(`permissions.${entity}.update`, event.currentTarget.checked);
+            handleChange('update', event.currentTarget.checked);
           }}
         />
       </Table.Td>
@@ -129,9 +163,9 @@ function PermissionRow({ title, entity, form }: PermissionRowProps) {
         <Checkbox
           key={form.key(`permissions.${entity}.delete`)}
           {...form.getInputProps(`permissions.${entity}.delete`)}
-          checked={form.values.permissions[entity].delete}
+          checked={deleteValue}
           onChange={(event) => {
-            form.setFieldValue(`permissions.${entity}.delete`, event.currentTarget.checked);
+            handleChange('delete', event.currentTarget.checked);
           }}
         />
       </Table.Td>
@@ -140,6 +174,32 @@ function PermissionRow({ title, entity, form }: PermissionRowProps) {
 }
 
 function FlowPermissionRow({ form }: { form: UseFormReturnType<UserDto> }) {
+  // Null safety check for permissions
+  const permissions = form.values.permissions;
+  const flowUpdate = permissions?.flow?.update ?? false;
+  
+  const handleChange = (value: boolean) => {
+    const currentPermissions = form.values.permissions || {
+      members: { create: false, read: false, update: false, delete: false },
+      classes: { create: false, read: false, update: false, delete: false },
+      users: { create: false, read: false, update: false, delete: false },
+      enrollments: { create: false, read: false, update: false, delete: false },
+      locations: { create: false, read: false, update: false, delete: false },
+      ranches: { create: false, read: false, update: false, delete: false },
+      flow: { create: false, read: false, update: false, delete: false },
+    };
+    
+    const updatedPermissions = {
+      ...currentPermissions,
+      flow: {
+        ...currentPermissions.flow,
+        update: value,
+      },
+    };
+    
+    form.setFieldValue('permissions', updatedPermissions);
+  };
+  
   return (
     <Table.Tr>
       <Table.Td>Fluxo de Inscrições</Table.Td>
@@ -153,9 +213,9 @@ function FlowPermissionRow({ form }: { form: UseFormReturnType<UserDto> }) {
         <Checkbox
           key={form.key('permissions.flow.update')}
           {...form.getInputProps('permissions.flow.update')}
-          checked={form.values.permissions.flow.update}
+          checked={flowUpdate}
           onChange={(event) => {
-            form.setFieldValue('permissions.flow.update', event.currentTarget.checked);
+            handleChange(event.currentTarget.checked);
           }}
         />
       </Table.Td>
@@ -167,21 +227,28 @@ function FlowPermissionRow({ form }: { form: UseFormReturnType<UserDto> }) {
 }
 
 export function UsersForm() {
-  const { query, action } = useCRUD();
-  const { isPending } = query;
+  const { query, action } = useGraphQLCRUD();
   const [passwordStrength, setPasswordStrength] = useState(0);
-  const { super_admin: currentUserIsSuperAdmin } = useAuth();
+  const { super_admin: currentUserIsSuperAdmin, ranches: authRanches } = useAuth();
+  
+  // Query all ranches (for super_admin) or use auth ranches (for regular users)
+  const { data: ranchesData } = useQuery(GET_RANCHES, {
+    skip: !currentUserIsSuperAdmin, // Only query if super_admin
+  });
 
-  const ranchesQuery = useCRUDQuery<Ranch>('ranches');
-
-  const ranchesOptions = useMemo(
-    () =>
-      (extractData(ranchesQuery.data) as unknown as Ranch[]).map((ranch) => ({
+  const ranchesOptions = useMemo(() => {
+    // For super_admin, use all ranches from query; for regular users, use from auth
+    const sourceRanches = currentUserIsSuperAdmin 
+      ? (ranchesData?.ranches || [])
+      : (authRanches || []);
+    
+    return sourceRanches
+      .filter((ranch: Ranch | null | undefined): ranch is Ranch => !!ranch && !!ranch.id)
+      .map((ranch: Ranch) => ({
         label: ranch.name,
         value: ranch.id.toString(),
-      })),
-    [ranchesQuery.data]
-  );
+      }));
+  }, [currentUserIsSuperAdmin, authRanches, ranchesData]);
 
   const form = useForm<UserDto>({
     initialValues: INITIAL_VALUES,
@@ -205,27 +272,50 @@ export function UsersForm() {
 
   const transformData = useCallback(
     (data: UserDto) => {
+      // Helper function to recursively remove __typename
+      const removeTypename = (obj: any): any => {
+        if (obj === null || obj === undefined) return obj;
+        if (Array.isArray(obj)) {
+          return obj.map(removeTypename);
+        }
+        if (typeof obj === 'object') {
+          const { __typename, ...rest } = obj;
+          return Object.entries(rest).reduce((acc, [key, value]) => {
+            acc[key] = removeTypename(value);
+            return acc;
+          }, {} as any);
+        }
+        return obj;
+      };
+
       // Remove repeatPassword (usado apenas para validação no frontend)
       const { repeatPassword, ...rest } = data;
 
+      // Remove __typename from permissions recursively
+      const cleanedData = removeTypename(rest);
+
       // Se for edição e não há senha, remove o campo password
       if (action === 'update' && !data.password) {
-        const { password, ...dataWithoutPassword } = rest;
+        const { password, ...dataWithoutPassword } = cleanedData;
         return dataWithoutPassword;
       }
 
-      return rest;
+      return cleanedData;
     },
     [action]
   );
 
   return (
-    <CRUDForm<User, UserDto>
+    <GraphQLCRUDForm<User, UserDto>
       baseValues={INITIAL_VALUES}
       parseSelected={parseSelected}
       form={form}
-      endpoint="users"
+      createMutation={CREATE_USER}
+      updateMutation={UPDATE_USER}
+      deleteMutation={DELETE_USER}
+      refetchQueries={[{ query: GET_USERS }]}
       modalProps={{ title: 'Cadastro de Usuários', size: 'xl' }}
+      entityName="Usuário"
       validate={validate}
       transformData={transformData}
     >
@@ -234,14 +324,14 @@ export function UsersForm() {
         label="Usuário"
         key={form.key('username')}
         {...form.getInputProps('username')}
-        disabled={isPending || action === 'delete'}
+        disabled={query.isLoading || action === 'delete'}
       />
       <TextInput
         required
         label="Nome"
         key={form.key('name')}
         {...form.getInputProps('name')}
-        disabled={isPending || action === 'delete'}
+        disabled={query.isLoading || action === 'delete'}
       />
       <Accordion defaultValue="senha">
         <Accordion.Item value="senha">
@@ -252,14 +342,14 @@ export function UsersForm() {
                 label="Senha"
                 key={form.key('password')}
                 {...form.getInputProps('password')}
-                disabled={isPending || action === 'delete'}
+                disabled={query.isLoading || action === 'delete'}
                 setPasswordStrength={setPasswordStrength}
               />
               <PasswordInput
                 label="Repetir senha"
                 key={form.key('repeatPassword')}
                 {...form.getInputProps('repeatPassword')}
-                disabled={isPending || action === 'delete'}
+                disabled={query.isLoading || action === 'delete'}
               />
             </SimpleGrid>
           </Accordion.Panel>
@@ -315,6 +405,6 @@ export function UsersForm() {
           </Accordion.Panel>
         </Accordion.Item>
       </Accordion>
-    </CRUDForm>
+    </GraphQLCRUDForm>
   );
 }

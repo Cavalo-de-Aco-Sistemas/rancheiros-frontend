@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { CRUDProvider } from '@/contexts/CRUDContext';
+import { GraphQLCRUDProvider } from '@/contexts/GraphQLCRUDContext';
+import { GET_CALL_MANAGEMENT_ENROLLMENTS } from '@/graphql/enrollments';
 import { CallManagementForm, CallManagementTable } from './index';
 
 export function CallManagementPage() {
@@ -12,25 +13,14 @@ export function CallManagementPage() {
   };
 
   return (
-    <CRUDProvider
-      endpoint="enrollments"
-      params={{
-        status: 'waiting,called,confirmed,ignored,dropped',
-        activeClassesOnly: true,
-        page: currentPage,
-        limit: pageSize,
-      }}
-      usePagination
-      enableFilters
-      pageId="call-management"
-    >
-            <CallManagementTable
-              onPageChange={setCurrentPage}
-              onPageSizeChange={handlePageSizeChange}
-              currentPage={currentPage}
-              pageSize={pageSize}
-            />
+    <GraphQLCRUDProvider query={GET_CALL_MANAGEMENT_ENROLLMENTS} dataKey="enrollments">
+      <CallManagementTable
+        onPageChange={setCurrentPage}
+        onPageSizeChange={handlePageSizeChange}
+        currentPage={currentPage}
+        pageSize={pageSize}
+      />
       <CallManagementForm />
-    </CRUDProvider>
+    </GraphQLCRUDProvider>
   );
 }

@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useContext, useMemo, useState } from 'react';
 import { IconCsv, IconEdit, IconPdf, IconPlus, IconTrash } from '@tabler/icons-react';
 import { download, generateCsv, mkConfig } from 'export-to-csv';
 import jsPDF from 'jspdf';
@@ -18,7 +18,8 @@ import { MRT_Localization_PT_BR } from 'mantine-react-table/locales/pt-BR/index.
 import { useLocation } from 'react-router-dom';
 import { ActionIcon, Button, Group, Menu, Modal, rem, Text, Title } from '@mantine/core';
 import { useAuth } from '@/contexts/AuthContext';
-import { useCRUD } from '@/contexts/CRUDContext';
+import { GraphQLCRUDContext } from '@/contexts/GraphQLCRUDContext';
+import { useSharedFilters } from '@/contexts/SharedFiltersContext';
 import { ROUTES_MAP } from '@/pages/MainPage/MainPage';
 
 type AcceptedData = number | string | boolean | null | undefined;
@@ -105,16 +106,49 @@ export function CRUDTable<T extends MRT_RowData>(props: CRUDTableProps<T>) {
     emptyStateMessage = 'Nenhum dado encontrado',
     emptyStateDescription,
   } = props;
-  const { 
-    query, 
-    setSelected, 
-    setAction, 
+  // Use GraphQL context (optional for read-only tables)
+  const context = useContext(GraphQLCRUDContext);
+
+  // If no context, this is a read-only table (like Call Management, Certification)
+  const isReadOnly = !context;
+
+  const {
+    query,
+    setSelected,
+    setAction,
     open,
-    columnFilters,
-    setColumnFilters,
-    globalFilter,
-    setGlobalFilter,
-  } = useCRUD();
+    columnFilters: contextColumnFilters,
+    setColumnFilters: setContextColumnFilters,
+    globalFilter: contextGlobalFilter,
+    setGlobalFilter: setContextGlobalFilter,
+  } = context || {};
+
+  // Try to use shared filters, fallback to context filters
+  let columnFilters, setColumnFilters, globalFilter, setGlobalFilter;
+
+  if (isReadOnly) {
+    // For read-only tables, use local state for filters
+    const [localColumnFilters, setLocalColumnFilters] = useState([]);
+    const [localGlobalFilter, setLocalGlobalFilter] = useState('');
+    columnFilters = localColumnFilters;
+    setColumnFilters = setLocalColumnFilters;
+    globalFilter = localGlobalFilter;
+    setGlobalFilter = setLocalGlobalFilter;
+  } else {
+    try {
+      const sharedFilters = useSharedFilters();
+      columnFilters = sharedFilters.filters.columnFilters;
+      setColumnFilters = sharedFilters.setColumnFilters;
+      globalFilter = sharedFilters.filters.globalFilter;
+      setGlobalFilter = sharedFilters.setGlobalFilter;
+    } catch {
+      // Fallback to context filters
+      columnFilters = contextColumnFilters;
+      setColumnFilters = setContextColumnFilters;
+      globalFilter = contextGlobalFilter;
+      setGlobalFilter = setContextGlobalFilter;
+    }
+  }
 
   // Estados para modal de confirmação
   const [confirmationModal, setConfirmationModal] = useState<{
@@ -126,10 +160,20 @@ export function CRUDTable<T extends MRT_RowData>(props: CRUDTableProps<T>) {
     action: null,
     row: null,
   });
-  const { data, isLoading, isError, isFetching, error } = query;
+  // Use custom data if provided, otherwise use query data
+  const queryResult = customData
+    ? { data: customData, isLoading: false, isError: false, isFetching: false, error: null }
+    : query;
+  const {
+    data = [],
+    isLoading,
+    isError,
+    isFetching,
+    error,
+  } = queryResult || { data: [], isLoading: false, isError: false, isFetching: false, error: null };
   const { tableHeaders, rowMapper } = pdfConfig;
 
-  const { permissions } = useAuth();
+  const { permissions, super_admin } = useAuth();
   const location = useLocation();
 
   // Funções para modal de confirmação
@@ -167,32 +211,37 @@ export function CRUDTable<T extends MRT_RowData>(props: CRUDTableProps<T>) {
   const filename = useMemo(() => slugify(title), [title]);
 
   // Coluna de numeração sequencial
-  const rowNumberColumn = useMemo(() => ({
-    id: 'rowNumber',
-    header: '#',
-    size: 60,
-    enableSorting: false,
-    enableColumnFilter: false,
-    enableHiding: false,
-    Cell: ({ row, table }: { row: any; table: any }) => {
-      // Calcular número sequencial considerando paginação
-      const pagination = table.options.state?.pagination;
-      const pageIndex = pagination?.pageIndex || 0;
-      const pageSize = pagination?.pageSize || 50;
-      const rowNumber = pageIndex * pageSize + row.index + 1;
-      
-      return (
-        <div style={{ 
-          textAlign: 'center', 
-          fontWeight: 'bold',
-          color: '#666',
-          fontSize: '14px'
-        }}>
-          {rowNumber}
-        </div>
-      );
-    },
-  }), []);
+  const rowNumberColumn = useMemo(
+    () => ({
+      id: 'rowNumber',
+      header: '#',
+      size: 60,
+      enableSorting: false,
+      enableColumnFilter: false,
+      enableHiding: false,
+      Cell: ({ row, table }: { row: any; table: any }) => {
+        // Calcular número sequencial considerando paginação
+        const pagination = table.options.state?.pagination;
+        const pageIndex = pagination?.pageIndex || 0;
+        const pageSize = pagination?.pageSize || 50;
+        const rowNumber = pageIndex * pageSize + row.index + 1;
+
+        return (
+          <div
+            style={{
+              textAlign: 'center',
+              fontWeight: 'bold',
+              color: '#666',
+              fontSize: '14px',
+            }}
+          >
+            {rowNumber}
+          </div>
+        );
+      },
+    }),
+    []
+  );
 
   // Combinar colunas com numeração se habilitado
   const finalColumns = useMemo(() => {
@@ -206,12 +255,18 @@ export function CRUDTable<T extends MRT_RowData>(props: CRUDTableProps<T>) {
     create,
     update,
     delete: remove, // delete is a reserved word
-  } = useMemo(
-    () =>
-      permissions?.[ROUTES_MAP.get(location.pathname)?.entity as keyof typeof permissions] ??
-      DEFAULT_PERMISSIONS,
-    [permissions, location.pathname]
-  );
+  } = useMemo(() => {
+    const entity = ROUTES_MAP.get(location.pathname)?.entity;
+    const entityPermissions = permissions?.[entity as keyof typeof permissions];
+
+    // Se for super admin, tem todas as permissões
+    if (super_admin) {
+      return { create: true, update: true, delete: true };
+    }
+
+    const result = entityPermissions ?? DEFAULT_PERMISSIONS;
+    return result;
+  }, [permissions, location.pathname, super_admin]);
 
   const handleExportRowsPDF = useCallback(
     (rows: MRT_Row<T>[]) => {
@@ -240,10 +295,9 @@ export function CRUDTable<T extends MRT_RowData>(props: CRUDTableProps<T>) {
     [filename]
   );
 
-
   // Chave única para forçar re-renderização quando paginação muda
-  const tableKey = useMemo(() => 
-    `table-${pagination?.page || 1}-${pagination?.limit || 50}`,
+  const tableKey = useMemo(
+    () => `table-${pagination?.page || 1}-${pagination?.limit || 50}`,
     [pagination?.page, pagination?.limit]
   );
 
@@ -261,12 +315,14 @@ export function CRUDTable<T extends MRT_RowData>(props: CRUDTableProps<T>) {
         showPagination: true, // Garantir que paginação está visível
         // Não definir pagination no initialState quando usando manualPagination
         // para evitar conflitos com o estado controlado
-        ...(pagination ? {} : {
-          pagination: {
-            pageSize: 50,
-            pageIndex: 0,
-          },
-        }),
+        ...(pagination
+          ? {}
+          : {
+              pagination: {
+                pageSize: 50,
+                pageIndex: 0,
+              },
+            }),
       },
       // Estado atual da paginação para sincronizar com props
       state: {
@@ -276,29 +332,29 @@ export function CRUDTable<T extends MRT_RowData>(props: CRUDTableProps<T>) {
         columnFilters: enableFilters ? columnFilters : undefined,
         globalFilter: enableFilters ? globalFilter : undefined,
         density: 'xs' as const, // Forçar densidade mínima
-        pagination: pagination ? {
-          pageIndex: pagination.page - 1,
-          pageSize: pagination.limit,
-        } : {
-          pageIndex: 0,
-          pageSize: 50,
-        },
+        pagination: pagination
+          ? {
+              pageIndex: pagination.page - 1,
+              pageSize: pagination.limit,
+            }
+          : {
+              pageIndex: 0,
+              pageSize: 50,
+            },
       },
       // Configuração para estado vazio
       renderEmptyRowsFallback: () => (
-        <div style={{ 
-          padding: '2rem', 
-          textAlign: 'center', 
-          color: '#666',
-          fontSize: '14px'
-        }}>
-          <div style={{ fontSize: '16px', marginBottom: '8px' }}>
-            {emptyStateMessage}
-          </div>
+        <div
+          style={{
+            padding: '2rem',
+            textAlign: 'center',
+            color: '#666',
+            fontSize: '14px',
+          }}
+        >
+          <div style={{ fontSize: '16px', marginBottom: '8px' }}>{emptyStateMessage}</div>
           {emptyStateDescription && (
-            <div style={{ fontSize: '12px', color: '#999' }}>
-              {emptyStateDescription}
-            </div>
+            <div style={{ fontSize: '12px', color: '#999' }}>{emptyStateDescription}</div>
           )}
         </div>
       ),
@@ -318,17 +374,30 @@ export function CRUDTable<T extends MRT_RowData>(props: CRUDTableProps<T>) {
       },
       enableBottomToolbar: true, // Habilitar toolbar inferior para controles de paginação
       enableRowVirtualization: !pagination,
-      mantineTableContainerProps: { style: { maxHeight: 'calc(100vh - 128px)' } },
+      mantineTableContainerProps: {
+        style: {
+          maxHeight: 'calc(100vh - 200px)', // Aumentar espaço para paginação
+          minHeight: '400px', // Altura mínima para garantir visibilidade
+          overflow: 'auto', // Permitir scroll quando necessário
+        },
+      },
       enableRowActions: true,
       // Configurações de filtros
       enableColumnFilters: enableFilters,
+      initialShowColumnFilters: enableFilters,
       enableGlobalFilter: enableFilters,
       enableColumnFilterModes: enableFilters,
       enableFilterMatchHighlighting: enableFilters,
       // Sempre usar manual filtering quando filtros estão habilitados
       // para evitar dupla filtragem (backend + frontend)
       manualFiltering: enableFilters,
-      onColumnFiltersChange: enableFilters ? setColumnFilters : undefined,
+      onColumnFiltersChange: enableFilters
+        ? (updaterOrValue: any) => {
+            const newFilters =
+              typeof updaterOrValue === 'function' ? updaterOrValue(columnFilters) : updaterOrValue;
+            setColumnFilters?.(newFilters);
+          }
+        : undefined,
       onGlobalFilterChange: enableFilters ? setGlobalFilter : undefined,
       // Desabilitar filtros locais quando manual filtering está ativo
       enableColumnFiltering: enableFilters,
@@ -346,19 +415,25 @@ export function CRUDTable<T extends MRT_RowData>(props: CRUDTableProps<T>) {
       enablePaginationDisplay: true,
       // Mostrar contagem de linhas
       enableRowCount: true,
+      // Garantir que a paginação seja sempre visível
+      positionPagination: 'bottom' as const,
       // Exibir informações de linha na parte inferior
       renderBottomToolbarCustomActions: pagination
         ? () => (
-            <div style={{ 
-              display: 'flex', 
-              alignItems: 'center', 
-              gap: '8px',
-              fontSize: '14px',
-              color: '#666'
-            }}>
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                fontSize: '14px',
+                color: '#666',
+              }}
+            >
               <span>Total: {pagination.total} registros</span>
               <span>•</span>
-              <span>Página {pagination.page} de {pagination.totalPages}</span>
+              <span>
+                Página {pagination.page} de {pagination.totalPages}
+              </span>
             </div>
           )
         : undefined,
@@ -369,11 +444,11 @@ export function CRUDTable<T extends MRT_RowData>(props: CRUDTableProps<T>) {
             children: error?.message ?? 'Error loading data',
           }
         : pagination
-        ? {
-            color: 'blue' as const,
-            children: `Total de registros: ${pagination.total} | Página ${pagination.page} de ${pagination.totalPages}`,
-          }
-        : undefined,
+          ? {
+              color: 'blue' as const,
+              children: `Total de registros: ${pagination.total} | Página ${pagination.page} de ${pagination.totalPages}`,
+            }
+          : undefined,
       // Opções de tamanho de página
       enablePageSizeOptions: true,
       pageSizeOptions: [10, 25, 50, 100],
@@ -388,12 +463,12 @@ export function CRUDTable<T extends MRT_RowData>(props: CRUDTableProps<T>) {
                   pageIndex: pagination.page - 1,
                   pageSize: pagination.limit,
                 });
-                
+
                 // Notificar mudança de página
                 if (onPageChange && newPagination.pageIndex !== pagination.page - 1) {
                   onPageChange(newPagination.pageIndex + 1);
                 }
-                
+
                 // Notificar mudança de tamanho da página
                 if (onPageSizeChange && newPagination.pageSize !== pagination.limit) {
                   onPageSizeChange(newPagination.pageSize);
@@ -403,7 +478,7 @@ export function CRUDTable<T extends MRT_RowData>(props: CRUDTableProps<T>) {
                 if (onPageChange && updater.pageIndex !== pagination.page - 1) {
                   onPageChange(updater.pageIndex + 1);
                 }
-                
+
                 // Notificar mudança de tamanho da página
                 if (onPageSizeChange && updater.pageSize !== pagination.limit) {
                   onPageSizeChange(updater.pageSize);
@@ -445,8 +520,12 @@ export function CRUDTable<T extends MRT_RowData>(props: CRUDTableProps<T>) {
       </Title>
     ),
     renderRowActionMenuItems: ({ row }) => {
-      const actualData = Array.isArray(data) ? data : data?.data || [];
-      const rowData = actualData[row.index];
+      const actualData = query?.data || data || [];
+      // Calcular o índice correto considerando a paginação
+      const currentPage = table.getState().pagination.pageIndex;
+      const pageSize = table.getState().pagination.pageSize;
+      const correctIndex = currentPage * pageSize + row.index;
+      const rowData = actualData[correctIndex];
       if (!rowData) {
         return null;
       }
@@ -456,9 +535,11 @@ export function CRUDTable<T extends MRT_RowData>(props: CRUDTableProps<T>) {
           {(update || enableEdit) && (
             <Menu.Item
               onClick={() => {
-                open();
-                setSelected(rowData as any);
-                setAction('update');
+                if (!isReadOnly && open && setSelected && setAction) {
+                  open();
+                  setSelected(rowData as any);
+                  setAction('update');
+                }
               }}
               leftSection={<IconEdit style={{ width: rem(16), height: rem(16) }} />}
             >
@@ -487,9 +568,11 @@ export function CRUDTable<T extends MRT_RowData>(props: CRUDTableProps<T>) {
           {remove && (
             <Menu.Item
               onClick={() => {
-                open();
-                setSelected(rowData as any);
-                setAction('delete');
+                if (!isReadOnly && open && setSelected && setAction) {
+                  open();
+                  setSelected(rowData as any);
+                  setAction('delete');
+                }
               }}
               color="red"
               leftSection={<IconTrash style={{ width: rem(16), height: rem(16) }} />}
@@ -517,7 +600,7 @@ export function CRUDTable<T extends MRT_RowData>(props: CRUDTableProps<T>) {
         <ActionIcon onClick={handleExportDataCSV} color="gray" variant="subtle">
           <IconCsv />
         </ActionIcon>
-        {create && (
+        {create && !isReadOnly && open && setSelected && setAction && (
           <ActionIcon
             onClick={() => {
               setSelected(undefined);

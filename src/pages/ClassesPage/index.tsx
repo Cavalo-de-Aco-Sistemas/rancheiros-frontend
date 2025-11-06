@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { CRUDProvider } from '@/contexts/CRUDContext';
+import { ClassesProvider } from '@/hooks/useClasses';
 import { ClassesForm } from './ClassesForm';
 import { ClassesTable } from './ClassesTable';
 
@@ -13,7 +13,7 @@ export function ClassesPage() {
   };
 
   return (
-    <CRUDProvider endpoint="classes">
+    <ClassesProvider>
       <ClassesTable
         onPageChange={setCurrentPage}
         onPageSizeChange={handlePageSizeChange}
@@ -21,6 +21,6 @@ export function ClassesPage() {
         pageSize={pageSize}
       />
       <ClassesForm />
-    </CRUDProvider>
+    </ClassesProvider>
   );
 }

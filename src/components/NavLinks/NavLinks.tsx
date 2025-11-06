@@ -11,13 +11,21 @@ export default function NavLinks({ toggleMobile }: { toggleMobile: () => void })
   const { logout, permissions } = useAuth();
   const [enrollmentsOpened, setEnrollmentsOpened] = useState(false);
 
-  const items = useMemo(
-    () =>
-      [...ROUTES_MAP.values()].filter(
-        (item) => permissions?.[item.entity as keyof typeof permissions]?.read
-      ),
-    [permissions]
-  );
+  const items = useMemo(() => {
+    return [...ROUTES_MAP.values()].filter((item) => {
+      // Check basic read permission for the entity
+      const hasReadPermission = permissions?.[item.entity as keyof typeof permissions]?.read;
+      
+      if (!hasReadPermission) return false;
+      
+      // Gestão de Chamadas and Certificações require flow.update permission
+      if (item.link === '/inscricoes/gestao-chamadas' || item.link === '/inscricoes/certificacoes') {
+        return permissions?.flow?.update || false;
+      }
+      
+      return true;
+    });
+  }, [permissions]);
 
   // Separar itens principais dos subitens de inscrições
   const mainItems = useMemo(

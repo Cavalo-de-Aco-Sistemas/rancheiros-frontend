@@ -1,14 +1,12 @@
-import { useMutation } from '@tanstack/react-query';
-import { AxiosError } from 'axios';
+import { useMutation } from '@apollo/client';
 import { notifications } from '@mantine/notifications';
-import { useAuth } from '@/contexts/AuthContext';
-import { useOptimizedQueries } from '@/hooks/useOptimizedQueries';
-import { Enrollment, EnrollmentStatus } from '@/model/enrollment';
-import { BACKEND_ADDRESS } from '@/utils/constants';
+import { GET_ENROLLMENTS, UPDATE_ENROLLMENT_STATUS } from '@/graphql/enrollments';
+import { EnrollmentStatus } from '@/model/enrollment';
 
 interface UpdateEnrollmentFlowParams {
   enrollmentId: string;
   status: EnrollmentStatus;
+  enrollmentName?: string;
 }
 
 const STATUS_LABELS = {
@@ -22,61 +20,36 @@ const STATUS_LABELS = {
 };
 
 export function useEnrollmentFlowMutation() {
-  const { axiosInstance } = useAuth();
-  const { invalidateQuery, updateQueryData, getQueryData, cancelQueries } = useOptimizedQueries();
-
-  return useMutation({
-    mutationFn: async ({ enrollmentId, status }: UpdateEnrollmentFlowParams) => {
-      const response = await axiosInstance.patch(
-        `${BACKEND_ADDRESS}/enrollments/${enrollmentId}/status`,
-        {
-          status,
-        }
-      );
-      return { enrollmentId, status, updatedEnrollment: response.data };
-    },
-    onMutate: async ({ enrollmentId, status }) => {
-      // Cancel outgoing refetches to avoid overwriting optimistic update
-      await cancelQueries('enrollments');
-
-      // Snapshot previous value
-      const previousEnrollments = getQueryData<Enrollment>('enrollments');
-
-      // Optimistically update the enrollment status
-      updateQueryData<Enrollment>('enrollments', (old) => {
-        if (!old) {
-          return [];
-        }
-        return old.map((enrollment) =>
-          enrollment.id === enrollmentId ? { ...enrollment, status } : enrollment
-        );
-      });
-
-      return { previousEnrollments };
-    },
-    onSuccess: (_data, { status }) => {
-      notifications.show({
-        title: 'Sucesso',
-        message: `Status alterado para ${STATUS_LABELS[status]}`,
-        color: 'green',
-      });
-
-      // Only invalidate enrollments query - classes don't need to be refetched for status changes
-      invalidateQuery('enrollments');
-    },
-    onError: (error: AxiosError, _variables, context) => {
-      // Revert optimistic update on error
-      if (context?.previousEnrollments) {
-        updateQueryData<Enrollment>('enrollments', () => context.previousEnrollments!);
-      }
-
-      const errorMessage =
-        (error.response?.data as any)?.message || 'Erro ao atualizar status da inscrição.';
-      notifications.show({
-        title: 'Erro',
-        message: errorMessage,
-        color: 'red',
-      });
-    },
+  const [updateStatus, { loading }] = useMutation(UPDATE_ENROLLMENT_STATUS, {
+    refetchQueries: [{ query: GET_ENROLLMENTS }],
   });
+
+  const mutate = ({ enrollmentId, status, enrollmentName }: UpdateEnrollmentFlowParams) => {
+    const successNameText = enrollmentName ? ` de ${enrollmentName}` : '';
+    const errorNameText = enrollmentName ? ` da inscrição ${enrollmentName}` : ' da inscrição';
+    return updateStatus({
+      variables: {
+        id: enrollmentId,
+        input: { status },
+      },
+    })
+      .then((result) => {
+        const updatedStatus: EnrollmentStatus = result.data.updateEnrollmentStatus.status as EnrollmentStatus;
+        notifications.show({
+          title: 'Sucesso',
+          message: `Status ${successNameText} alterado para ${STATUS_LABELS[updatedStatus]}`,
+          color: 'green',
+        });
+      })
+      .catch((error) => {
+        notifications.show({
+          title: 'Erro',
+          message: `Erro ao atualizar status${errorNameText}: ${error.message}`,
+          color: 'red',
+        });
+        throw error;
+      });
+  };
+
+  return { mutate, isLoading: loading };
 }

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { CRUDProvider } from '@/contexts/CRUDContext';
+import { LocationsProvider } from '@/hooks/useLocations';
 import { LocationsForm } from './LocationsForm';
 import { LocationsTable } from './LocationsTable';
 
@@ -13,7 +13,7 @@ export function LocationsPage() {
   };
 
   return (
-    <CRUDProvider endpoint="locations">
+    <LocationsProvider>
       <LocationsTable
         onPageChange={setCurrentPage}
         onPageSizeChange={handlePageSizeChange}
@@ -21,6 +21,6 @@ export function LocationsPage() {
         pageSize={pageSize}
       />
       <LocationsForm />
-    </CRUDProvider>
+    </LocationsProvider>
   );
 }

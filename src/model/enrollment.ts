@@ -5,19 +5,19 @@ export type { Class } from './class';
 
 export enum EnrollmentStatus {
   // Em lista de espera (disponível para chamar para uma turma) [waiting]
-  WAITING = 'waiting',
+  WAITING = 'WAITING',
   // Convidado para uma turma (entrou em contato com o aluno para uma turma específica) [called]
-  CALLED = 'called',
+  CALLED = 'CALLED',
   // Desistiu da vaga na turma (não poderá participar do curso de forma justificada, informado anteriormente a data do curso) [dropped]
-  DROPPED = 'dropped',
+  DROPPED = 'DROPPED',
   // Confirmou convite para a turma [confirmed]
-  CONFIRMED = 'confirmed',
+  CONFIRMED = 'CONFIRMED',
   // Participou do curso (aluno recebeu certificado no curso) [certified]
-  CERTIFIED = 'certified',
+  CERTIFIED = 'CERTIFIED',
   // Faltou no curso (este aluno não participou e deve se inscrever novamente se quiser realizar o curso em outra turma) [missed]
-  MISSED = 'missed',
+  MISSED = 'MISSED',
   // Não deu resposta ao convite (este aluno deverá se inscrever novamente se quiser realizar o curso em outra turma) [ignored]
-  IGNORED = 'ignored',
+  IGNORED = 'IGNORED',
 }
 
 export interface Enrollment {

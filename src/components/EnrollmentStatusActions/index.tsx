@@ -1,4 +1,5 @@
 import { useCallback, useMemo } from 'react';
+import { useQuery } from '@apollo/client';
 import {
   IconArrowBack,
   IconCertificate,
@@ -10,11 +11,11 @@ import {
 } from '@tabler/icons-react';
 import { ActionIcon, Button, Group, Modal, Select, Text, Tooltip } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
+import { GET_CLASSES } from '@/graphql/classes';
 import { Class } from '@/model/class';
 import { Enrollment, EnrollmentStatus } from '@/model/enrollment';
 import { useEnrollmentAssignClassMutation } from '@/mutations/useEnrollmentAssignClassMutation';
 import { useEnrollmentFlowMutation } from '@/mutations/useEnrollmentFlowMutation';
-import useCRUDQuery from '@/queries/useCRUDQuery';
 import { extractData } from '@/utils/dataUtils';
 import { dateBR } from '@/utils/dates';
 
@@ -70,7 +71,8 @@ export function EnrollmentStatusActions({
 }: EnrollmentStatusActionsProps) {
   const updateFlowMutation = useEnrollmentFlowMutation();
   const assignClassMutation = useEnrollmentAssignClassMutation();
-  const classesQuery = useCRUDQuery<Class>('classes');
+  const { data: classesData } = useQuery(GET_CLASSES);
+  const classesQuery = { data: classesData?.classes };
   const [, { open }] = useDisclosure(false);
 
   const classesOptions = useMemo(() => {
@@ -87,9 +89,10 @@ export function EnrollmentStatusActions({
       assignClassMutation.mutate({
         enrollmentId: enrollment.id,
         classId,
+        enrollmentName: enrollment.name,
       });
     },
-    [assignClassMutation, enrollment.id]
+    [assignClassMutation, enrollment.id, enrollment.name]
   );
 
   const canRevertStatus = useCallback(() => {
@@ -156,9 +159,10 @@ export function EnrollmentStatusActions({
       updateFlowMutation.mutate({
         enrollmentId: enrollment.id,
         status: newStatus,
+        enrollmentName: enrollment.name,
       });
     },
-    [updateFlowMutation, enrollment.id]
+    [updateFlowMutation, enrollment.id, enrollment.name]
   );
 
   // Se não tem turma atribuída, mostra seleção de turma
@@ -173,7 +177,7 @@ export function EnrollmentStatusActions({
             handleAssignClass(value);
           }
         }}
-        disabled={assignClassMutation.isPending}
+        disabled={assignClassMutation.isLoading}
         size="xs"
         w={200}
       />
@@ -190,7 +194,7 @@ export function EnrollmentStatusActions({
             color={color}
             size="sm"
             onClick={() => handleStatusUpdate(status)}
-            loading={updateFlowMutation.isPending}
+            loading={updateFlowMutation.isLoading}
           >
             <Icon size={16} />
           </ActionIcon>
@@ -205,7 +209,7 @@ export function EnrollmentStatusActions({
             color="orange"
             size="sm"
             onClick={handleRevertStatus}
-            loading={updateFlowMutation.isPending}
+            loading={updateFlowMutation.isLoading}
           >
             <IconArrowBack size={16} />
           </ActionIcon>
@@ -228,9 +232,10 @@ export default function EnrollmentStatusActionsWithModal({
     updateFlowMutation.mutate({
       enrollmentId: enrollment.id,
       status: EnrollmentStatus.CONFIRMED,
+      enrollmentName: enrollment.name,
     });
     close();
-  }, [updateFlowMutation, enrollment.id, close]);
+  }, [updateFlowMutation, enrollment.id, enrollment.name, close]);
 
   const getStatusLabel = (status: EnrollmentStatus) => {
     switch (status) {
@@ -264,7 +269,7 @@ export default function EnrollmentStatusActionsWithModal({
           <Button
             color="orange"
             onClick={confirmRevertStatus}
-            loading={updateFlowMutation.isPending}
+            loading={updateFlowMutation.isLoading}
           >
             Confirmar Reversão
           </Button>

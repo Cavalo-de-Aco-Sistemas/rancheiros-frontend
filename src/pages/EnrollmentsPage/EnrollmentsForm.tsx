@@ -1,13 +1,20 @@
 import { useMemo } from 'react';
+import { useQuery } from '@apollo/client';
 import { Select, TextInput } from '@mantine/core';
 import { useForm } from '@mantine/form';
-import { CRUDForm } from '@/components/CRUDForm';
-import { useCRUD } from '@/contexts/CRUDContext';
+import { GraphQLCRUDForm } from '@/components/GraphQLCRUDForm';
+import { GET_CLASSES } from '@/graphql/classes';
+import {
+  CREATE_ENROLLMENT,
+  DELETE_ENROLLMENT,
+  GET_ENROLLMENTS,
+  UPDATE_ENROLLMENT,
+} from '@/graphql/enrollments';
+import { GET_LOCATIONS } from '@/graphql/locations';
+import { useEnrollmentsData } from '@/hooks/useSharedEnrollments';
 import { Class } from '@/model/class';
 import { Enrollment, EnrollmentDto, EnrollmentStatus } from '@/model/enrollment';
 import { Location } from '@/model/location';
-import useCRUDQuery from '@/queries/useCRUDQuery';
-import { extractData } from '@/utils/dataUtils';
 
 // Tipo para criação de inscrição (sem status e class)
 type CreateEnrollmentDto = Omit<EnrollmentDto, 'status' | 'class'>;
@@ -47,29 +54,33 @@ const transformData = (
 };
 
 export function EnrollmentsForm() {
-  const classesQuery = useCRUDQuery<Class>('classes');
-  const locationsQuery = useCRUDQuery<Location>('locations');
+  const { data: classesData } = useQuery(GET_CLASSES);
+  const { data: locationsData } = useQuery(GET_LOCATIONS);
+
+  const classes = classesData?.classes || [];
+  const locations = locationsData?.locations || [];
 
   const classesOptions = useMemo(
     () =>
-      (extractData(classesQuery.data) as unknown as Class[]).map((classs) => ({
+      classes.map((classs: Class) => ({
         label: classs.location?.name ?? '',
         value: classs.id.toString(),
       })),
-    [classesQuery.data]
+    [classes]
   );
 
   const locationsOptions = useMemo(
     () =>
-      (extractData(locationsQuery.data) as unknown as Location[]).map((location) => ({
+      locations.map((location: Location) => ({
         label: location.name,
         value: location.id.toString(),
       })),
-    [locationsQuery.data]
+    [locations]
   );
 
-  const { query, action } = useCRUD();
-  const { isPending } = query;
+  const { data, loading, error, refetch } = useEnrollmentsData();
+  const query = { data, isLoading: loading, isError: !!error, error, refetch };
+  const action = 'create'; // Default action for form
 
   // Desabilitar campos durante criação
   const isCreating = action === 'create';
@@ -79,12 +90,16 @@ export function EnrollmentsForm() {
   });
 
   return (
-    <CRUDForm<Enrollment, EnrollmentDto, CreateEnrollmentDto>
+    <GraphQLCRUDForm<Enrollment, EnrollmentDto>
       baseValues={INITIAL_VALUES}
       parseSelected={parseSelected}
       form={form}
-      endpoint="enrollments"
+      createMutation={CREATE_ENROLLMENT}
+      updateMutation={UPDATE_ENROLLMENT}
+      deleteMutation={DELETE_ENROLLMENT}
+      refetchQueries={[{ query: GET_ENROLLMENTS }]}
       modalProps={{ title: 'Cadastro de Inscrições', size: 'xl' }}
+      entityName="Inscrição"
       transformData={transformData}
     >
       <TextInput
@@ -92,42 +107,42 @@ export function EnrollmentsForm() {
         label="Nome"
         key={form.key('name')}
         {...form.getInputProps('name')}
-        disabled={isPending || action === 'delete'}
+        disabled={query.isLoading}
       />
       <TextInput
         required
         label="Telefone"
         key={form.key('phone')}
         {...form.getInputProps('phone')}
-        disabled={isPending || action === 'delete'}
+        disabled={query.isLoading}
       />
       <TextInput
         required
         label="CNH"
         key={form.key('cnh')}
         {...form.getInputProps('cnh')}
-        disabled={isPending || action === 'delete'}
+        disabled={query.isLoading}
       />
       <TextInput
         required
         label="Email"
         key={form.key('email')}
         {...form.getInputProps('email')}
-        disabled={isPending || action === 'delete'}
+        disabled={query.isLoading}
       />
       <TextInput
         required
         label="UF da CNH"
         key={form.key('uf_cnh')}
         {...form.getInputProps('uf_cnh')}
-        disabled={isPending || action === 'delete'}
+        disabled={query.isLoading}
       />
       <Select
         required
         label="Localidade de Preferência"
         key={form.key('preferred_city')}
         {...form.getInputProps('preferred_city')}
-        disabled={isPending || action === 'delete'}
+        disabled={query.isLoading}
         data={locationsOptions}
         searchable
         clearable
@@ -138,7 +153,7 @@ export function EnrollmentsForm() {
           label="Status"
           key={form.key('status')}
           {...form.getInputProps('status')}
-          disabled={isPending || action === 'delete'}
+          disabled={query.isLoading}
           data={Object.values(EnrollmentStatus).map((status) => ({ label: status, value: status }))}
         />
       )}
@@ -147,12 +162,12 @@ export function EnrollmentsForm() {
           label="Turma"
           key={form.key('class')}
           {...form.getInputProps('class')}
-          disabled={isPending || action === 'delete'}
+          disabled={query.isLoading}
           data={classesOptions}
           searchable
           clearable
         />
       )}
-    </CRUDForm>
+    </GraphQLCRUDForm>
   );
 }

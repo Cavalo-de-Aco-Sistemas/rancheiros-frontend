@@ -12,7 +12,7 @@ import {
 import { MRT_ColumnDef, MRT_Row } from 'mantine-react-table';
 import { Badge, Group, Indicator, Tooltip } from '@mantine/core';
 import { CRUDTable } from '@/components/CRUDTable';
-import { useCRUD } from '@/contexts/CRUDContext';
+import { useGraphQLCRUD } from '@/contexts/GraphQLCRUDContext';
 import { Ranch } from '@/model/ranch';
 import { Permissions, User } from '@/model/user';
 import { extractData } from '@/utils/dataUtils';
@@ -75,18 +75,18 @@ export function UsersTable({
   currentPage = 1,
   pageSize = 10,
 }: UsersTableProps = {}) {
-  const { query } = useCRUD();
+  const { query } = useGraphQLCRUD();
 
   const columns = useMemo<MRT_ColumnDef<User>[]>(
     () => [
-      { 
-        accessorKey: 'username', 
+      {
+        accessorKey: 'username',
         header: 'Usuário',
         filterVariant: 'text',
         filterFn: 'contains',
       },
-      { 
-        accessorKey: 'name', 
+      {
+        accessorKey: 'name',
         header: 'Nome',
         filterVariant: 'text',
         filterFn: 'contains',
@@ -111,43 +111,43 @@ export function UsersTable({
       {
         accessorKey: 'permissions.members',
         header: 'Membros',
-        Cell: ({ row }) => <PermissionRow permission={row.original.permissions.members} />,
+        Cell: ({ row }) => <PermissionRow permission={row.original.permissions?.members} />,
       },
       {
         accessorKey: 'permissions.classes',
         header: 'Turmas',
-        Cell: ({ row }) => <PermissionRow permission={row.original.permissions.classes} />,
+        Cell: ({ row }) => <PermissionRow permission={row.original.permissions?.classes} />,
       },
       {
         accessorKey: 'permissions.users',
         header: 'Usuários',
-        Cell: ({ row }) => <PermissionRow permission={row.original.permissions.users} />,
+        Cell: ({ row }) => <PermissionRow permission={row.original.permissions?.users} />,
       },
       {
         accessorKey: 'permissions.enrollments',
         header: 'Inscrições',
-        Cell: ({ row }) => <PermissionRow permission={row.original.permissions.enrollments} />,
+        Cell: ({ row }) => <PermissionRow permission={row.original.permissions?.enrollments} />,
       },
       {
         accessorKey: 'permissions.locations',
         header: 'Locais MPV',
-        Cell: ({ row }) => <PermissionRow permission={row.original.permissions.locations} />,
+        Cell: ({ row }) => <PermissionRow permission={row.original.permissions?.locations} />,
       },
       {
         accessorKey: 'permissions.ranches',
         header: 'Ranchos',
-        Cell: ({ row }) => <PermissionRow permission={row.original.permissions.ranches} />,
+        Cell: ({ row }) => <PermissionRow permission={row.original.permissions?.ranches} />,
       },
       {
         accessorKey: 'permissions.flow',
         header: 'Fluxo',
-        Cell: ({ row }) => <PermissionRow permission={row.original.permissions.flow} />,
+        Cell: ({ row }) => <PermissionRow permission={row.original.permissions?.flow} />,
       },
       {
         accessorKey: 'ranches',
         header: 'Filtros',
         Cell: ({ row }) =>
-          row.original.ranches.length > 0 && (
+          row.original.ranches && row.original.ranches.length > 0 && (
             <Tooltip label={row.original.ranches.map((ranch) => ranch.name).join(', ')}>
               <Indicator
                 inline
@@ -172,13 +172,13 @@ export function UsersTable({
         Usuário: username,
         Nome: name,
         'Super Admin': super_admin ? 'Sim' : 'Não',
-        Membros: permissionsToString(permissions.members),
-        Turmas: permissionsToString(permissions.classes),
-        Inscrições: permissionsToString(permissions.enrollments),
-        'Locais MPV': permissionsToString(permissions.locations),
-        Ranchos: permissionsToString(permissions.ranches),
-        Fluxo: permissionsToString(permissions.flow),
-        Filtros: ranches.map((ranch: Ranch) => ranch.name).join(', '),
+        Membros: permissionsToString(permissions?.members),
+        Turmas: permissionsToString(permissions?.classes),
+        Inscrições: permissionsToString(permissions?.enrollments),
+        'Locais MPV': permissionsToString(permissions?.locations),
+        Ranchos: permissionsToString(permissions?.ranches),
+        Fluxo: permissionsToString(permissions?.flow),
+        Filtros: ranches?.map((ranch: Ranch) => ranch.name).join(', ') || '',
       })),
     [query.data]
   );
@@ -189,13 +189,13 @@ export function UsersTable({
       username,
       name,
       super_admin ? 'Sim' : 'Não',
-      permissionsToString(permissions.members),
-      permissionsToString(permissions.classes),
-      permissionsToString(permissions.enrollments),
-      permissionsToString(permissions.locations),
-      permissionsToString(permissions.ranches),
-      permissionsToString(permissions.flow),
-      ranches.map((ranch: Ranch) => ranch.name).join(', '),
+      permissionsToString(permissions?.members),
+      permissionsToString(permissions?.classes),
+      permissionsToString(permissions?.enrollments),
+      permissionsToString(permissions?.locations),
+      permissionsToString(permissions?.ranches),
+      permissionsToString(permissions?.flow),
+      ranches?.map((ranch: Ranch) => ranch.name).join(', ') || '',
     ];
   }, []);
 
@@ -212,24 +212,27 @@ export function UsersTable({
     return allData.slice(startIndex, endIndex);
   }, [allData, currentPage, pageSize]);
 
-  const pagination = useMemo(() => ({
-    page: currentPage,
-    limit: pageSize,
-    total: allData.length,
-    totalPages: Math.ceil(allData.length / pageSize),
-  }), [allData.length, currentPage, pageSize]);
+  const pagination = useMemo(
+    () => ({
+      page: currentPage,
+      limit: pageSize,
+      total: allData.length,
+      totalPages: Math.ceil(allData.length / pageSize),
+    }),
+    [allData.length, currentPage, pageSize]
+  );
 
   return (
-    <CRUDTable 
-      columns={columns} 
-      title="Usuários" 
-      csvData={csvData} 
-      pdfConfig={pdfConfig} 
+    <CRUDTable
+      columns={columns}
+      title="Usuários"
+      csvData={csvData}
+      pdfConfig={pdfConfig}
       data={paginatedData}
       pagination={pagination}
       onPageChange={onPageChange}
       onPageSizeChange={onPageSizeChange}
-      enableFilters 
+      enableFilters
       emptyStateMessage="Nenhum usuário encontrado"
       emptyStateDescription="Os usuários aparecerão aqui conforme forem sendo criados"
     />

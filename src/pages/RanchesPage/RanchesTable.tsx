@@ -2,7 +2,7 @@ import { useCallback, useMemo } from 'react';
 import { MRT_ColumnDef, MRT_Row } from 'mantine-react-table';
 import { Badge } from '@mantine/core';
 import { CRUDTable } from '@/components/CRUDTable';
-import { useCRUD } from '@/contexts/CRUDContext';
+import { useGraphQLCRUD } from '@/contexts/GraphQLCRUDContext';
 import { Ranch } from '@/model/ranch';
 import { extractData } from '@/utils/dataUtils';
 
@@ -21,7 +21,7 @@ export function RanchesTable({
   currentPage = 1,
   pageSize = 10,
 }: RanchesTableProps = {}) {
-  const { query } = useCRUD();
+  const { query } = useGraphQLCRUD();
 
   const columns = useMemo<MRT_ColumnDef<Ranch>[]>(
     () => [
@@ -65,19 +65,22 @@ export function RanchesTable({
     return allData.slice(startIndex, endIndex);
   }, [allData, currentPage, pageSize]);
 
-  const pagination = useMemo(() => ({
-    page: currentPage,
-    limit: pageSize,
-    total: allData.length,
-    totalPages: Math.ceil(allData.length / pageSize),
-  }), [allData.length, currentPage, pageSize]);
+  const pagination = useMemo(
+    () => ({
+      page: currentPage,
+      limit: pageSize,
+      total: allData.length,
+      totalPages: Math.ceil(allData.length / pageSize),
+    }),
+    [allData.length, currentPage, pageSize]
+  );
 
   return (
-    <CRUDTable 
-      columns={columns} 
-      title="Ranchos" 
-      csvData={csvData} 
-      pdfConfig={pdfConfig} 
+    <CRUDTable
+      columns={columns}
+      title="Ranchos"
+      csvData={csvData}
+      pdfConfig={pdfConfig}
       data={paginatedData}
       pagination={pagination}
       onPageChange={onPageChange}

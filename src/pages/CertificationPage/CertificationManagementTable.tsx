@@ -6,10 +6,11 @@ import { CRUDTable } from '@/components/CRUDTable';
 import { EnrollmentStatusCertificationActions } from '@/components/EnrollmentStatusActions/EnrollmentStatusCertificationActions';
 import { StatusIcon } from '@/components/StatusIcon';
 import { useAuth } from '@/contexts/AuthContext';
-import { useCRUD } from '@/contexts/CRUDContext';
+import { useCertificationData } from '@/hooks/useSharedEnrollments';
 import { Enrollment, EnrollmentStatus } from '@/model/enrollment';
 import { useEnrollmentFlowMutation } from '@/mutations/useEnrollmentFlowMutation';
 import { dateBR } from '@/utils/dates';
+import { normalizeEnrollments } from '@/utils/statusNormalizer';
 
 const tableHeaders = [
   'Fluxo',
@@ -37,10 +38,11 @@ interface CertificationManagementTableProps {
 export function CertificationManagementTable({
   onPageChange,
   onPageSizeChange,
-  currentPage: _currentPage,
-  pageSize: _pageSize,
+  currentPage: _currentPage = 1,
+  pageSize: _pageSize = 50,
 }: CertificationManagementTableProps) {
-  const { query } = useCRUD();
+  const { data: certificationData, loading, error, refetch } = useCertificationData();
+  const query = { data: certificationData, isLoading: loading, isError: !!error, error, refetch };
   const { name } = useAuth();
   const updateFlowMutation = useEnrollmentFlowMutation();
 
@@ -49,6 +51,7 @@ export function CertificationManagementTable({
       updateFlowMutation.mutate({
         enrollmentId: enrollment.id,
         status: EnrollmentStatus.CERTIFIED,
+        enrollmentName: enrollment.name,
       });
     },
     [updateFlowMutation]
@@ -59,6 +62,7 @@ export function CertificationManagementTable({
       updateFlowMutation.mutate({
         enrollmentId: enrollment.id,
         status: EnrollmentStatus.MISSED,
+        enrollmentName: enrollment.name,
       });
     },
     [updateFlowMutation]
@@ -81,7 +85,7 @@ export function CertificationManagementTable({
         icon: IconCheck,
         onClick: handleCertify,
         isVisible: canCertify,
-        isLoading: updateFlowMutation.isPending,
+        isLoading: updateFlowMutation.isLoading,
         requiresConfirmation: true,
         confirmationTitle: 'Confirmar Certificação',
         confirmationMessage: (enrollment: Enrollment) =>
@@ -94,7 +98,7 @@ export function CertificationManagementTable({
         icon: IconX,
         onClick: handleMarkAsMissed,
         isVisible: canMarkAsMissed,
-        isLoading: updateFlowMutation.isPending,
+        isLoading: updateFlowMutation.isLoading,
         requiresConfirmation: true,
         confirmationTitle: 'Confirmar Falta',
         confirmationMessage: (enrollment: Enrollment) =>
@@ -103,7 +107,7 @@ export function CertificationManagementTable({
         confirmationButtonColor: 'red',
       },
     ],
-    [handleCertify, handleMarkAsMissed, canCertify, canMarkAsMissed, updateFlowMutation.isPending]
+    [handleCertify, handleMarkAsMissed, canCertify, canMarkAsMissed, updateFlowMutation.isLoading]
   );
 
   const columns = useMemo<MRT_ColumnDef<Enrollment>[]>(
@@ -143,16 +147,27 @@ export function CertificationManagementTable({
       {
         accessorKey: 'status',
         header: 'Status',
+        filterVariant: 'select',
+        filterSelectOptions: [
+          { label: 'Aguardando', value: 'waiting' },
+          { label: 'Chamado', value: 'called' },
+          { label: 'Confirmado', value: 'confirmed' },
+          { label: 'Ignorado', value: 'ignored' },
+          { label: 'Desistiu', value: 'dropped' },
+          { label: 'Faltou', value: 'missed' },
+          { label: 'Certificado', value: 'certified' },
+        ],
+        filterFn: 'equals',
         Cell: ({ row }) => <StatusIcon status={row.original.status} />,
       },
-      { 
-        accessorKey: 'enrollment_date', 
+      {
+        accessorKey: 'enrollment_date',
         header: 'Data de Inscrição',
         filterVariant: 'date',
         Cell: ({ row }) => {
           const date = row.original.enrollment_date;
           if (!date) return '';
-          
+
           try {
             // Converter para Date e formatar para DD/MM/YYYY
             const dateObj = new Date(date);
@@ -172,8 +187,8 @@ export function CertificationManagementTable({
         filterFn: 'contains',
         Cell: ({ row }) => row.original.preferred_city?.name ?? '',
       },
-      { 
-        accessorKey: 'name', 
+      {
+        accessorKey: 'name',
         header: 'Nome',
         filterVariant: 'text',
         filterFn: 'contains',
@@ -186,13 +201,17 @@ export function CertificationManagementTable({
         Cell: ({ row }) => {
           const phone = row.original.phone;
           const enrollment = row.original;
-          if (!phone) {return '';}
+          if (!phone) {
+            return '';
+          }
 
           // Regex para extrair apenas números do telefone
           const regex = /\d/g;
           const phoneNumbers = phone.match(regex)?.join('');
 
-          if (!phoneNumbers) {return phone;}
+          if (!phoneNumbers) {
+            return phone;
+          }
 
           // Formatar telefone para exibição (XX) XXXXX-XXXX
           const formattedPhone = phone.replace(/^(\d{2})(\d{5})(\d{4}).*/, '($1) $2-$3');
@@ -235,12 +254,9 @@ Deus abençoe grandemente.`;
           };
 
           // URL do WhatsApp com mensagem
-          const whatsappUrl =
-            `${(isMobile ? 'whatsapp://wa.me/55' : 'https://wa.me/55') +
-            phoneNumbers 
-            }?text=${ 
-            createWhatsAppMessage() 
-            }&type=phone_number&app_absent=0`;
+          const whatsappUrl = `${
+            (isMobile ? 'whatsapp://wa.me/55' : 'https://wa.me/55') + phoneNumbers
+          }?text=${createWhatsAppMessage()}&type=phone_number&app_absent=0`;
 
           return (
             <Anchor href={whatsappUrl} target="_blank" rel="noreferrer">
@@ -252,9 +268,9 @@ Deus abençoe grandemente.`;
       { accessorKey: 'uf_cnh', header: 'UF' },
       // Colunas ocultas por padrão
       { accessorKey: 'cnh', header: 'CNH', enableHiding: true },
-      { 
-        accessorKey: 'email', 
-        header: 'Email', 
+      {
+        accessorKey: 'email',
+        header: 'Email',
         enableHiding: true,
         filterVariant: 'text',
         filterFn: 'contains',
@@ -266,33 +282,29 @@ Deus abençoe grandemente.`;
     []
   );
 
-  // Dados já filtrados pelo backend
-  const paginatedData = query.data as any;
+  // Dados já vêm filtrados do hook compartilhado
+  const allData = query.data || [];
 
-  // Tentar diferentes formas de extrair os dados
-  let data = [];
-  if (paginatedData?.data && Array.isArray(paginatedData.data)) {
-    data = paginatedData.data;
-  } else if (Array.isArray(paginatedData)) {
-    data = paginatedData;
-  } else if (paginatedData && typeof paginatedData === 'object') {
-    // Se não tem propriedade 'data', talvez os dados estejam diretamente no objeto
-    data = Object.values(paginatedData).find((value) => Array.isArray(value)) || [];
-  }
+  // Paginação client-side
+  const paginatedData = useMemo(() => {
+    const startIndex = (_currentPage - 1) * _pageSize;
+    const endIndex = startIndex + _pageSize;
+    return allData.slice(startIndex, endIndex);
+  }, [allData, _currentPage, _pageSize]);
 
-  const pagination =
-    paginatedData && !Array.isArray(paginatedData)
-      ? {
-          page: paginatedData.page,
-          limit: paginatedData.limit,
-          total: paginatedData.total,
-          totalPages: paginatedData.totalPages,
-        }
-      : undefined;
+  const pagination = useMemo(
+    () => ({
+      page: _currentPage,
+      limit: _pageSize,
+      total: allData.length,
+      totalPages: Math.ceil(allData.length / _pageSize),
+    }),
+    [allData.length, _currentPage, _pageSize]
+  );
 
   const csvData = useMemo(
     () =>
-      data?.map(
+      allData?.map(
         ({
           name,
           phone,
@@ -322,7 +334,7 @@ Deus abençoe grandemente.`;
           Modelo: model,
         })
       ) ?? [],
-    [data]
+    [allData]
   );
 
   const rowMapper = useCallback((row: MRT_Row<Enrollment>): string[] => {
@@ -360,33 +372,31 @@ Deus abençoe grandemente.`;
   const pdfConfig = useMemo(() => ({ tableHeaders, rowMapper }), [rowMapper]);
 
   return (
-    <>
-      <CRUDTable<Enrollment>
-        columns={columns}
-        title="Gestão de Certificações"
-        csvData={csvData}
-        pdfConfig={pdfConfig}
-        customActions={customActions}
-        enableFilters
-        enableRowNumbers
-        columnVisibility={{
-          status: false,
-          enrollment_date: false,
-          preferred_city: false,
-          uf_cnh: false,
-          cnh: false,
-          email: false,
-          motorcycle_usage: false,
-          brand: false,
-          model: false,
-        }}
-        data={data}
-        pagination={pagination}
-        onPageChange={onPageChange}
-        onPageSizeChange={onPageSizeChange}
-        emptyStateMessage="Nenhuma inscrição confirmada encontrada"
-        emptyStateDescription="As inscrições confirmadas aparecerão aqui para certificação"
-      />
-    </>
+    <CRUDTable<Enrollment>
+      columns={columns}
+      title="Gestão de Certificações"
+      csvData={csvData}
+      pdfConfig={pdfConfig}
+      customActions={customActions}
+      enableFilters={true}
+      enableRowNumbers={true}
+      columnVisibility={{
+        status: false,
+        enrollment_date: false,
+        preferred_city: false,
+        uf_cnh: false,
+        cnh: false,
+        email: false,
+        motorcycle_usage: false,
+        brand: false,
+        model: false,
+      }}
+      data={paginatedData}
+      pagination={pagination}
+      onPageChange={onPageChange}
+      onPageSizeChange={onPageSizeChange}
+      emptyStateMessage="Nenhuma inscrição confirmada encontrada"
+      emptyStateDescription="As inscrições confirmadas aparecerão aqui para certificação"
+    />
   );
 }

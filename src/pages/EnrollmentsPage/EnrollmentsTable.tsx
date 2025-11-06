@@ -5,10 +5,11 @@ import { Anchor } from '@mantine/core';
 import { CRUDTable } from '@/components/CRUDTable';
 import { StatusIcon } from '@/components/StatusIcon';
 import { useAuth } from '@/contexts/AuthContext';
-import { useCRUD } from '@/contexts/CRUDContext';
+import { useEnrollmentsData } from '@/hooks/useSharedEnrollments';
 import { Enrollment, EnrollmentStatus } from '@/model/enrollment';
 import { useEnrollmentFlowMutation } from '@/mutations/useEnrollmentFlowMutation';
 import { dateBR } from '@/utils/dates';
+import { normalizeEnrollments } from '@/utils/statusNormalizer';
 
 const tableHeaders = [
   'Turma',
@@ -35,10 +36,11 @@ interface EnrollmentsTableProps {
 export function EnrollmentsTable({
   onPageChange,
   onPageSizeChange,
-  currentPage: _currentPage,
-  pageSize: _pageSize,
+  currentPage: _currentPage = 1,
+  pageSize: _pageSize = 50,
 }: EnrollmentsTableProps = {}) {
-  const { query } = useCRUD();
+  const { data: enrollmentsData, loading, error, refetch } = useEnrollmentsData();
+  const query = { data: enrollmentsData, isLoading: loading, isError: !!error, error, refetch };
   const { name } = useAuth();
   const updateFlowMutation = useEnrollmentFlowMutation();
 
@@ -47,6 +49,7 @@ export function EnrollmentsTable({
       updateFlowMutation.mutate({
         enrollmentId: enrollment.id,
         status: EnrollmentStatus.WAITING,
+        enrollmentName: enrollment.name,
       });
     },
     [updateFlowMutation]
@@ -71,7 +74,7 @@ export function EnrollmentsTable({
         icon: IconClock,
         onClick: handleReturnToWaiting,
         isVisible: canReturnToWaiting,
-        isLoading: updateFlowMutation.isPending,
+        isLoading: updateFlowMutation.isLoading,
         requiresConfirmation: true,
         confirmationTitle: 'Confirmar Retorno para Lista de Espera',
         confirmationMessage: (enrollment: Enrollment) =>
@@ -80,7 +83,7 @@ export function EnrollmentsTable({
         confirmationButtonColor: 'blue',
       },
     ],
-    [handleReturnToWaiting, canReturnToWaiting, updateFlowMutation.isPending]
+    [handleReturnToWaiting, canReturnToWaiting, updateFlowMutation.isLoading]
   );
 
   const columns = useMemo<MRT_ColumnDef<Enrollment>[]>(
@@ -126,14 +129,14 @@ export function EnrollmentsTable({
         filterFn: 'equals',
         Cell: ({ row }) => <StatusIcon status={row.original.status} />,
       },
-      { 
-        accessorKey: 'enrollment_date', 
+      {
+        accessorKey: 'enrollment_date',
         header: 'Data de Inscrição',
         filterVariant: 'date',
         Cell: ({ row }) => {
           const date = row.original.enrollment_date;
           if (!date) return '';
-          
+
           try {
             // Converter para Date e formatar para DD/MM/YYYY
             const dateObj = new Date(date);
@@ -153,8 +156,8 @@ export function EnrollmentsTable({
         filterFn: 'contains',
         Cell: ({ row }) => row.original.preferred_city?.name ?? '',
       },
-      { 
-        accessorKey: 'name', 
+      {
+        accessorKey: 'name',
         header: 'Nome',
         filterVariant: 'text',
         filterFn: 'contains',
@@ -167,13 +170,17 @@ export function EnrollmentsTable({
         Cell: ({ row }) => {
           const phone = row.original.phone;
           const enrollment = row.original;
-          if (!phone) {return '';}
+          if (!phone) {
+            return '';
+          }
 
           // Regex para extrair apenas números do telefone
           const regex = /\d/g;
           const phoneNumbers = phone.match(regex)?.join('');
 
-          if (!phoneNumbers) {return phone;}
+          if (!phoneNumbers) {
+            return phone;
+          }
 
           // Formatar telefone para exibição (XX) XXXXX-XXXX
           const formattedPhone = phone.replace(/^(\d{2})(\d{5})(\d{4}).*/, '($1) $2-$3');
@@ -216,12 +223,9 @@ Deus abençoe grandemente.`;
           };
 
           // URL do WhatsApp com mensagem
-          const whatsappUrl =
-            `${(isMobile ? 'whatsapp://wa.me/55' : 'https://wa.me/55') +
-            phoneNumbers 
-            }?text=${ 
-            createWhatsAppMessage() 
-            }&type=phone_number&app_absent=0`;
+          const whatsappUrl = `${
+            (isMobile ? 'whatsapp://wa.me/55' : 'https://wa.me/55') + phoneNumbers
+          }?text=${createWhatsAppMessage()}&type=phone_number&app_absent=0`;
 
           return (
             <Anchor href={whatsappUrl} target="_blank" rel="noreferrer">
@@ -233,9 +237,9 @@ Deus abençoe grandemente.`;
       { accessorKey: 'uf_cnh', header: 'UF' },
       // Colunas ocultas por padrão
       { accessorKey: 'cnh', header: 'CNH', enableHiding: true },
-      { 
-        accessorKey: 'email', 
-        header: 'Email', 
+      {
+        accessorKey: 'email',
+        header: 'Email',
         enableHiding: true,
         filterVariant: 'text',
         filterFn: 'contains',
@@ -249,7 +253,8 @@ Deus abençoe grandemente.`;
 
   const csvData = useMemo(() => {
     // Handle both array and paginated data
-    const data = Array.isArray(query.data) ? query.data : query.data?.data || [];
+    const rawData = Array.isArray(query.data) ? query.data : (query.data as any)?.data || [];
+    const data = normalizeEnrollments(rawData);
 
     return data.map(
       ({
@@ -315,47 +320,49 @@ Deus abençoe grandemente.`;
 
   const pdfConfig = useMemo(() => ({ tableHeaders, rowMapper }), [rowMapper]);
 
-  // Extrair dados corretamente (pode ser array ou paginado)
-  const data = (Array.isArray(query.data)
-    ? query.data
-    : query.data?.data || []) as unknown as Enrollment[];
+  // Dados já vêm filtrados do hook compartilhado
+  const allData = query.data || [];
 
-  // Configuração de paginação
-  const pagination = query.data && !Array.isArray(query.data)
-    ? {
-        page: query.data.page,
-        limit: query.data.limit,
-        total: query.data.total,
-        totalPages: query.data.totalPages,
-      }
-    : undefined;
+  // Paginação client-side
+  const paginatedData = useMemo(() => {
+    const startIndex = (_currentPage - 1) * _pageSize;
+    const endIndex = startIndex + _pageSize;
+    return allData.slice(startIndex, endIndex);
+  }, [allData, _currentPage, _pageSize]);
 
+  const pagination = useMemo(
+    () => ({
+      page: _currentPage,
+      limit: _pageSize,
+      total: allData.length,
+      totalPages: Math.ceil(allData.length / _pageSize),
+    }),
+    [allData.length, _currentPage, _pageSize]
+  );
 
   return (
-    <>
-      <CRUDTable<Enrollment>
-        columns={columns}
-        title="Visão Geral - Inscrições"
-        csvData={csvData}
-        pdfConfig={pdfConfig}
-        customActions={customActions}
-        enableEdit
-        enableFilters
-        enableRowNumbers
-        data={data}
-        pagination={pagination}
-        onPageChange={onPageChange}
-        onPageSizeChange={onPageSizeChange}
-        columnVisibility={{
-          cnh: false,
-          email: false,
-          motorcycle_usage: false,
-          brand: false,
-          model: false,
-        }}
-        emptyStateMessage="Nenhuma inscrição encontrada"
-        emptyStateDescription="As inscrições aparecerão aqui conforme forem sendo criadas"
-      />
-    </>
+    <CRUDTable<Enrollment>
+      columns={columns}
+      title="Visão Geral - Inscrições"
+      csvData={csvData}
+      pdfConfig={pdfConfig}
+      customActions={customActions}
+      enableEdit
+      enableFilters={true}
+      enableRowNumbers={true}
+      data={paginatedData}
+      pagination={pagination}
+      onPageChange={onPageChange}
+      onPageSizeChange={onPageSizeChange}
+      columnVisibility={{
+        cnh: false,
+        email: false,
+        motorcycle_usage: false,
+        brand: false,
+        model: false,
+      }}
+      emptyStateMessage="Nenhuma inscrição encontrada"
+      emptyStateDescription="As inscrições aparecerão aqui conforme forem sendo criadas"
+    />
   );
 }

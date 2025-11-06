@@ -1,13 +1,15 @@
 import { useCallback, useMemo } from 'react';
+import { useQuery } from '@apollo/client';
 import { IconArrowBack, IconCheck, IconEyeOff, IconPhone, IconX } from '@tabler/icons-react';
 import { ActionIcon, Button, Group, Modal, Select, Text, Tooltip } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
+import { GET_ACTIVE_CLASSES } from '@/graphql/classes';
 import { Class } from '@/model/class';
 import { Enrollment, EnrollmentStatus } from '@/model/enrollment';
 import { useEnrollmentAssignClassMutation } from '@/mutations/useEnrollmentAssignClassMutation';
 import { useEnrollmentFlowMutation } from '@/mutations/useEnrollmentFlowMutation';
-import useCRUDQuery from '@/queries/useCRUDQuery';
 import { dateBR } from '@/utils/dates';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface EnrollmentStatusCallActionsProps {
   enrollment: Enrollment;
@@ -47,8 +49,13 @@ export function EnrollmentStatusCallActions({
 }: EnrollmentStatusCallActionsProps) {
   const updateFlowMutation = useEnrollmentFlowMutation();
   const assignClassMutation = useEnrollmentAssignClassMutation();
-  const classesQuery = useCRUDQuery<Class>('classes');
+  const { data: classesData } = useQuery(GET_ACTIVE_CLASSES);
+  const classesQuery = { data: classesData?.activeClasses };
   const [, { open: _open }] = useDisclosure(false);
+  const { permissions } = useAuth();
+
+  // Check if user has permission to update flow
+  const canUpdateFlow = permissions?.flow?.update || false;
 
   const classesOptions = useMemo(() => {
     if (!classesQuery.data) {
@@ -71,17 +78,19 @@ export function EnrollmentStatusCallActions({
       assignClassMutation.mutate({
         enrollmentId: enrollment.id,
         classId,
+        enrollmentName: enrollment.name,
       });
     },
-    [assignClassMutation, enrollment.id]
+    [assignClassMutation, enrollment.id, enrollment.name]
   );
 
   const handleReturnToCalled = useCallback(() => {
     updateFlowMutation.mutate({
       enrollmentId: enrollment.id,
       status: EnrollmentStatus.CALLED,
+      enrollmentName: enrollment.name,
     });
-  }, [updateFlowMutation, enrollment.id]);
+  }, [updateFlowMutation, enrollment.id, enrollment.name]);
 
   const handleRevertStatus = useCallback(() => {
     if (onRevertClick) {
@@ -140,10 +149,16 @@ export function EnrollmentStatusCallActions({
       updateFlowMutation.mutate({
         enrollmentId: enrollment.id,
         status: newStatus,
+        enrollmentName: enrollment.name,
       });
     },
-    [updateFlowMutation, enrollment.id]
+    [updateFlowMutation, enrollment.id, enrollment.name]
   );
+
+  // Se não tem permissão de editar fluxo, não mostra nenhum botão
+  if (!canUpdateFlow) {
+    return <Text size="xs" c="dimmed">Sem permissão</Text>;
+  }
 
   // Se não tem turma atribuída E está em waiting, mostra seleção de turma
   if (!enrollment.class && enrollment.status === EnrollmentStatus.WAITING) {
@@ -157,7 +172,7 @@ export function EnrollmentStatusCallActions({
             handleAssignClass(value);
           }
         }}
-        disabled={assignClassMutation.isPending}
+        disabled={assignClassMutation.isLoading}
         size="xs"
         w={200}
       />
@@ -174,7 +189,7 @@ export function EnrollmentStatusCallActions({
             color="blue"
             size="sm"
             onClick={handleReturnToCalled}
-            loading={updateFlowMutation.isPending}
+            loading={updateFlowMutation.isLoading}
           >
             <IconArrowBack size={16} />
           </ActionIcon>
@@ -193,7 +208,7 @@ export function EnrollmentStatusCallActions({
             color="blue"
             size="sm"
             onClick={handleRevertStatus}
-            loading={updateFlowMutation.isPending}
+            loading={updateFlowMutation.isLoading}
           >
             <IconArrowBack size={16} />
           </ActionIcon>
@@ -211,7 +226,7 @@ export function EnrollmentStatusCallActions({
             color={color}
             size="sm"
             onClick={() => handleStatusUpdate(status)}
-            loading={updateFlowMutation.isPending}
+            loading={updateFlowMutation.isLoading}
           >
             <Icon size={16} />
           </ActionIcon>
@@ -224,7 +239,7 @@ export function EnrollmentStatusCallActions({
             color="blue"
             size="sm"
             onClick={handleReturnToCalled}
-            loading={updateFlowMutation.isPending}
+            loading={updateFlowMutation.isLoading}
           >
             <IconArrowBack size={16} />
           </ActionIcon>
