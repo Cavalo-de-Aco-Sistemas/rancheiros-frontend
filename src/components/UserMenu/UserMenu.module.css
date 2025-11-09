@@ -1,0 +1,45 @@
+.userButton {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: var(--mantine-spacing-xs) var(--mantine-spacing-sm);
+  border-radius: var(--mantine-radius-sm);
+  color: light-dark(var(--mantine-color-gray-7), var(--mantine-color-dark-1));
+  transition: background-color 150ms ease;
+
+  &:hover {
+    background-color: light-dark(var(--mantine-color-gray-0), var(--mantine-color-dark-6));
+  }
+}
+
+.chevron {
+  color: light-dark(var(--mantine-color-gray-6), var(--mantine-color-dark-2));
+  transition: transform 150ms ease;
+}
+
+.userButton[data-expanded] .chevron {
+  transform: rotate(180deg);
+}
+
+.userContainer {
+  width: 100%;
+}
+
+.logoutButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--mantine-spacing-xs);
+  border-radius: var(--mantine-radius-sm);
+  color: light-dark(var(--mantine-color-gray-7), var(--mantine-color-dark-1));
+  transition: background-color 150ms ease;
+
+  &:hover {
+    background-color: light-dark(var(--mantine-color-gray-0), var(--mantine-color-dark-6));
+  }
+}
+
+.logoutIcon {
+  color: var(--mantine-color-red-6);
+}
+
