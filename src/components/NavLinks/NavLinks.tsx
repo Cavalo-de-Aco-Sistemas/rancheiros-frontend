@@ -1,14 +1,15 @@
 import { useMemo, useState } from 'react';
-import { IconChevronDown, IconChevronRight, IconLogout, IconMail } from '@tabler/icons-react';
+import { IconChevronDown, IconChevronRight, IconMail } from '@tabler/icons-react';
 import { Link, useLocation } from 'react-router-dom';
 import { Collapse, Divider, Group, Stack, Text, UnstyledButton } from '@mantine/core';
 import { useAuth } from '@/contexts/AuthContext';
 import { ROUTES_MAP } from '@/pages/MainPage/MainPage';
+import { UserMenu } from '@/components/UserMenu';
 import classes from './NavLinks.module.css';
 
 export default function NavLinks({ toggleMobile }: { toggleMobile: () => void }) {
   const location = useLocation();
-  const { logout, permissions } = useAuth();
+  const { permissions } = useAuth();
   const [enrollmentsOpened, setEnrollmentsOpened] = useState(false);
 
   const items = useMemo(() => {
@@ -93,16 +94,7 @@ export default function NavLinks({ toggleMobile }: { toggleMobile: () => void })
       )}
 
       <Divider />
-      <a
-        className={classes.link}
-        onClick={logout}
-        role="button"
-        tabIndex={0}
-        onKeyDown={(e) => e.key === 'Enter' && logout()}
-      >
-        <IconLogout className={classes.linkIcon} stroke={1.5} />
-        <span>Sair</span>
-      </a>
+      <UserMenu />
     </Stack>
   );
 }
