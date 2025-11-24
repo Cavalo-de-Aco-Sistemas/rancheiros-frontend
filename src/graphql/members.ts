@@ -33,8 +33,8 @@ const MEMBER_FRAGMENT = gql`
 
 export const GET_MEMBERS = gql`
   ${MEMBER_FRAGMENT}
-  query GetMembers {
-    members {
+  query GetMembers($pagination: PaginationArgs) {
+    members(pagination: $pagination) {
       ...MemberFields
     }
   }

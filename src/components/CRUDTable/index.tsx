@@ -121,6 +121,10 @@ export function CRUDTable<T extends MRT_RowData>(props: CRUDTableProps<T>) {
     setColumnFilters: setContextColumnFilters,
     globalFilter: contextGlobalFilter,
     setGlobalFilter: setContextGlobalFilter,
+    sorting: contextSorting,
+    setSorting: setContextSorting,
+    pagination: contextPagination,
+    setPagination: setContextPagination,
   } = context || {};
 
   // Try to use shared filters, fallback to context filters
@@ -341,6 +345,7 @@ export function CRUDTable<T extends MRT_RowData>(props: CRUDTableProps<T>) {
               pageIndex: 0,
               pageSize: 50,
             },
+        sorting: contextSorting || undefined,
       },
       // Configuração para estado vazio
       renderEmptyRowsFallback: () => (
@@ -405,6 +410,16 @@ export function CRUDTable<T extends MRT_RowData>(props: CRUDTableProps<T>) {
       // Configurações específicas para filtros
       enableMultiSort: false,
       enableMultiColumnFiltering: true,
+      // Configurações de ordenação (server-side quando paginação está habilitada)
+      enableSorting: true,
+      manualSorting: !!pagination, // Server-side sorting when pagination is enabled
+      onSortingChange: pagination && setContextSorting
+        ? (updaterOrValue: any) => {
+            const newSorting =
+              typeof updaterOrValue === 'function' ? updaterOrValue(contextSorting || []) : updaterOrValue;
+            setContextSorting(newSorting);
+          }
+        : undefined,
       // Configurações de paginação
       enablePagination: true,
       enableRowSelection: false,
@@ -504,6 +519,8 @@ export function CRUDTable<T extends MRT_RowData>(props: CRUDTableProps<T>) {
       globalFilter,
       setColumnFilters,
       setGlobalFilter,
+      contextSorting,
+      setContextSorting,
     ]
   );
 

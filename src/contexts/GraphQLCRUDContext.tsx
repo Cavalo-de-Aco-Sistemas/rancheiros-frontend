@@ -14,6 +14,12 @@ interface ColumnFilter {
   value: any;
 }
 
+// Sorting state from Mantine React Table
+export interface SortingState {
+  id: string;
+  desc: boolean;
+}
+
 // Simula a interface do useQuery do react-query para compatibilidade com CRUDTable
 interface QueryResult<T> {
   data: T[] | undefined;
@@ -37,6 +43,13 @@ export interface GraphQLCRUDContextType<T extends CRUDType> {
   setColumnFilters: React.Dispatch<React.SetStateAction<ColumnFilter[]>>;
   globalFilter: string;
   setGlobalFilter: React.Dispatch<React.SetStateAction<string>>;
+  sorting: SortingState[];
+  setSorting: React.Dispatch<React.SetStateAction<SortingState[]>>;
+  pagination?: {
+    page: number;
+    limit: number;
+  };
+  setPagination?: React.Dispatch<React.SetStateAction<{ page: number; limit: number }>>;
 }
 
 export const GraphQLCRUDContext = createContext<GraphQLCRUDContextType<CRUDType> | undefined>(
@@ -46,6 +59,7 @@ export const GraphQLCRUDContext = createContext<GraphQLCRUDContextType<CRUDType>
 interface GraphQLCRUDProviderProps {
   query: DocumentNode;
   dataKey: string; // Key to extract data from query result (e.g., 'members', 'users')
+  enablePagination?: boolean; // Enable pagination and sorting support
 }
 
 /**
@@ -67,6 +81,7 @@ export const GraphQLCRUDProvider = ({
   children,
   query: graphqlQuery,
   dataKey,
+  enablePagination = false,
 }: PropsWithChildren<GraphQLCRUDProviderProps>) => {
   const [selected, setSelected] = useState<CRUDType | undefined>(undefined);
   const [action, setAction] = useState<'create' | 'update' | 'delete'>('create');
@@ -76,13 +91,55 @@ export const GraphQLCRUDProvider = ({
   const [columnFilters, setColumnFilters] = useState<ColumnFilter[]>([]);
   const [globalFilter, setGlobalFilter] = useState<string>('');
 
+  // Estados para ordenação e paginação
+  const [sorting, setSorting] = useState<SortingState[]>([]);
+  const [pagination, setPagination] = useState<{ page: number; limit: number }>({
+    page: 1,
+    limit: 10,
+  });
+
+  // Convert sorting state to GraphQL pagination args
+  const paginationVariables = useMemo(() => {
+    if (!enablePagination) {
+      return undefined;
+    }
+
+    const sortBy = sorting.length > 0 ? sorting[0].id : undefined;
+    const sortOrder = sorting.length > 0 ? (sorting[0].desc ? 'DESC' : 'ASC') : undefined;
+
+    return {
+      pagination: {
+        page: pagination.page,
+        limit: pagination.limit,
+        ...(sortBy && { sortBy }),
+        ...(sortOrder && { sortOrder }),
+      },
+    };
+  }, [enablePagination, pagination, sorting]);
+
   // Execute GraphQL query
-  const { data: rawData, loading, error, refetch } = useQuery(graphqlQuery);
+  const { data: rawData, loading, error, refetch } = useQuery(graphqlQuery, {
+    variables: paginationVariables,
+    skip: false,
+  });
 
   // Transform to match expected interface (compatível com CRUDContext)
-  const query = useMemo(
-    () => ({
-      data: rawData?.[dataKey] || [],
+  // Handle both array response (no pagination) and paginated response (with pagination)
+  const query = useMemo(() => {
+    const rawDataValue = rawData?.[dataKey];
+    let data: any[] = [];
+
+    // Check if response is paginated (has data property) or direct array
+    if (rawDataValue) {
+      if (Array.isArray(rawDataValue)) {
+        data = rawDataValue;
+      } else if (rawDataValue.data && Array.isArray(rawDataValue.data)) {
+        data = rawDataValue.data;
+      }
+    }
+
+    return {
+      data,
       isLoading: loading,
       isError: !!error,
       isFetching: loading,
@@ -90,9 +147,8 @@ export const GraphQLCRUDProvider = ({
       refetch: () => {
         refetch();
       },
-    }),
-    [rawData, dataKey, loading, error, refetch]
-  );
+    };
+  }, [rawData, dataKey, loading, error, refetch]);
 
   const open = useCallback(() => setOpened(true), []);
   const close = useCallback(() => setOpened(false), []);
@@ -111,8 +167,24 @@ export const GraphQLCRUDProvider = ({
       setColumnFilters,
       globalFilter,
       setGlobalFilter,
+      sorting,
+      setSorting,
+      ...(enablePagination && {
+        pagination,
+        setPagination,
+      }),
     }),
-    [query, selected, action, opened, columnFilters, globalFilter]
+    [
+      query,
+      selected,
+      action,
+      opened,
+      columnFilters,
+      globalFilter,
+      sorting,
+      enablePagination,
+      pagination,
+    ]
   );
 
   return <GraphQLCRUDContext.Provider value={value}>{children}</GraphQLCRUDContext.Provider>;

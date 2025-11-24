@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
 import { MRT_ColumnDef, MRT_Row } from 'mantine-react-table';
 import { Anchor, Badge } from '@mantine/core';
 import { CRUDTable } from '@/components/CRUDTable';
@@ -50,8 +50,15 @@ export function MembersTable({
   currentPage = 1,
   pageSize = 10,
 }: MembersTableProps = {}) {
-  const { query } = useGraphQLCRUD();
+  const { query, setPagination } = useGraphQLCRUD();
   const data = (query.data || []) as Member[];
+
+  // Sincronizar paginação com contexto para server-side sorting
+  useEffect(() => {
+    if (setPagination) {
+      setPagination({ page: currentPage, limit: pageSize });
+    }
+  }, [currentPage, pageSize, setPagination]);
 
   const columns = useMemo<MRT_ColumnDef<Member>[]>(
     () => [
@@ -222,18 +229,13 @@ export function MembersTable({
 
   const pdfConfig = useMemo(() => ({ tableHeaders, rowMapper }), [rowMapper]);
 
-  // Paginação client-side
-  const paginatedData = useMemo(() => {
-    const startIndex = (currentPage - 1) * pageSize;
-    const endIndex = startIndex + pageSize;
-    return data.slice(startIndex, endIndex);
-  }, [data, currentPage, pageSize]);
-
+  // Paginação server-side - dados já vêm paginados do backend
+  // Não fazer paginação local, usar dados diretamente
   const pagination = useMemo(
     () => ({
       page: currentPage,
       limit: pageSize,
-      total: data.length,
+      total: data.length, // Backend retorna total quando paginado, mas pode ser length do array
       totalPages: Math.ceil(data.length / pageSize),
     }),
     [data.length, currentPage, pageSize]
@@ -245,7 +247,7 @@ export function MembersTable({
       title="Membros"
       csvData={csvData}
       pdfConfig={pdfConfig}
-      data={paginatedData}
+      data={data}
       pagination={pagination}
       onPageChange={onPageChange}
       onPageSizeChange={onPageSizeChange}
