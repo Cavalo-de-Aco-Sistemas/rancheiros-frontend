@@ -1,4 +1,4 @@
-import { createContext, PropsWithChildren, useCallback, useMemo, useState } from 'react';
+import { createContext, PropsWithChildren, useCallback, useEffect, useMemo, useState } from 'react';
 import { ApolloError, DocumentNode, useQuery } from '@apollo/client';
 import { MRT_RowData } from 'mantine-react-table';
 import { useContextProvider } from './useContextProvider';
@@ -98,6 +98,13 @@ export const GraphQLCRUDProvider = ({
     limit: 10,
   });
 
+  // Reset to first page when filters change
+  useEffect(() => {
+    if (enablePagination && columnFilters.length > 0 && pagination.page !== 1) {
+      setPagination(prev => ({ ...prev, page: 1 }));
+    }
+  }, [columnFilters, enablePagination]);
+
   // Convert sorting state to GraphQL pagination args
   const paginationVariables = useMemo(() => {
     if (!enablePagination) {
@@ -112,7 +119,58 @@ export const GraphQLCRUDProvider = ({
     const sortBy = sorting.length > 0 ? sorting[0].id : undefined;
     const sortOrder = sorting.length > 0 ? (sorting[0].desc ? 'DESC' : 'ASC') : undefined;
 
-    return {
+    // Include column filters if available
+    // Filter out empty filters and ensure proper format
+    const filtersToSend = columnFilters && columnFilters.length > 0
+      ? columnFilters
+          .filter((filter) => {
+            // Filter out empty values
+            if (filter.value === null || filter.value === undefined || filter.value === '') {
+              return false;
+            }
+            // Filter out empty arrays
+            if (Array.isArray(filter.value) && filter.value.length === 0) {
+              return false;
+            }
+            return true;
+          })
+          .map((filter) => {
+            // Normalize filter value - Mantine React Table may send different formats
+            let normalizedValue = filter.value;
+            let filterFn = (filter as any).filterFn; // Extract filterFn if present
+            
+            // If value is an object, try to extract the actual value
+            if (typeof filter.value === 'object' && filter.value !== null && !Array.isArray(filter.value)) {
+              // Check if it's a Mantine Select value format
+              if ('value' in filter.value) {
+                normalizedValue = filter.value.value;
+                // Extract filterFn from object if present
+                if ('filterFn' in filter.value && !filterFn) {
+                  filterFn = filter.value.filterFn;
+                }
+              } else if ('label' in filter.value && 'value' in filter.value) {
+                normalizedValue = filter.value.value;
+              } else {
+                // Keep the object as is (might be a date range or other complex filter)
+                normalizedValue = filter.value;
+              }
+            }
+            
+            const result: { id: string; value: any; filterFn?: string } = {
+              id: filter.id,
+              value: normalizedValue,
+            };
+            
+            // Include filterFn if available
+            if (filterFn) {
+              result.filterFn = filterFn;
+            }
+            
+            return result;
+          })
+      : undefined;
+
+    const result = {
       pagination: {
         page: pagination.page,
         limit: pagination.limit,
@@ -120,14 +178,19 @@ export const GraphQLCRUDProvider = ({
         ...(sortOrder && { sortOrder }),
         ...(sortByArray && sortByArray.length > 0 && { sortByArray }),
         ...(sortOrderArray && sortOrderArray.length > 0 && { sortOrderArray }),
+        ...(filtersToSend && filtersToSend.length > 0 && { columnFilters: filtersToSend }),
       },
     };
-  }, [enablePagination, pagination, sorting]);
+
+            return result;
+  }, [enablePagination, pagination, sorting, columnFilters]);
 
   // Execute GraphQL query
   const { data: rawData, loading, error, refetch } = useQuery(graphqlQuery, {
     variables: paginationVariables,
     skip: false,
+    fetchPolicy: 'network-only', // Always fetch from network when variables change
+    notifyOnNetworkStatusChange: true,
   });
 
   // Transform to match expected interface (compatível com CRUDContext)

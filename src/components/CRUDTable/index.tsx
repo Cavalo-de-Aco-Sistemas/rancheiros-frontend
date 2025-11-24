@@ -139,18 +139,30 @@ export function CRUDTable<T extends MRT_RowData>(props: CRUDTableProps<T>) {
     globalFilter = localGlobalFilter;
     setGlobalFilter = setLocalGlobalFilter;
   } else {
-    try {
-      const sharedFilters = useSharedFilters();
-      columnFilters = sharedFilters.filters.columnFilters;
-      setColumnFilters = sharedFilters.setColumnFilters;
-      globalFilter = sharedFilters.filters.globalFilter;
-      setGlobalFilter = sharedFilters.setGlobalFilter;
-    } catch {
-      // Fallback to context filters
-      columnFilters = contextColumnFilters;
+    // For GraphQL tables with server-side filtering (pagination enabled),
+    // always use GraphQLCRUDContext filters, not SharedFiltersContext
+    // SharedFiltersContext is only for client-side filtering (like Enrollments without pagination)
+    if (pagination && enableFilters) {
+      // Server-side filtering: MUST use GraphQL context
+      columnFilters = contextColumnFilters || [];
       setColumnFilters = setContextColumnFilters;
-      globalFilter = contextGlobalFilter;
+      globalFilter = contextGlobalFilter || '';
       setGlobalFilter = setContextGlobalFilter;
+    } else {
+      // Client-side filtering: try shared filters first, fallback to context
+      try {
+        const sharedFilters = useSharedFilters();
+        columnFilters = sharedFilters.filters.columnFilters;
+        setColumnFilters = sharedFilters.setColumnFilters;
+        globalFilter = sharedFilters.filters.globalFilter;
+        setGlobalFilter = sharedFilters.setGlobalFilter;
+      } catch {
+        // Fallback to context filters
+        columnFilters = contextColumnFilters || [];
+        setColumnFilters = setContextColumnFilters;
+        globalFilter = contextGlobalFilter || '';
+        setGlobalFilter = setContextGlobalFilter;
+      }
     }
   }
 
@@ -373,8 +385,8 @@ export function CRUDTable<T extends MRT_RowData>(props: CRUDTableProps<T>) {
         isLoading,
         showAlertBanner: isError,
         showProgressBars: isFetching,
-        columnFilters: enableFilters ? columnFilters : undefined,
-        globalFilter: enableFilters ? globalFilter : undefined,
+        columnFilters: enableFilters ? (columnFilters || []) : undefined, // Ensure it's always an array
+        globalFilter: enableFilters ? (globalFilter || '') : undefined, // Ensure it's always a string
         density: 'xs' as const, // Forçar densidade mínima
         pagination: pagination
           ? {
@@ -438,9 +450,16 @@ export function CRUDTable<T extends MRT_RowData>(props: CRUDTableProps<T>) {
       manualFiltering: enableFilters,
       onColumnFiltersChange: enableFilters
         ? (updaterOrValue: any) => {
+            const currentFilters = columnFilters || [];
             const newFilters =
-              typeof updaterOrValue === 'function' ? updaterOrValue(columnFilters) : updaterOrValue;
-            setColumnFilters?.(newFilters);
+              typeof updaterOrValue === 'function' ? updaterOrValue(currentFilters) : updaterOrValue;
+            if (setColumnFilters) {
+              setColumnFilters(newFilters);
+            }
+            // Reset to first page when filters change
+            if (pagination && onPageChange) {
+              onPageChange(1);
+            }
           }
         : undefined,
       onGlobalFilterChange: enableFilters ? setGlobalFilter : undefined,

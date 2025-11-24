@@ -1,11 +1,15 @@
 import { useCallback, useEffect, useMemo } from 'react';
 import { MRT_ColumnDef, MRT_Row } from 'mantine-react-table';
 import { Anchor, Badge } from '@mantine/core';
+import { useQuery } from '@apollo/client';
 import { CRUDTable } from '@/components/CRUDTable';
 import { useGraphQLCRUD } from '@/contexts/GraphQLCRUDContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { Member } from '@/model/member';
+import { Ranch } from '@/model/ranch';
 import { birthdayBR, dateBR } from '@/utils/dates';
 import { phasesOptions } from './MembersForm';
+import { GET_RANCHES } from '@/graphql/ranches';
 
 const optionsToObject = (
   options: {
@@ -51,7 +55,38 @@ export function MembersTable({
   pageSize = 10,
 }: MembersTableProps = {}) {
   const { query, setPagination } = useGraphQLCRUD();
+  const { ranches: authRanches, super_admin } = useAuth();
   const data = (query.data || []) as Member[];
+
+  // Query all ranches (for super_admin) or use auth ranches (for regular users)
+  const { data: ranchesData } = useQuery(GET_RANCHES, {
+    skip: !super_admin,
+  });
+
+  // Get ranches options for filter
+  const ranchesOptions = useMemo(() => {
+    const sourceRanches = super_admin 
+      ? (ranchesData?.ranches || [])
+      : (authRanches || []);
+    
+    if (!sourceRanches || sourceRanches.length === 0) {
+      return [];
+    }
+    
+    return sourceRanches
+      .filter((ranch: Ranch | null | undefined): ranch is Ranch => !!ranch && !!ranch.id)
+      .map((ranch: Ranch) => ({ label: ranch.name, value: ranch.name }));
+  }, [super_admin, authRanches, ranchesData]);
+
+  // Get members options for godfather and spouse filters
+  const membersOptions = useMemo(
+    () =>
+      data.map((member: Member) => ({
+        label: member.name,
+        value: member.name,
+      })),
+    [data]
+  );
 
   // Sincronizar paginação com contexto para server-side sorting
   useEffect(() => {
@@ -65,6 +100,7 @@ export function MembersTable({
       {
         accessorKey: 'patch',
         header: 'Nome no Patch',
+        filterVariant: 'text',
         Cell: ({ row }) =>
           row.original.patch && (
             <Badge ff="Rye" variant="outline" color="white" radius="xs">
@@ -75,12 +111,23 @@ export function MembersTable({
       {
         accessorKey: 'phase',
         header: 'Fase',
+        filterVariant: 'select',
+        filterFn: 'equals', // Use equals for select filters
+        mantineFilterSelectProps: {
+          data: phasesOptions.map(opt => ({ label: opt.label, value: opt.value })),
+        },
         Cell: ({ row }) => phases[row.original.phase ?? ''] ?? '',
       },
       {
+        id: 'ranch.name', // Explicit ID for filtering
         accessorKey: 'ranch.name',
         accessorFn: (row) => row.ranch?.name || '',
         header: 'Rancho',
+        filterVariant: 'select',
+        filterFn: 'equals', // Use equals for select filters
+        mantineFilterSelectProps: {
+          data: ranchesOptions,
+        },
         Cell: ({ row }) =>
           row.original.ranch?.name && (
             <Badge ff="Rye" variant="outline" color="white" radius="xs">
@@ -88,32 +135,54 @@ export function MembersTable({
             </Badge>
           ),
       },
-      { accessorKey: 'residence', header: 'Residência' },
-      { accessorKey: 'responsibility', header: 'Encargo' },
+      { 
+        accessorKey: 'residence', 
+        header: 'Residência',
+        filterVariant: 'text',
+      },
+      { 
+        accessorKey: 'responsibility', 
+        header: 'Encargo',
+        filterVariant: 'text',
+      },
       {
+        id: 'godfather.name', // Explicit ID for filtering
         accessorKey: 'godfather.name',
         accessorFn: (row) => row.godfather?.name || '',
         header: 'Padrinho',
+        filterVariant: 'select',
+        filterFn: 'equals', // Use equals for select filters
+        mantineFilterSelectProps: {
+          data: membersOptions,
+        },
       },
-      { accessorKey: 'name', header: 'Nome' },
+      { 
+        accessorKey: 'name', 
+        header: 'Nome',
+        filterVariant: 'text',
+      },
       {
         accessorKey: 'birthday',
         header: 'Aniversário',
+        filterVariant: 'date',
         Cell: ({ row }) => birthdayBR(row.original.birthday),
       },
       {
         accessorKey: 'dateProspect',
         header: 'Data Prospect',
+        filterVariant: 'date',
         Cell: ({ row }) => dateBR(row.original.dateProspect),
       },
       {
         accessorKey: 'dateHalfPatch',
         header: 'Data Meio escudo',
+        filterVariant: 'date',
         Cell: ({ row }) => dateBR(row.original.dateHalfPatch),
       },
       {
         accessorKey: 'dateFullPatch',
         header: 'Data Full patch',
+        filterVariant: 'date',
         Cell: ({ row }) => dateBR(row.original.dateFullPatch),
       },
       {
@@ -151,7 +220,7 @@ export function MembersTable({
         header: 'Cônjuge',
       },
     ],
-    []
+    [ranchesOptions, membersOptions]
   );
 
   const csvData = useMemo(
@@ -251,6 +320,7 @@ export function MembersTable({
       pagination={pagination}
       onPageChange={onPageChange}
       onPageSizeChange={onPageSizeChange}
+      enableFilters={true}
       columnVisibility={{
         blood: false,
         phone: false,
