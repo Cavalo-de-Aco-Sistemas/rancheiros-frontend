@@ -273,19 +273,59 @@ export function CRUDTable<T extends MRT_RowData>(props: CRUDTableProps<T>) {
   }, [permissions, location.pathname, super_admin]);
 
   const handleExportRowsPDF = useCallback(
-    (rows: MRT_Row<T>[]) => {
+    (rows: MRT_Row<T>[], table?: any) => {
       const doc = new jsPDF({
         orientation: 'landscape',
       });
-      const tableData = rows.map(rowMapper);
+      
+      // Get visible columns if table is provided
+      let visibleHeaders = tableHeaders;
+      let filteredRowMapper = rowMapper;
+      
+      if (table) {
+        const visibleColumns = table.getVisibleColumns();
+        const visibleColumnIds = new Set(visibleColumns.map((col: any) => col.id));
+        
+        // Filter headers and row mapper based on visible columns
+        // Map column accessorKeys to indices in tableHeaders
+        const columnIdToIndex = new Map<string, number>();
+        finalColumns.forEach((col, index) => {
+          const colId = col.id || ('accessorKey' in col ? (col.accessorKey as string) : '');
+          if (colId) {
+            columnIdToIndex.set(colId, index);
+          }
+        });
+        
+        // Filter tableHeaders and create filtered row mapper
+        const visibleIndices: number[] = [];
+        const filteredHeaders: string[] = [];
+        
+        finalColumns.forEach((col, index) => {
+          const colId = col.id || ('accessorKey' in col ? (col.accessorKey as string) : '');
+          if (colId && visibleColumnIds.has(colId) && index < tableHeaders.length) {
+            visibleIndices.push(index);
+            filteredHeaders.push(tableHeaders[index]);
+          }
+        });
+        
+        visibleHeaders = filteredHeaders;
+        filteredRowMapper = (row: MRT_Row<T>) => {
+          const fullRow = rowMapper(row);
+          // Ensure fullRow is treated as an array
+          const rowArray = Array.isArray(fullRow) ? fullRow : [String(fullRow)];
+          return visibleIndices.map(idx => rowArray[idx] || '');
+        };
+      }
+      
+      const tableData = rows.map(filteredRowMapper);
       autoTable(doc, {
-        head: [tableHeaders],
+        head: [visibleHeaders],
         body: tableData,
       });
 
       doc.save(`${filename}.pdf`);
     },
-    [filename, rowMapper, tableHeaders]
+    [filename, rowMapper, tableHeaders, finalColumns]
   );
 
   const csvConfig = useMemo(
@@ -408,7 +448,7 @@ export function CRUDTable<T extends MRT_RowData>(props: CRUDTableProps<T>) {
       enableColumnFiltering: enableFilters,
       enableGlobalFiltering: enableFilters,
       // Configurações específicas para filtros
-      enableMultiSort: false,
+      enableMultiSort: true,
       enableMultiColumnFiltering: true,
       // Configurações de ordenação (server-side quando paginação está habilitada)
       enableSorting: true,
@@ -524,10 +564,56 @@ export function CRUDTable<T extends MRT_RowData>(props: CRUDTableProps<T>) {
     ]
   );
 
-  const handleExportDataCSV = useCallback(() => {
-    const csv = generateCsv(csvConfig)(csvData ?? []);
+  const handleExportDataCSV = useCallback((table?: any) => {
+    let filteredCsvData = csvData ?? [];
+    
+    // Filter CSV data based on visible columns if table is provided
+    if (table && csvData && csvData.length > 0) {
+      const visibleColumns = table.getVisibleColumns();
+      
+      // Map column headers to CSV keys
+      const headerToCsvKey = new Map<string, string>();
+      const csvKeys = Object.keys(csvData[0]);
+      
+      // Create mapping from column header to CSV key
+      finalColumns.forEach((col) => {
+        const headerText = typeof col.header === 'string' ? col.header : '';
+        if (headerText) {
+          // Find matching CSV key by exact header match
+          const matchingKey = csvKeys.find(key => key === headerText);
+          if (matchingKey) {
+            headerToCsvKey.set(headerText, matchingKey);
+          }
+        }
+      });
+      
+      // Get visible column headers
+      const visibleHeaders = new Set<string>();
+      visibleColumns.forEach((col: any) => {
+        const headerText = typeof col.columnDef.header === 'string' 
+          ? col.columnDef.header 
+          : '';
+        if (headerText) {
+          visibleHeaders.add(headerText);
+        }
+      });
+      
+      // Filter CSV data to only include visible columns
+      filteredCsvData = csvData.map((row) => {
+        const filteredRow: any = {};
+        visibleHeaders.forEach((header) => {
+          const csvKey = headerToCsvKey.get(header);
+          if (csvKey && row[csvKey] !== undefined) {
+            filteredRow[csvKey] = row[csvKey];
+          }
+        });
+        return filteredRow;
+      });
+    }
+    
+    const csv = generateCsv(csvConfig)(filteredCsvData);
     download(csvConfig)(csv);
-  }, [csvConfig, csvData]);
+  }, [csvConfig, csvData, finalColumns]);
 
   const table = useMantineReactTable<T>({
     ...tableConfig,
@@ -608,13 +694,13 @@ export function CRUDTable<T extends MRT_RowData>(props: CRUDTableProps<T>) {
         <MRT_ShowHideColumnsButton table={table} />
         <MRT_ToggleFullScreenButton table={table} />
         <ActionIcon
-          onClick={() => handleExportRowsPDF(table.getPrePaginationRowModel().rows)}
+          onClick={() => handleExportRowsPDF(table.getPrePaginationRowModel().rows, table)}
           variant="subtle"
           color="gray"
         >
           <IconPdf />
         </ActionIcon>
-        <ActionIcon onClick={handleExportDataCSV} color="gray" variant="subtle">
+        <ActionIcon onClick={() => handleExportDataCSV(table)} color="gray" variant="subtle">
           <IconCsv />
         </ActionIcon>
         {create && !isReadOnly && open && setSelected && setAction && (

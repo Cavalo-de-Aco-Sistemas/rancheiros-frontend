@@ -104,6 +104,11 @@ export const GraphQLCRUDProvider = ({
       return undefined;
     }
 
+    // Support multiple sorting
+    const sortByArray = sorting.length > 0 ? sorting.map(s => s.id) : undefined;
+    const sortOrderArray = sorting.length > 0 ? sorting.map(s => (s.desc ? 'DESC' : 'ASC')) : undefined;
+
+    // Backward compatibility: also send single sortBy/sortOrder if only one sort field
     const sortBy = sorting.length > 0 ? sorting[0].id : undefined;
     const sortOrder = sorting.length > 0 ? (sorting[0].desc ? 'DESC' : 'ASC') : undefined;
 
@@ -113,6 +118,8 @@ export const GraphQLCRUDProvider = ({
         limit: pagination.limit,
         ...(sortBy && { sortBy }),
         ...(sortOrder && { sortOrder }),
+        ...(sortByArray && sortByArray.length > 0 && { sortByArray }),
+        ...(sortOrderArray && sortOrderArray.length > 0 && { sortOrderArray }),
       },
     };
   }, [enablePagination, pagination, sorting]);

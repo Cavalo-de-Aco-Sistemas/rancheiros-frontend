@@ -21,20 +21,20 @@ const digits = /\d+/g;
 const phases = optionsToObject(phasesOptions);
 
 const tableHeaders = [
-  'Nome',
   'Nome no Patch',
-  'Tipo sanguíneo',
   'Fase',
-  'Aniversário',
-  'Telefone',
   'Rancho',
   'Residência',
   'Encargo',
+  'Padrinho',
+  'Nome',
+  'Aniversário',
   'Data Prospect',
   'Data Meio escudo',
   'Data Full patch',
+  'Tipo sanguíneo',
+  'Telefone',
   'Cônjuge',
-  'Padrinho',
 ];
 
 interface MembersTableProps {
@@ -62,7 +62,6 @@ export function MembersTable({
 
   const columns = useMemo<MRT_ColumnDef<Member>[]>(
     () => [
-      { accessorKey: 'name', header: 'Nome' },
       {
         accessorKey: 'patch',
         header: 'Nome no Patch',
@@ -74,6 +73,50 @@ export function MembersTable({
           ),
       },
       {
+        accessorKey: 'phase',
+        header: 'Fase',
+        Cell: ({ row }) => phases[row.original.phase ?? ''] ?? '',
+      },
+      {
+        accessorKey: 'ranch.name',
+        accessorFn: (row) => row.ranch?.name || '',
+        header: 'Rancho',
+        Cell: ({ row }) =>
+          row.original.ranch?.name && (
+            <Badge ff="Rye" variant="outline" color="white" radius="xs">
+              {row.original.ranch.name}
+            </Badge>
+          ),
+      },
+      { accessorKey: 'residence', header: 'Residência' },
+      { accessorKey: 'responsibility', header: 'Encargo' },
+      {
+        accessorKey: 'godfather.name',
+        accessorFn: (row) => row.godfather?.name || '',
+        header: 'Padrinho',
+      },
+      { accessorKey: 'name', header: 'Nome' },
+      {
+        accessorKey: 'birthday',
+        header: 'Aniversário',
+        Cell: ({ row }) => birthdayBR(row.original.birthday),
+      },
+      {
+        accessorKey: 'dateProspect',
+        header: 'Data Prospect',
+        Cell: ({ row }) => dateBR(row.original.dateProspect),
+      },
+      {
+        accessorKey: 'dateHalfPatch',
+        header: 'Data Meio escudo',
+        Cell: ({ row }) => dateBR(row.original.dateHalfPatch),
+      },
+      {
+        accessorKey: 'dateFullPatch',
+        header: 'Data Full patch',
+        Cell: ({ row }) => dateBR(row.original.dateFullPatch),
+      },
+      {
         accessorKey: 'blood',
         header: 'Tipo sanguíneo',
         Cell: ({ row }) =>
@@ -82,16 +125,6 @@ export function MembersTable({
               {row.original.blood}
             </Badge>
           ),
-      },
-      {
-        accessorKey: 'phase',
-        header: 'Fase',
-        Cell: ({ row }) => phases[row.original.phase ?? ''] ?? '',
-      },
-      {
-        accessorKey: 'birthday',
-        header: 'Aniversário',
-        Cell: ({ row }) => birthdayBR(row.original.birthday),
       },
       {
         accessorKey: 'phone',
@@ -113,42 +146,9 @@ export function MembersTable({
           ),
       },
       {
-        accessorKey: 'ranch.name',
-        accessorFn: (row) => row.ranch?.name || '',
-        header: 'Rancho',
-        Cell: ({ row }) =>
-          row.original.ranch?.name && (
-            <Badge ff="Rye" variant="outline" color="white" radius="xs">
-              {row.original.ranch.name}
-            </Badge>
-          ),
-      },
-      { accessorKey: 'residence', header: 'Residência' },
-      { accessorKey: 'responsibility', header: 'Encargo' },
-      {
-        accessorKey: 'dateProspect',
-        header: 'Data Prospect',
-        Cell: ({ row }) => dateBR(row.original.dateProspect),
-      },
-      {
-        accessorKey: 'dateHalfPatch',
-        header: 'Data Meio escudo',
-        Cell: ({ row }) => dateBR(row.original.dateHalfPatch),
-      },
-      {
-        accessorKey: 'dateFullPatch',
-        header: 'Data Full patch',
-        Cell: ({ row }) => dateBR(row.original.dateFullPatch),
-      },
-      {
         accessorKey: 'spouse.name',
         accessorFn: (row) => row.spouse?.name || '',
         header: 'Cônjuge',
-      },
-      {
-        accessorKey: 'godfather.name',
-        accessorFn: (row) => row.godfather?.name || '',
-        header: 'Padrinho',
       },
     ],
     []
@@ -173,20 +173,20 @@ export function MembersTable({
           spouse,
           godfather,
         }: Member) => ({
-          Nome: name,
           'Nome no Patch': patch ?? '',
-          'Tipo sanguíneo': blood ?? '',
           Fase: phase ?? '',
-          Aniversário: birthday ? (birthdayBR(birthday) ?? '') : '',
-          Telefone: phone ?? '',
           Rancho: ranch?.name ?? '',
           Residência: residence ?? '',
           Encargo: responsibility ?? '',
+          Padrinho: godfather?.name ?? '',
+          Nome: name,
+          Aniversário: birthday ? (birthdayBR(birthday) ?? '') : '',
           'Data Prospect': dateProspect ? (dateBR(dateProspect) ?? '') : '',
           'Data Meio escudo': dateHalfPatch ? (dateBR(dateHalfPatch) ?? '') : '',
           'Data Full patch': dateFullPatch ? (dateBR(dateFullPatch) ?? '') : '',
+          'Tipo sanguíneo': blood ?? '',
+          Telefone: phone ?? '',
           Cônjuge: spouse?.name ?? '',
-          Padrinho: godfather?.name ?? '',
         })
       ),
     [data]
@@ -210,20 +210,20 @@ export function MembersTable({
       godfather,
     } = row.original;
     return [
-      name,
-      patch ?? '',
-      blood ?? '',
-      phase ?? '',
-      birthday ? (birthdayBR(birthday) ?? '') : '',
-      phone ?? '',
-      ranch?.name ?? '',
-      residence ?? '',
-      responsibility ?? '',
-      dateProspect ? (dateBR(dateProspect) ?? '') : '',
-      dateHalfPatch ? (dateBR(dateHalfPatch) ?? '') : '',
-      dateFullPatch ? (dateBR(dateFullPatch) ?? '') : '',
-      spouse?.name ?? '',
-      godfather?.name ?? '',
+      patch ?? '', // Nome no Patch
+      phases[phase ?? ''] ?? '', // Fase
+      ranch?.name ?? '', // Rancho
+      residence ?? '', // Residência
+      responsibility ?? '', // Encargo
+      godfather?.name ?? '', // Padrinho
+      name, // Nome
+      birthday ? (birthdayBR(birthday) ?? '') : '', // Aniversário
+      dateProspect ? (dateBR(dateProspect) ?? '') : '', // Data Prospect
+      dateHalfPatch ? (dateBR(dateHalfPatch) ?? '') : '', // Data Meio escudo
+      dateFullPatch ? (dateBR(dateFullPatch) ?? '') : '', // Data Full patch
+      blood ?? '', // Tipo sanguíneo
+      phone ?? '', // Telefone
+      spouse?.name ?? '', // Cônjuge
     ];
   }, []);
 
@@ -251,6 +251,11 @@ export function MembersTable({
       pagination={pagination}
       onPageChange={onPageChange}
       onPageSizeChange={onPageSizeChange}
+      columnVisibility={{
+        blood: false,
+        phone: false,
+        'spouse.name': false,
+      }}
       emptyStateMessage="Nenhum membro encontrado"
       emptyStateDescription="Os membros aparecerão aqui conforme forem sendo cadastrados"
     />
