@@ -294,8 +294,8 @@ export function CRUDTable<T extends MRT_RowData>(props: CRUDTableProps<T>) {
       let visibleHeaders = tableHeaders;
       let filteredRowMapper = rowMapper;
       
-      if (table) {
-        const visibleColumns = table.getVisibleColumns();
+      if (table && typeof table.getVisibleLeafColumns === 'function') {
+        const visibleColumns = table.getVisibleLeafColumns();
         const visibleColumnIds = new Set(visibleColumns.map((col: any) => col.id));
         
         // Filter headers and row mapper based on visible columns
@@ -587,8 +587,8 @@ export function CRUDTable<T extends MRT_RowData>(props: CRUDTableProps<T>) {
     let filteredCsvData = csvData ?? [];
     
     // Filter CSV data based on visible columns if table is provided
-    if (table && csvData && csvData.length > 0) {
-      const visibleColumns = table.getVisibleColumns();
+    if (table && typeof table.getVisibleLeafColumns === 'function' && csvData && csvData.length > 0) {
+      const visibleColumns = table.getVisibleLeafColumns();
       
       // Map column headers to CSV keys
       const headerToCsvKey = new Map<string, string>();
