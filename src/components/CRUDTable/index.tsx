@@ -121,6 +121,10 @@ export function CRUDTable<T extends MRT_RowData>(props: CRUDTableProps<T>) {
     setColumnFilters: setContextColumnFilters,
     globalFilter: contextGlobalFilter,
     setGlobalFilter: setContextGlobalFilter,
+    sorting: contextSorting,
+    setSorting: setContextSorting,
+    pagination: contextPagination,
+    setPagination: setContextPagination,
   } = context || {};
 
   // Try to use shared filters, fallback to context filters
@@ -135,18 +139,30 @@ export function CRUDTable<T extends MRT_RowData>(props: CRUDTableProps<T>) {
     globalFilter = localGlobalFilter;
     setGlobalFilter = setLocalGlobalFilter;
   } else {
-    try {
-      const sharedFilters = useSharedFilters();
-      columnFilters = sharedFilters.filters.columnFilters;
-      setColumnFilters = sharedFilters.setColumnFilters;
-      globalFilter = sharedFilters.filters.globalFilter;
-      setGlobalFilter = sharedFilters.setGlobalFilter;
-    } catch {
-      // Fallback to context filters
-      columnFilters = contextColumnFilters;
+    // For GraphQL tables with server-side filtering (pagination enabled),
+    // always use GraphQLCRUDContext filters, not SharedFiltersContext
+    // SharedFiltersContext is only for client-side filtering (like Enrollments without pagination)
+    if (pagination && enableFilters) {
+      // Server-side filtering: MUST use GraphQL context
+      columnFilters = contextColumnFilters || [];
       setColumnFilters = setContextColumnFilters;
-      globalFilter = contextGlobalFilter;
+      globalFilter = contextGlobalFilter || '';
       setGlobalFilter = setContextGlobalFilter;
+    } else {
+      // Client-side filtering: try shared filters first, fallback to context
+      try {
+        const sharedFilters = useSharedFilters();
+        columnFilters = sharedFilters.filters.columnFilters;
+        setColumnFilters = sharedFilters.setColumnFilters;
+        globalFilter = sharedFilters.filters.globalFilter;
+        setGlobalFilter = sharedFilters.setGlobalFilter;
+      } catch {
+        // Fallback to context filters
+        columnFilters = contextColumnFilters || [];
+        setColumnFilters = setContextColumnFilters;
+        globalFilter = contextGlobalFilter || '';
+        setGlobalFilter = setContextGlobalFilter;
+      }
     }
   }
 
@@ -269,19 +285,59 @@ export function CRUDTable<T extends MRT_RowData>(props: CRUDTableProps<T>) {
   }, [permissions, location.pathname, super_admin]);
 
   const handleExportRowsPDF = useCallback(
-    (rows: MRT_Row<T>[]) => {
+    (rows: MRT_Row<T>[], table?: any) => {
       const doc = new jsPDF({
         orientation: 'landscape',
       });
-      const tableData = rows.map(rowMapper);
+      
+      // Get visible columns if table is provided
+      let visibleHeaders = tableHeaders;
+      let filteredRowMapper = rowMapper;
+      
+      if (table && typeof table.getVisibleLeafColumns === 'function') {
+        const visibleColumns = table.getVisibleLeafColumns();
+        const visibleColumnIds = new Set(visibleColumns.map((col: any) => col.id));
+        
+        // Filter headers and row mapper based on visible columns
+        // Map column accessorKeys to indices in tableHeaders
+        const columnIdToIndex = new Map<string, number>();
+        finalColumns.forEach((col, index) => {
+          const colId = col.id || ('accessorKey' in col ? (col.accessorKey as string) : '');
+          if (colId) {
+            columnIdToIndex.set(colId, index);
+          }
+        });
+        
+        // Filter tableHeaders and create filtered row mapper
+        const visibleIndices: number[] = [];
+        const filteredHeaders: string[] = [];
+        
+        finalColumns.forEach((col, index) => {
+          const colId = col.id || ('accessorKey' in col ? (col.accessorKey as string) : '');
+          if (colId && visibleColumnIds.has(colId) && index < tableHeaders.length) {
+            visibleIndices.push(index);
+            filteredHeaders.push(tableHeaders[index]);
+          }
+        });
+        
+        visibleHeaders = filteredHeaders;
+        filteredRowMapper = (row: MRT_Row<T>) => {
+          const fullRow = rowMapper(row);
+          // Ensure fullRow is treated as an array
+          const rowArray = Array.isArray(fullRow) ? fullRow : [String(fullRow)];
+          return visibleIndices.map(idx => rowArray[idx] || '');
+        };
+      }
+      
+      const tableData = rows.map(filteredRowMapper);
       autoTable(doc, {
-        head: [tableHeaders],
+        head: [visibleHeaders],
         body: tableData,
       });
 
       doc.save(`${filename}.pdf`);
     },
-    [filename, rowMapper, tableHeaders]
+    [filename, rowMapper, tableHeaders, finalColumns]
   );
 
   const csvConfig = useMemo(
@@ -329,8 +385,8 @@ export function CRUDTable<T extends MRT_RowData>(props: CRUDTableProps<T>) {
         isLoading,
         showAlertBanner: isError,
         showProgressBars: isFetching,
-        columnFilters: enableFilters ? columnFilters : undefined,
-        globalFilter: enableFilters ? globalFilter : undefined,
+        columnFilters: enableFilters ? (columnFilters || []) : undefined, // Ensure it's always an array
+        globalFilter: enableFilters ? (globalFilter || '') : undefined, // Ensure it's always a string
         density: 'xs' as const, // Forçar densidade mínima
         pagination: pagination
           ? {
@@ -341,6 +397,7 @@ export function CRUDTable<T extends MRT_RowData>(props: CRUDTableProps<T>) {
               pageIndex: 0,
               pageSize: 50,
             },
+        sorting: contextSorting || undefined,
       },
       // Configuração para estado vazio
       renderEmptyRowsFallback: () => (
@@ -393,9 +450,16 @@ export function CRUDTable<T extends MRT_RowData>(props: CRUDTableProps<T>) {
       manualFiltering: enableFilters,
       onColumnFiltersChange: enableFilters
         ? (updaterOrValue: any) => {
+            const currentFilters = columnFilters || [];
             const newFilters =
-              typeof updaterOrValue === 'function' ? updaterOrValue(columnFilters) : updaterOrValue;
-            setColumnFilters?.(newFilters);
+              typeof updaterOrValue === 'function' ? updaterOrValue(currentFilters) : updaterOrValue;
+            if (setColumnFilters) {
+              setColumnFilters(newFilters);
+            }
+            // Reset to first page when filters change
+            if (pagination && onPageChange) {
+              onPageChange(1);
+            }
           }
         : undefined,
       onGlobalFilterChange: enableFilters ? setGlobalFilter : undefined,
@@ -403,8 +467,18 @@ export function CRUDTable<T extends MRT_RowData>(props: CRUDTableProps<T>) {
       enableColumnFiltering: enableFilters,
       enableGlobalFiltering: enableFilters,
       // Configurações específicas para filtros
-      enableMultiSort: false,
+      enableMultiSort: true,
       enableMultiColumnFiltering: true,
+      // Configurações de ordenação (server-side quando paginação está habilitada)
+      enableSorting: true,
+      manualSorting: !!pagination, // Server-side sorting when pagination is enabled
+      onSortingChange: pagination && setContextSorting
+        ? (updaterOrValue: any) => {
+            const newSorting =
+              typeof updaterOrValue === 'function' ? updaterOrValue(contextSorting || []) : updaterOrValue;
+            setContextSorting(newSorting);
+          }
+        : undefined,
       // Configurações de paginação
       enablePagination: true,
       enableRowSelection: false,
@@ -504,13 +578,61 @@ export function CRUDTable<T extends MRT_RowData>(props: CRUDTableProps<T>) {
       globalFilter,
       setColumnFilters,
       setGlobalFilter,
+      contextSorting,
+      setContextSorting,
     ]
   );
 
-  const handleExportDataCSV = useCallback(() => {
-    const csv = generateCsv(csvConfig)(csvData ?? []);
+  const handleExportDataCSV = useCallback((table?: any) => {
+    let filteredCsvData = csvData ?? [];
+    
+    // Filter CSV data based on visible columns if table is provided
+    if (table && typeof table.getVisibleLeafColumns === 'function' && csvData && csvData.length > 0) {
+      const visibleColumns = table.getVisibleLeafColumns();
+      
+      // Map column headers to CSV keys
+      const headerToCsvKey = new Map<string, string>();
+      const csvKeys = Object.keys(csvData[0]);
+      
+      // Create mapping from column header to CSV key
+      finalColumns.forEach((col) => {
+        const headerText = typeof col.header === 'string' ? col.header : '';
+        if (headerText) {
+          // Find matching CSV key by exact header match
+          const matchingKey = csvKeys.find(key => key === headerText);
+          if (matchingKey) {
+            headerToCsvKey.set(headerText, matchingKey);
+          }
+        }
+      });
+      
+      // Get visible column headers
+      const visibleHeaders = new Set<string>();
+      visibleColumns.forEach((col: any) => {
+        const headerText = typeof col.columnDef.header === 'string' 
+          ? col.columnDef.header 
+          : '';
+        if (headerText) {
+          visibleHeaders.add(headerText);
+        }
+      });
+      
+      // Filter CSV data to only include visible columns
+      filteredCsvData = csvData.map((row) => {
+        const filteredRow: any = {};
+        visibleHeaders.forEach((header) => {
+          const csvKey = headerToCsvKey.get(header);
+          if (csvKey && row[csvKey] !== undefined) {
+            filteredRow[csvKey] = row[csvKey];
+          }
+        });
+        return filteredRow;
+      });
+    }
+    
+    const csv = generateCsv(csvConfig)(filteredCsvData);
     download(csvConfig)(csv);
-  }, [csvConfig, csvData]);
+  }, [csvConfig, csvData, finalColumns]);
 
   const table = useMantineReactTable<T>({
     ...tableConfig,
@@ -591,13 +713,13 @@ export function CRUDTable<T extends MRT_RowData>(props: CRUDTableProps<T>) {
         <MRT_ShowHideColumnsButton table={table} />
         <MRT_ToggleFullScreenButton table={table} />
         <ActionIcon
-          onClick={() => handleExportRowsPDF(table.getPrePaginationRowModel().rows)}
+          onClick={() => handleExportRowsPDF(table.getPrePaginationRowModel().rows, table)}
           variant="subtle"
           color="gray"
         >
           <IconPdf />
         </ActionIcon>
-        <ActionIcon onClick={handleExportDataCSV} color="gray" variant="subtle">
+        <ActionIcon onClick={() => handleExportDataCSV(table)} color="gray" variant="subtle">
           <IconCsv />
         </ActionIcon>
         {create && !isReadOnly && open && setSelected && setAction && (

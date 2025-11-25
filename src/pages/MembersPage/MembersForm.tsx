@@ -53,12 +53,22 @@ const parseSelected = (member: Member): MemberDto => {
     spouse,
     godfather,
   } = member;
+  
+  // Normalize birthday to year 2000
+  let normalizedBirthday: Date | null = null;
+  if (birthday) {
+    const birthdayDate = toDate(birthday);
+    if (birthdayDate instanceof Date) {
+      normalizedBirthday = new Date(2000, birthdayDate.getMonth(), birthdayDate.getDate());
+    }
+  }
+  
   return {
     name,
     phase,
     blood,
     patch,
-    birthday: toDate(birthday),
+    birthday: normalizedBirthday,
     phone,
     ranch: ranch?.id.toString(),
     residence,
@@ -69,6 +79,18 @@ const parseSelected = (member: Member): MemberDto => {
     spouse: spouse?.id.toString(),
     godfather: godfather?.id.toString(),
   };
+};
+
+// Transform data before submission to normalize birthday to year 2000
+const transformData = (data: MemberDto): any => {
+  const transformed = { ...data };
+  
+  // Normalize birthday to year 2000 if present
+  if (transformed.birthday instanceof Date) {
+    transformed.birthday = new Date(2000, transformed.birthday.getMonth(), transformed.birthday.getDate());
+  }
+  
+  return transformed;
 };
 
 export default function MembersForm() {
@@ -123,6 +145,7 @@ export default function MembersForm() {
       refetchQueries={[{ query: GET_MEMBERS }]}
       modalProps={{ title: 'Cadastro de Membros', size: 'xl' }}
       entityName="Membro"
+      transformData={transformData}
       handleError={(error) => {
         const message = error.message.toLowerCase();
         if (message.includes('unique') || message.includes('duplicate')) {

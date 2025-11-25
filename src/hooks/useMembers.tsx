@@ -18,7 +18,7 @@ import { GET_MEMBERS } from '@/graphql/members';
  */
 export function MembersProvider({ children }: { children: ReactNode }) {
   return (
-    <GraphQLCRUDProvider query={GET_MEMBERS} dataKey="members">
+    <GraphQLCRUDProvider query={GET_MEMBERS} dataKey="members" enablePagination>
       {children}
     </GraphQLCRUDProvider>
   );

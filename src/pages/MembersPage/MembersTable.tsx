@@ -1,11 +1,15 @@
-import { useCallback, useMemo } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
 import { MRT_ColumnDef, MRT_Row } from 'mantine-react-table';
 import { Anchor, Badge } from '@mantine/core';
+import { useQuery } from '@apollo/client';
 import { CRUDTable } from '@/components/CRUDTable';
 import { useGraphQLCRUD } from '@/contexts/GraphQLCRUDContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { Member } from '@/model/member';
+import { Ranch } from '@/model/ranch';
 import { birthdayBR, dateBR } from '@/utils/dates';
 import { phasesOptions } from './MembersForm';
+import { GET_RANCHES } from '@/graphql/ranches';
 
 const optionsToObject = (
   options: {
@@ -21,20 +25,20 @@ const digits = /\d+/g;
 const phases = optionsToObject(phasesOptions);
 
 const tableHeaders = [
-  'Nome',
   'Nome no Patch',
-  'Tipo sanguíneo',
   'Fase',
-  'Aniversário',
-  'Telefone',
   'Rancho',
   'Residência',
   'Encargo',
+  'Padrinho',
+  'Nome',
+  'Aniversário',
   'Data Prospect',
   'Data Meio escudo',
   'Data Full patch',
+  'Tipo sanguíneo',
+  'Telefone',
   'Cônjuge',
-  'Padrinho',
 ];
 
 interface MembersTableProps {
@@ -50,21 +54,136 @@ export function MembersTable({
   currentPage = 1,
   pageSize = 10,
 }: MembersTableProps = {}) {
-  const { query } = useGraphQLCRUD();
+  const { query, setPagination } = useGraphQLCRUD();
+  const { ranches: authRanches, super_admin } = useAuth();
   const data = (query.data || []) as Member[];
+
+  // Query all ranches (for super_admin) or use auth ranches (for regular users)
+  const { data: ranchesData } = useQuery(GET_RANCHES, {
+    skip: !super_admin,
+  });
+
+  // Get ranches options for filter
+  const ranchesOptions = useMemo(() => {
+    const sourceRanches = super_admin 
+      ? (ranchesData?.ranches || [])
+      : (authRanches || []);
+    
+    if (!sourceRanches || sourceRanches.length === 0) {
+      return [];
+    }
+    
+    return sourceRanches
+      .filter((ranch: Ranch | null | undefined): ranch is Ranch => !!ranch && !!ranch.id)
+      .map((ranch: Ranch) => ({ label: ranch.name, value: ranch.name }));
+  }, [super_admin, authRanches, ranchesData]);
+
+  // Get members options for godfather and spouse filters
+  const membersOptions = useMemo(
+    () =>
+      data.map((member: Member) => ({
+        label: member.name,
+        value: member.name,
+      })),
+    [data]
+  );
+
+  // Sincronizar paginação com contexto para server-side sorting
+  useEffect(() => {
+    if (setPagination) {
+      setPagination({ page: currentPage, limit: pageSize });
+    }
+  }, [currentPage, pageSize, setPagination]);
 
   const columns = useMemo<MRT_ColumnDef<Member>[]>(
     () => [
-      { accessorKey: 'name', header: 'Nome' },
       {
         accessorKey: 'patch',
         header: 'Nome no Patch',
+        filterVariant: 'text',
         Cell: ({ row }) =>
           row.original.patch && (
             <Badge ff="Rye" variant="outline" color="white" radius="xs">
               {row.original.patch}
             </Badge>
           ),
+      },
+      {
+        accessorKey: 'phase',
+        header: 'Fase',
+        filterVariant: 'select',
+        filterFn: 'equals', // Use equals for select filters
+        mantineFilterSelectProps: {
+          data: phasesOptions.map(opt => ({ label: opt.label, value: opt.value })),
+        },
+        Cell: ({ row }) => phases[row.original.phase ?? ''] ?? '',
+      },
+      {
+        id: 'ranch.name', // Explicit ID for filtering
+        accessorKey: 'ranch.name',
+        accessorFn: (row) => row.ranch?.name || '',
+        header: 'Rancho',
+        filterVariant: 'select',
+        filterFn: 'equals', // Use equals for select filters
+        mantineFilterSelectProps: {
+          data: ranchesOptions,
+        },
+        Cell: ({ row }) =>
+          row.original.ranch?.name && (
+            <Badge ff="Rye" variant="outline" color="white" radius="xs">
+              {row.original.ranch.name}
+            </Badge>
+          ),
+      },
+      { 
+        accessorKey: 'residence', 
+        header: 'Residência',
+        filterVariant: 'text',
+      },
+      { 
+        accessorKey: 'responsibility', 
+        header: 'Encargo',
+        filterVariant: 'text',
+      },
+      {
+        id: 'godfather.name', // Explicit ID for filtering
+        accessorKey: 'godfather.name',
+        accessorFn: (row) => row.godfather?.name || '',
+        header: 'Padrinho',
+        filterVariant: 'select',
+        filterFn: 'equals', // Use equals for select filters
+        mantineFilterSelectProps: {
+          data: membersOptions,
+        },
+      },
+      { 
+        accessorKey: 'name', 
+        header: 'Nome',
+        filterVariant: 'text',
+      },
+      {
+        accessorKey: 'birthday',
+        header: 'Aniversário',
+        filterVariant: 'date',
+        Cell: ({ row }) => birthdayBR(row.original.birthday),
+      },
+      {
+        accessorKey: 'dateProspect',
+        header: 'Data Prospect',
+        filterVariant: 'date',
+        Cell: ({ row }) => dateBR(row.original.dateProspect),
+      },
+      {
+        accessorKey: 'dateHalfPatch',
+        header: 'Data Meio escudo',
+        filterVariant: 'date',
+        Cell: ({ row }) => dateBR(row.original.dateHalfPatch),
+      },
+      {
+        accessorKey: 'dateFullPatch',
+        header: 'Data Full patch',
+        filterVariant: 'date',
+        Cell: ({ row }) => dateBR(row.original.dateFullPatch),
       },
       {
         accessorKey: 'blood',
@@ -75,16 +194,6 @@ export function MembersTable({
               {row.original.blood}
             </Badge>
           ),
-      },
-      {
-        accessorKey: 'phase',
-        header: 'Fase',
-        Cell: ({ row }) => phases[row.original.phase ?? ''] ?? '',
-      },
-      {
-        accessorKey: 'birthday',
-        header: 'Aniversário',
-        Cell: ({ row }) => birthdayBR(row.original.birthday),
       },
       {
         accessorKey: 'phone',
@@ -106,45 +215,12 @@ export function MembersTable({
           ),
       },
       {
-        accessorKey: 'ranch.name',
-        accessorFn: (row) => row.ranch?.name || '',
-        header: 'Rancho',
-        Cell: ({ row }) =>
-          row.original.ranch?.name && (
-            <Badge ff="Rye" variant="outline" color="white" radius="xs">
-              {row.original.ranch.name}
-            </Badge>
-          ),
-      },
-      { accessorKey: 'residence', header: 'Residência' },
-      { accessorKey: 'responsibility', header: 'Encargo' },
-      {
-        accessorKey: 'dateProspect',
-        header: 'Data Prospect',
-        Cell: ({ row }) => dateBR(row.original.dateProspect),
-      },
-      {
-        accessorKey: 'dateHalfPatch',
-        header: 'Data Meio escudo',
-        Cell: ({ row }) => dateBR(row.original.dateHalfPatch),
-      },
-      {
-        accessorKey: 'dateFullPatch',
-        header: 'Data Full patch',
-        Cell: ({ row }) => dateBR(row.original.dateFullPatch),
-      },
-      {
         accessorKey: 'spouse.name',
         accessorFn: (row) => row.spouse?.name || '',
         header: 'Cônjuge',
       },
-      {
-        accessorKey: 'godfather.name',
-        accessorFn: (row) => row.godfather?.name || '',
-        header: 'Padrinho',
-      },
     ],
-    []
+    [ranchesOptions, membersOptions]
   );
 
   const csvData = useMemo(
@@ -166,20 +242,20 @@ export function MembersTable({
           spouse,
           godfather,
         }: Member) => ({
-          Nome: name,
           'Nome no Patch': patch ?? '',
-          'Tipo sanguíneo': blood ?? '',
           Fase: phase ?? '',
-          Aniversário: birthday ? (birthdayBR(birthday) ?? '') : '',
-          Telefone: phone ?? '',
           Rancho: ranch?.name ?? '',
           Residência: residence ?? '',
           Encargo: responsibility ?? '',
+          Padrinho: godfather?.name ?? '',
+          Nome: name,
+          Aniversário: birthday ? (birthdayBR(birthday) ?? '') : '',
           'Data Prospect': dateProspect ? (dateBR(dateProspect) ?? '') : '',
           'Data Meio escudo': dateHalfPatch ? (dateBR(dateHalfPatch) ?? '') : '',
           'Data Full patch': dateFullPatch ? (dateBR(dateFullPatch) ?? '') : '',
+          'Tipo sanguíneo': blood ?? '',
+          Telefone: phone ?? '',
           Cônjuge: spouse?.name ?? '',
-          Padrinho: godfather?.name ?? '',
         })
       ),
     [data]
@@ -203,37 +279,32 @@ export function MembersTable({
       godfather,
     } = row.original;
     return [
-      name,
-      patch ?? '',
-      blood ?? '',
-      phase ?? '',
-      birthday ? (birthdayBR(birthday) ?? '') : '',
-      phone ?? '',
-      ranch?.name ?? '',
-      residence ?? '',
-      responsibility ?? '',
-      dateProspect ? (dateBR(dateProspect) ?? '') : '',
-      dateHalfPatch ? (dateBR(dateHalfPatch) ?? '') : '',
-      dateFullPatch ? (dateBR(dateFullPatch) ?? '') : '',
-      spouse?.name ?? '',
-      godfather?.name ?? '',
+      patch ?? '', // Nome no Patch
+      phases[phase ?? ''] ?? '', // Fase
+      ranch?.name ?? '', // Rancho
+      residence ?? '', // Residência
+      responsibility ?? '', // Encargo
+      godfather?.name ?? '', // Padrinho
+      name, // Nome
+      birthday ? (birthdayBR(birthday) ?? '') : '', // Aniversário
+      dateProspect ? (dateBR(dateProspect) ?? '') : '', // Data Prospect
+      dateHalfPatch ? (dateBR(dateHalfPatch) ?? '') : '', // Data Meio escudo
+      dateFullPatch ? (dateBR(dateFullPatch) ?? '') : '', // Data Full patch
+      blood ?? '', // Tipo sanguíneo
+      phone ?? '', // Telefone
+      spouse?.name ?? '', // Cônjuge
     ];
   }, []);
 
   const pdfConfig = useMemo(() => ({ tableHeaders, rowMapper }), [rowMapper]);
 
-  // Paginação client-side
-  const paginatedData = useMemo(() => {
-    const startIndex = (currentPage - 1) * pageSize;
-    const endIndex = startIndex + pageSize;
-    return data.slice(startIndex, endIndex);
-  }, [data, currentPage, pageSize]);
-
+  // Paginação server-side - dados já vêm paginados do backend
+  // Não fazer paginação local, usar dados diretamente
   const pagination = useMemo(
     () => ({
       page: currentPage,
       limit: pageSize,
-      total: data.length,
+      total: data.length, // Backend retorna total quando paginado, mas pode ser length do array
       totalPages: Math.ceil(data.length / pageSize),
     }),
     [data.length, currentPage, pageSize]
@@ -245,10 +316,16 @@ export function MembersTable({
       title="Membros"
       csvData={csvData}
       pdfConfig={pdfConfig}
-      data={paginatedData}
+      data={data}
       pagination={pagination}
       onPageChange={onPageChange}
       onPageSizeChange={onPageSizeChange}
+      enableFilters={true}
+      columnVisibility={{
+        blood: false,
+        phone: false,
+        'spouse.name': false,
+      }}
       emptyStateMessage="Nenhum membro encontrado"
       emptyStateDescription="Os membros aparecerão aqui conforme forem sendo cadastrados"
     />
