@@ -28,6 +28,10 @@ interface QueryResult<T> {
   isFetching: boolean;
   error: ApolloError | null;
   refetch: () => void;
+  total?: number;
+  page?: number;
+  limit?: number;
+  totalPages?: number;
 }
 
 export interface GraphQLCRUDContextType<T extends CRUDType> {
@@ -182,7 +186,7 @@ export const GraphQLCRUDProvider = ({
       },
     };
 
-            return result;
+    return result;
   }, [enablePagination, pagination, sorting, columnFilters]);
 
   // Execute GraphQL query
@@ -198,13 +202,27 @@ export const GraphQLCRUDProvider = ({
   const query = useMemo(() => {
     const rawDataValue = rawData?.[dataKey];
     let data: any[] = [];
+    let total: number | undefined;
+    let page: number | undefined;
+    let limit: number | undefined;
+    let totalPages: number | undefined;
 
     // Check if response is paginated (has data property) or direct array
     if (rawDataValue) {
       if (Array.isArray(rawDataValue)) {
+        // Direct array response (no pagination)
         data = rawDataValue;
+        total = rawDataValue.length;
+        page = 1;
+        limit = rawDataValue.length;
+        totalPages = 1;
       } else if (rawDataValue.data && Array.isArray(rawDataValue.data)) {
+        // Paginated response
         data = rawDataValue.data;
+        total = rawDataValue.total;
+        page = rawDataValue.page;
+        limit = rawDataValue.limit;
+        totalPages = rawDataValue.totalPages;
       }
     }
 
@@ -217,6 +235,10 @@ export const GraphQLCRUDProvider = ({
       refetch: () => {
         refetch();
       },
+      total,
+      page,
+      limit,
+      totalPages,
     };
   }, [rawData, dataKey, loading, error, refetch]);
 
