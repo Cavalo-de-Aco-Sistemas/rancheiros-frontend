@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { MRT_ColumnDef, MRT_Row } from 'mantine-react-table';
 import { Anchor, Badge } from '@mantine/core';
 import { useQuery } from '@apollo/client';
@@ -54,9 +54,22 @@ export function MembersTable({
   currentPage = 1,
   pageSize = 10,
 }: MembersTableProps = {}) {
-  const { query, setPagination } = useGraphQLCRUD();
+  const { query, setPagination, pagination: contextPagination } = useGraphQLCRUD();
   const { ranches: authRanches, super_admin } = useAuth();
   const data = (query.data || []) as Member[];
+  
+  // Manter valores anteriores de total e totalPages durante o carregamento para evitar resetar paginação
+  const [lastKnownTotal, setLastKnownTotal] = useState<number | undefined>(undefined);
+  const [lastKnownTotalPages, setLastKnownTotalPages] = useState<number | undefined>(undefined);
+  
+  useEffect(() => {
+    if (query.total !== undefined) {
+      setLastKnownTotal(query.total);
+    }
+    if (query.totalPages !== undefined) {
+      setLastKnownTotalPages(query.totalPages);
+    }
+  }, [query.total, query.totalPages]);
 
   // Query all ranches (for super_admin) or use auth ranches (for regular users)
   const { data: ranchesData } = useQuery(GET_RANCHES, {
@@ -88,12 +101,15 @@ export function MembersTable({
     [data]
   );
 
-  // Sincronizar paginação com contexto para server-side sorting
+  // Inicializar contexto apenas na montagem
+  // O CRUDTable atualizará o contexto diretamente quando o usuário mudar a página via UI
+  // Quando há contexto GraphQL, ele é a fonte de verdade - não sincronizar com props
   useEffect(() => {
-    if (setPagination) {
+    if (setPagination && !contextPagination) {
+      // Inicializar apenas se contexto não existe
       setPagination({ page: currentPage, limit: pageSize });
     }
-  }, [currentPage, pageSize, setPagination]);
+  }, [setPagination]); // Apenas na montagem
 
   const columns = useMemo<MRT_ColumnDef<Member>[]>(
     () => [
@@ -299,15 +315,16 @@ export function MembersTable({
   const pdfConfig = useMemo(() => ({ tableHeaders, rowMapper }), [rowMapper]);
 
   // Paginação server-side - dados já vêm paginados do backend
-  // Não fazer paginação local, usar dados diretamente
+  // Usar paginação do contexto quando disponível (atualizada diretamente pelo CRUDTable), senão usar props
+  // Usar total e totalPages retornados pelo backend, mantendo valores anteriores durante carregamento
   const pagination = useMemo(
     () => ({
-      page: currentPage,
-      limit: pageSize,
-      total: data.length, // Backend retorna total quando paginado, mas pode ser length do array
-      totalPages: Math.ceil(data.length / pageSize),
+      page: contextPagination?.page || currentPage,
+      limit: contextPagination?.limit || pageSize,
+      total: query.total ?? lastKnownTotal ?? 0,
+      totalPages: query.totalPages ?? lastKnownTotalPages ?? 0,
     }),
-    [data.length, currentPage, pageSize]
+    [contextPagination?.page, contextPagination?.limit, currentPage, pageSize, query.total, query.totalPages, lastKnownTotal, lastKnownTotalPages]
   );
 
   return (

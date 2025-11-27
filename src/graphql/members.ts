@@ -35,7 +35,13 @@ export const GET_MEMBERS = gql`
   ${MEMBER_FRAGMENT}
   query GetMembers($pagination: PaginationArgs) {
     members(pagination: $pagination) {
-      ...MemberFields
+      data {
+        ...MemberFields
+      }
+      total
+      page
+      limit
+      totalPages
     }
   }
 `;

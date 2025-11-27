@@ -530,32 +530,38 @@ export function CRUDTable<T extends MRT_RowData>(props: CRUDTableProps<T>) {
       rowCount: pagination?.total || 0,
       manualPagination: !!pagination,
       onPaginationChange:
-        pagination && (onPageChange || onPageSizeChange)
+        pagination && (onPageChange || onPageSizeChange || setContextPagination)
           ? (updater: any) => {
+              let newPageIndex: number;
+              let newPageSize: number;
+
               if (typeof updater === 'function') {
                 const newPagination = updater({
                   pageIndex: pagination.page - 1,
                   pageSize: pagination.limit,
                 });
-
-                // Notificar mudança de página
-                if (onPageChange && newPagination.pageIndex !== pagination.page - 1) {
-                  onPageChange(newPagination.pageIndex + 1);
-                }
-
-                // Notificar mudança de tamanho da página
-                if (onPageSizeChange && newPagination.pageSize !== pagination.limit) {
-                  onPageSizeChange(newPagination.pageSize);
-                }
+                newPageIndex = newPagination.pageIndex;
+                newPageSize = newPagination.pageSize;
               } else {
-                // Notificar mudança de página
-                if (onPageChange && updater.pageIndex !== pagination.page - 1) {
-                  onPageChange(updater.pageIndex + 1);
+                newPageIndex = updater.pageIndex;
+                newPageSize = updater.pageSize;
+              }
+
+              const newPage = newPageIndex + 1;
+
+              // Atualizar contexto GraphQL diretamente se disponível (prioridade)
+              // Quando há contexto GraphQL, ele é a fonte de verdade - não chamar callbacks
+              if (setContextPagination) {
+                setContextPagination({ page: newPage, limit: newPageSize });
+                // Não chamar callbacks quando há contexto GraphQL para evitar dessincronização
+              } else {
+                // Apenas chamar callbacks quando não há contexto GraphQL (tabelas read-only)
+                if (onPageChange && newPageIndex !== pagination.page - 1) {
+                  onPageChange(newPage);
                 }
 
-                // Notificar mudança de tamanho da página
-                if (onPageSizeChange && updater.pageSize !== pagination.limit) {
-                  onPageSizeChange(updater.pageSize);
+                if (onPageSizeChange && newPageSize !== pagination.limit) {
+                  onPageSizeChange(newPageSize);
                 }
               }
             }
@@ -580,6 +586,7 @@ export function CRUDTable<T extends MRT_RowData>(props: CRUDTableProps<T>) {
       setGlobalFilter,
       contextSorting,
       setContextSorting,
+      setContextPagination,
     ]
   );
 
