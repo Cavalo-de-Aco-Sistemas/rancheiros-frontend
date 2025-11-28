@@ -91,15 +91,6 @@ export function MembersTable({
       .map((ranch: Ranch) => ({ label: ranch.name, value: ranch.name }));
   }, [super_admin, authRanches, ranchesData]);
 
-  // Get members options for godfather and spouse filters
-  const membersOptions = useMemo(
-    () =>
-      data.map((member: Member) => ({
-        label: member.name,
-        value: member.name,
-      })),
-    [data]
-  );
 
   // Inicializar contexto apenas na montagem
   // O CRUDTable atualizará o contexto diretamente quando o usuário mudar a página via UI
@@ -166,11 +157,8 @@ export function MembersTable({
         accessorKey: 'godfather.name',
         accessorFn: (row) => row.godfather?.name || '',
         header: 'Padrinho',
-        filterVariant: 'select',
-        filterFn: 'equals', // Use equals for select filters
-        mantineFilterSelectProps: {
-          data: membersOptions,
-        },
+        filterVariant: 'text',
+        filterFn: 'equals',
       },
       { 
         accessorKey: 'name', 
@@ -236,7 +224,7 @@ export function MembersTable({
         header: 'Cônjuge',
       },
     ],
-    [ranchesOptions, membersOptions]
+    [ranchesOptions]
   );
 
   const csvData = useMemo(
