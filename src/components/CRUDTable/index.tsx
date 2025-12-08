@@ -649,12 +649,9 @@ export function CRUDTable<T extends MRT_RowData>(props: CRUDTableProps<T>) {
       </Title>
     ),
     renderRowActionMenuItems: ({ row }) => {
-      const actualData = query?.data || data || [];
-      // Calcular o índice correto considerando a paginação
-      const currentPage = table.getState().pagination.pageIndex;
-      const pageSize = table.getState().pagination.pageSize;
-      const correctIndex = currentPage * pageSize + row.index;
-      const rowData = actualData[correctIndex];
+      // Usar row.original diretamente, pois já contém os dados corretos da linha
+      // independente da página atual (os dados já vêm paginados do backend)
+      const rowData = row.original;
       if (!rowData) {
         return null;
       }
