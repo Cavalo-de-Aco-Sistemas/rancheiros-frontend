@@ -36,6 +36,66 @@ export const ranchOptions = [
 
 const INITIAL_VALUES = { name: '' };
 
+// Create a Date pinned to UTC noon to avoid DST/offset issues
+const buildUTCDate = (year: number, month: number, day: number): Date =>
+  new Date(Date.UTC(year, month, day, 12, 0, 0));
+
+// Helper function to extract date from string/Date avoiding timezone shifts
+const extractDateFromString = (dateValue: string | Date | null | undefined): Date | null => {
+  if (!dateValue) return null;
+  
+  let year = 0;
+  let month = 0;
+  let day = 1;
+  
+  if (typeof dateValue === 'string') {
+    // Handle ISO strings (2000-12-01T00:00:00.000Z) - extract date part before T
+    if (dateValue.includes('T')) {
+      const datePart = dateValue.split('T')[0];
+      const [y, m, d] = datePart.split('-').map(Number);
+      if (y && m && d) {
+        year = y;
+        month = m - 1; // Month is 0-indexed
+        day = d;
+      } else {
+        return null;
+      }
+    }
+    // Handle YYYY-MM-DD format
+    else if (dateValue.match(/^\d{4}-\d{2}-\d{2}$/)) {
+      const [y, m, d] = dateValue.split('-').map(Number);
+      if (y && m && d) {
+        year = y;
+        month = m - 1; // Month is 0-indexed
+        day = d;
+      } else {
+        return null;
+      }
+    }
+    // Try parsing as Date and extract UTC values
+    else {
+      const parsedDate = toDate(dateValue);
+      if (parsedDate instanceof Date) {
+        year = parsedDate.getUTCFullYear();
+        month = parsedDate.getUTCMonth();
+        day = parsedDate.getUTCDate();
+      } else {
+        return null;
+      }
+    }
+  } else if (dateValue instanceof Date) {
+    // If it's already a Date object, extract UTC values
+    year = dateValue.getUTCFullYear();
+    month = dateValue.getUTCMonth();
+    day = dateValue.getUTCDate();
+  } else {
+    return null;
+  }
+  
+  // Create date pinned to UTC noon with the extracted values
+  return buildUTCDate(year, month, day);
+};
+
 const parseSelected = (member: Member): MemberDto => {
   const {
     name,
@@ -54,13 +114,13 @@ const parseSelected = (member: Member): MemberDto => {
     godfather,
   } = member;
   
-  // Normalize birthday to year 2000
+  // Extract dates directly from strings to avoid timezone shifts
+  // For birthday, normalize to year 2000
   let normalizedBirthday: Date | null = null;
-  if (birthday) {
-    const birthdayDate = toDate(birthday);
-    if (birthdayDate instanceof Date) {
-      normalizedBirthday = new Date(2000, birthdayDate.getMonth(), birthdayDate.getDate());
-    }
+  const birthdayDate = extractDateFromString(birthday);
+  if (birthdayDate) {
+    // Normalize to year 2000 using UTC noon
+    normalizedBirthday = buildUTCDate(2000, birthdayDate.getUTCMonth(), birthdayDate.getUTCDate());
   }
   
   return {
@@ -73,21 +133,47 @@ const parseSelected = (member: Member): MemberDto => {
     ranch: ranch?.id.toString(),
     residence,
     responsibility,
-    dateFullPatch: toDate(dateFullPatch),
-    dateHalfPatch: toDate(dateHalfPatch),
-    dateProspect: toDate(dateProspect),
+    dateFullPatch: extractDateFromString(dateFullPatch),
+    dateHalfPatch: extractDateFromString(dateHalfPatch),
+    dateProspect: extractDateFromString(dateProspect),
     spouse: spouse?.id.toString(),
     godfather: godfather?.id.toString(),
   };
 };
 
 // Transform data before submission to normalize birthday to year 2000
+// Convert Date objects to strings using fixed timezone (GMT-3) for backend
 const transformData = (data: MemberDto): any => {
-  const transformed = { ...data };
+  // Use any here because we convert Date -> string for GraphQL input
+  const transformed: any = { ...data };
   
-  // Normalize birthday to year 2000 if present
+  const TZ_OFFSET_MINUTES = 180; // GMT-3
+  const formatDateInGMT3 = (date: Date, forceYear?: number): string => {
+    // Shift date to target timezone before extracting parts
+    const shifted = new Date(date.getTime() - TZ_OFFSET_MINUTES * 60 * 1000);
+    const year = forceYear ?? shifted.getUTCFullYear();
+    const month = String(shifted.getUTCMonth() + 1).padStart(2, '0');
+    const day = String(shifted.getUTCDate()).padStart(2, '0');
+    return `${year}-${month}-${day}T00:00:00-03:00`;
+  };
+  
+  // Normalize birthday to year 2000 and convert to string (UTC)
   if (transformed.birthday instanceof Date) {
-    transformed.birthday = new Date(2000, transformed.birthday.getMonth(), transformed.birthday.getDate());
+    const normalizedDate = buildUTCDate(2000, transformed.birthday.getUTCMonth(), transformed.birthday.getUTCDate());
+    transformed.birthday = formatDateInGMT3(normalizedDate, 2000);
+  }
+  
+  // Convert other date fields to YYYY-MM-DD strings (UTC)
+  if (transformed.dateProspect instanceof Date) {
+    transformed.dateProspect = formatDateInGMT3(transformed.dateProspect);
+  }
+  
+  if (transformed.dateHalfPatch instanceof Date) {
+    transformed.dateHalfPatch = formatDateInGMT3(transformed.dateHalfPatch);
+  }
+  
+  if (transformed.dateFullPatch instanceof Date) {
+    transformed.dateFullPatch = formatDateInGMT3(transformed.dateFullPatch);
   }
   
   return transformed;
@@ -206,15 +292,41 @@ export default function MembersForm() {
         <DateInput
           label="Nascimento"
           key={form.key('birthday')}
-          {...form.getInputProps('birthday')}
           disabled={query.isLoading || action === 'delete'}
-          valueFormat="DD/MM/YYYY"
-          placeholder="DD/MM/AAAA"
+          valueFormat="DD/MM"
+          placeholder="DD/MM"
           value={
             form.values.birthday && form.values.birthday instanceof Date
               ? form.values.birthday
               : null
           }
+          onChange={(date) => {
+            // Always set year to 2000 when date is selected
+            if (date instanceof Date) {
+              const month = date.getMonth();
+              const day = date.getDate();
+              const normalizedDate = buildUTCDate(2000, month, day);
+              form.setFieldValue('birthday', normalizedDate);
+            } else {
+              form.setFieldValue('birthday', null);
+            }
+          }}
+          dateParser={(input) => {
+            // Parse DD/MM format and add year 2000
+            const match = input.match(/^(\d{1,2})\/(\d{1,2})$/);
+            if (match) {
+              const day = parseInt(match[1], 10);
+              const month = parseInt(match[2], 10) - 1; // Month is 0-indexed
+              if (day >= 1 && day <= 31 && month >= 0 && month <= 11) {
+                return new Date(2000, month, day);
+              }
+            }
+            return null;
+          }}
+          defaultDate={new Date(2000, 0, 1)}
+          hideOutsideDates
+          maxDate={new Date(2000, 11, 31)}
+          minDate={new Date(2000, 0, 1)}
         />
         <TextInput
           label="Celular/WhatsApp"
@@ -260,7 +372,6 @@ export default function MembersForm() {
         <DateInput
           label="Data que prospectou"
           key={form.key('dateProspect')}
-          {...form.getInputProps('dateProspect')}
           disabled={query.isLoading || action === 'delete'}
           valueFormat="DD/MM/YYYY"
           placeholder="DD/MM/AAAA"
@@ -269,11 +380,22 @@ export default function MembersForm() {
               ? form.values.dateProspect
               : null
           }
+          onChange={(date) => {
+            // Preserve the date as selected by extracting year, month, day using local methods
+            if (date instanceof Date) {
+              const year = date.getFullYear();
+              const month = date.getMonth();
+              const day = date.getDate();
+              const preservedDate = buildUTCDate(year, month, day);
+              form.setFieldValue('dateProspect', preservedDate);
+            } else {
+              form.setFieldValue('dateProspect', null);
+            }
+          }}
         />
         <DateInput
           label="Data Meio escudo"
           key={form.key('dateHalfPatch')}
-          {...form.getInputProps('dateHalfPatch')}
           disabled={query.isLoading || action === 'delete'}
           valueFormat="DD/MM/YYYY"
           placeholder="DD/MM/AAAA"
@@ -282,11 +404,22 @@ export default function MembersForm() {
               ? form.values.dateHalfPatch
               : null
           }
+          onChange={(date) => {
+            // Preserve the date as selected by extracting year, month, day using local methods
+            if (date instanceof Date) {
+              const year = date.getFullYear();
+              const month = date.getMonth();
+              const day = date.getDate();
+              const preservedDate = buildUTCDate(year, month, day);
+              form.setFieldValue('dateHalfPatch', preservedDate);
+            } else {
+              form.setFieldValue('dateHalfPatch', null);
+            }
+          }}
         />
         <DateInput
           label="Data Full patch"
           key={form.key('dateFullPatch')}
-          {...form.getInputProps('dateFullPatch')}
           disabled={query.isLoading || action === 'delete'}
           valueFormat="DD/MM/YYYY"
           placeholder="DD/MM/AAAA"
@@ -295,6 +428,18 @@ export default function MembersForm() {
               ? form.values.dateFullPatch
               : null
           }
+          onChange={(date) => {
+            // Preserve the date as selected by extracting year, month, day using local methods
+            if (date instanceof Date) {
+              const year = date.getFullYear();
+              const month = date.getMonth();
+              const day = date.getDate();
+              const preservedDate = buildUTCDate(year, month, day);
+              form.setFieldValue('dateFullPatch', preservedDate);
+            } else {
+              form.setFieldValue('dateFullPatch', null);
+            }
+          }}
         />
       </SimpleGrid>
     </GraphQLCRUDForm>

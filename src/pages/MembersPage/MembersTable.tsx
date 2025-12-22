@@ -3,6 +3,7 @@ import { MRT_ColumnDef, MRT_Row } from 'mantine-react-table';
 import { Anchor, Badge } from '@mantine/core';
 import { useQuery } from '@apollo/client';
 import { CRUDTable } from '@/components/CRUDTable';
+import { DateCell } from '@/components/DateCell';
 import { useGraphQLCRUD } from '@/contexts/GraphQLCRUDContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { Member } from '@/model/member';
@@ -169,25 +170,25 @@ export function MembersTable({
         accessorKey: 'birthday',
         header: 'Aniversário',
         filterVariant: 'date',
-        Cell: ({ row }) => birthdayBR(row.original.birthday),
+        Cell: ({ row }) => <DateCell value={row.original.birthday} variant="birthday" />,
       },
       {
         accessorKey: 'dateProspect',
         header: 'Data Prospect',
         filterVariant: 'date',
-        Cell: ({ row }) => dateBR(row.original.dateProspect),
+        Cell: ({ row }) => <DateCell value={row.original.dateProspect} />,
       },
       {
         accessorKey: 'dateHalfPatch',
         header: 'Data Meio escudo',
         filterVariant: 'date',
-        Cell: ({ row }) => dateBR(row.original.dateHalfPatch),
+        Cell: ({ row }) => <DateCell value={row.original.dateHalfPatch} />,
       },
       {
         accessorKey: 'dateFullPatch',
         header: 'Data Full patch',
         filterVariant: 'date',
-        Cell: ({ row }) => dateBR(row.original.dateFullPatch),
+        Cell: ({ row }) => <DateCell value={row.original.dateFullPatch} />,
       },
       {
         accessorKey: 'blood',
@@ -227,6 +228,20 @@ export function MembersTable({
     [ranchesOptions]
   );
 
+  // Normalize Date objects to ISO date strings applying fixed offset (GMT-3) for export (CSV/PDF)
+  const TZ_OFFSET_MINUTES = 180;
+  const normalizeDateValue = (value: string | Date | null | undefined): string | null => {
+    if (!value) return null;
+    if (value instanceof Date) {
+      const shifted = new Date(value.getTime() - TZ_OFFSET_MINUTES * 60 * 1000);
+      const y = shifted.getUTCFullYear();
+      const m = String(shifted.getUTCMonth() + 1).padStart(2, '0');
+      const d = String(shifted.getUTCDate()).padStart(2, '0');
+      return `${y}-${m}-${d}`;
+    }
+    return value;
+  };
+
   const csvData = useMemo(
     () =>
       data.map(
@@ -253,10 +268,10 @@ export function MembersTable({
           Encargo: responsibility ?? '',
           Padrinho: godfather?.name ?? '',
           Nome: name,
-          Aniversário: birthday ? (birthdayBR(birthday) ?? '') : '',
-          'Data Prospect': dateProspect ? (dateBR(dateProspect) ?? '') : '',
-          'Data Meio escudo': dateHalfPatch ? (dateBR(dateHalfPatch) ?? '') : '',
-          'Data Full patch': dateFullPatch ? (dateBR(dateFullPatch) ?? '') : '',
+          Aniversário: birthday ? (birthdayBR(normalizeDateValue(birthday)) ?? '') : '',
+          'Data Prospect': dateProspect ? (dateBR(normalizeDateValue(dateProspect)) ?? '') : '',
+          'Data Meio escudo': dateHalfPatch ? (dateBR(normalizeDateValue(dateHalfPatch)) ?? '') : '',
+          'Data Full patch': dateFullPatch ? (dateBR(normalizeDateValue(dateFullPatch)) ?? '') : '',
           'Tipo sanguíneo': blood ?? '',
           Telefone: phone ?? '',
           Cônjuge: spouse?.name ?? '',
@@ -290,10 +305,10 @@ export function MembersTable({
       responsibility ?? '', // Encargo
       godfather?.name ?? '', // Padrinho
       name, // Nome
-      birthday ? (birthdayBR(birthday) ?? '') : '', // Aniversário
-      dateProspect ? (dateBR(dateProspect) ?? '') : '', // Data Prospect
-      dateHalfPatch ? (dateBR(dateHalfPatch) ?? '') : '', // Data Meio escudo
-      dateFullPatch ? (dateBR(dateFullPatch) ?? '') : '', // Data Full patch
+      birthday ? (birthdayBR(normalizeDateValue(birthday)) ?? '') : '', // Aniversário
+      dateProspect ? (dateBR(normalizeDateValue(dateProspect)) ?? '') : '', // Data Prospect
+      dateHalfPatch ? (dateBR(normalizeDateValue(dateHalfPatch)) ?? '') : '', // Data Meio escudo
+      dateFullPatch ? (dateBR(normalizeDateValue(dateFullPatch)) ?? '') : '', // Data Full patch
       blood ?? '', // Tipo sanguíneo
       phone ?? '', // Telefone
       spouse?.name ?? '', // Cônjuge
