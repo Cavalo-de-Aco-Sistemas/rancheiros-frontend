@@ -1,12 +1,11 @@
 export const dateBR = (date: string | Date | null) => {
   if (!date) return null;
 
-  // Handle Date objects
+  // Handle Date objects (use local getters to preserve selected day)
   if (date instanceof Date) {
-    // Use UTC methods to avoid timezone issues
-    const year = date.getUTCFullYear();
-    const month = String(date.getUTCMonth() + 1).padStart(2, '0');
-    const day = String(date.getUTCDate()).padStart(2, '0');
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
     return `${day}/${month}/${year}`;
   }
 
@@ -53,11 +52,10 @@ export const toDate = (date?: string | null) => {
 export const birthdayBR = (date: string | Date | null) => {
   if (!date) return null;
 
-  // Handle Date objects
+  // Handle Date objects (use local getters to preserve selected day)
   if (date instanceof Date) {
-    // Use UTC methods to avoid timezone issues
-    const month = String(date.getUTCMonth() + 1).padStart(2, '0');
-    const day = String(date.getUTCDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
     return `${day}/${month}`;
   }
 
