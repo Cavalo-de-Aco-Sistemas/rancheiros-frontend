@@ -4,6 +4,7 @@ import { DateInput } from '@mantine/dates';
 import { useForm } from '@mantine/form';
 import { useQuery } from '@apollo/client';
 import { GraphQLCRUDForm } from '@/components/GraphQLCRUDForm';
+import { MemberSearchSelect } from '@/components/MemberSearchSelect';
 import { useAuth } from '@/contexts/AuthContext';
 import { useGraphQLCRUD } from '@/contexts/GraphQLCRUDContext';
 import { CREATE_MEMBER, DELETE_MEMBER, GET_MEMBERS, UPDATE_MEMBER } from '@/graphql/members';
@@ -188,17 +189,6 @@ export default function MembersForm() {
     skip: !super_admin, // Only query if super_admin
   });
 
-  const members = (query.data || []) as Member[];
-
-  const membersOptions = useMemo(
-    () =>
-      members.map((member: Member) => ({
-        label: member.name,
-        value: member.id.toString(),
-      })),
-    [members]
-  );
-
   const ranchesOptions = useMemo(() => {
     // For super_admin, use all ranches from query; for regular users, use from auth
     const sourceRanches = super_admin 
@@ -335,22 +325,18 @@ export default function MembersForm() {
           {...form.getInputProps('phone')}
           disabled={query.isLoading || action === 'delete'}
         />
-        <Select
+        <MemberSearchSelect
           label="Cônjuge"
-          data={membersOptions}
           key={form.key('spouse')}
           {...form.getInputProps('spouse')}
           disabled={query.isLoading || action === 'delete'}
-          searchable
           clearable
         />
-        <Select
+        <MemberSearchSelect
           label="Padrinho/Madrinha"
-          data={membersOptions}
           key={form.key('godfather')}
           {...form.getInputProps('godfather')}
           disabled={query.isLoading || action === 'delete'}
-          searchable
           clearable
         />
         <TextInput
