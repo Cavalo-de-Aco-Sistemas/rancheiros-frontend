@@ -14,7 +14,7 @@ export function EnrollmentsPage() {
   };
 
   return (
-    <GraphQLCRUDProvider query={GET_ENROLLMENTS} dataKey="enrollments">
+    <GraphQLCRUDProvider query={GET_ENROLLMENTS} dataKey="enrollments" enablePagination>
       <EnrollmentsTable
         onPageChange={setCurrentPage}
         onPageSizeChange={handlePageSizeChange}

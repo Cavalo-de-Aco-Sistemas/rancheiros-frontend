@@ -1,12 +1,12 @@
-import { useCallback, useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { IconClock } from '@tabler/icons-react';
 import { MRT_ColumnDef, MRT_Row } from 'mantine-react-table';
 import { Anchor } from '@mantine/core';
 import { CRUDTable } from '@/components/CRUDTable';
 import { StatusIcon } from '@/components/StatusIcon';
 import { useAuth } from '@/contexts/AuthContext';
-import { useEnrollmentsData } from '@/hooks/useSharedEnrollments';
-import { Enrollment, EnrollmentStatus } from '@/model/enrollment';
+import { useGraphQLCRUD } from '@/contexts/GraphQLCRUDContext';
+import { Enrollment, EnrollmentStatus, ENROLLMENT_STATUS_FILTER_OPTIONS } from '@/model/enrollment';
 import { useEnrollmentFlowMutation } from '@/mutations/useEnrollmentFlowMutation';
 import { dateBR } from '@/utils/dates';
 import { normalizeEnrollments } from '@/utils/statusNormalizer';
@@ -36,13 +36,34 @@ interface EnrollmentsTableProps {
 export function EnrollmentsTable({
   onPageChange,
   onPageSizeChange,
-  currentPage: _currentPage = 1,
-  pageSize: _pageSize = 50,
+  currentPage = 1,
+  pageSize = 50,
 }: EnrollmentsTableProps = {}) {
-  const { data: enrollmentsData, loading, error, refetch } = useEnrollmentsData();
-  const query = { data: enrollmentsData, isLoading: loading, isError: !!error, error, refetch };
+  const { query, setPagination, pagination: contextPagination } = useGraphQLCRUD();
   const { name } = useAuth();
   const updateFlowMutation = useEnrollmentFlowMutation();
+  
+  // Manter valores anteriores de total e totalPages durante o carregamento para evitar resetar paginação
+  const [lastKnownTotal, setLastKnownTotal] = useState<number | undefined>(undefined);
+  const [lastKnownTotalPages, setLastKnownTotalPages] = useState<number | undefined>(undefined);
+  
+  useEffect(() => {
+    if (query.total !== undefined) {
+      setLastKnownTotal(query.total);
+    }
+    if (query.totalPages !== undefined) {
+      setLastKnownTotalPages(query.totalPages);
+    }
+  }, [query.total, query.totalPages]);
+
+  // Inicializar contexto apenas na montagem
+  useEffect(() => {
+    if (setPagination && !contextPagination) {
+      setPagination({ page: currentPage, limit: pageSize });
+    }
+  }, [setPagination]);
+
+  const data = normalizeEnrollments(query.data || []);
 
   const handleReturnToWaiting = useCallback(
     (enrollment: Enrollment) => {
@@ -89,6 +110,7 @@ export function EnrollmentsTable({
   const columns = useMemo<MRT_ColumnDef<Enrollment>[]>(
     () => [
       {
+        id: 'class',
         accessorKey: 'class',
         header: 'Turma',
         filterVariant: 'text',
@@ -114,22 +136,16 @@ export function EnrollmentsTable({
         },
       },
       {
+        id: 'status',
         accessorKey: 'status',
         header: 'Status',
         filterVariant: 'select',
-        filterSelectOptions: [
-          { label: 'Aguardando', value: 'waiting' },
-          { label: 'Chamado', value: 'called' },
-          { label: 'Confirmado', value: 'confirmed' },
-          { label: 'Ignorado', value: 'ignored' },
-          { label: 'Desistiu', value: 'dropped' },
-          { label: 'Faltou', value: 'missed' },
-          { label: 'Certificado', value: 'certified' },
-        ],
+        filterSelectOptions: ENROLLMENT_STATUS_FILTER_OPTIONS,
         filterFn: 'equals',
         Cell: ({ row }) => <StatusIcon status={row.original.status} />,
       },
       {
+        id: 'enrollment_date',
         accessorKey: 'enrollment_date',
         header: 'Data de Inscrição',
         filterVariant: 'date',
@@ -150,13 +166,16 @@ export function EnrollmentsTable({
         },
       },
       {
+        id: 'preferred_city',
         accessorKey: 'preferred_city',
+        accessorFn: (row) => row.preferred_city?.name || '',
         header: 'Cidade Preferencial',
         filterVariant: 'text',
         filterFn: 'contains',
         Cell: ({ row }) => row.original.preferred_city?.name ?? '',
       },
       {
+        id: 'name',
         accessorKey: 'name',
         header: 'Nome',
         filterVariant: 'text',
@@ -252,10 +271,6 @@ Deus abençoe grandemente.`;
   );
 
   const csvData = useMemo(() => {
-    // Handle both array and paginated data
-    const rawData = Array.isArray(query.data) ? query.data : (query.data as any)?.data || [];
-    const data = normalizeEnrollments(rawData);
-
     return data.map(
       ({
         name,
@@ -320,24 +335,17 @@ Deus abençoe grandemente.`;
 
   const pdfConfig = useMemo(() => ({ tableHeaders, rowMapper }), [rowMapper]);
 
-  // Dados já vêm filtrados do hook compartilhado
-  const allData = query.data || [];
-
-  // Paginação client-side
-  const paginatedData = useMemo(() => {
-    const startIndex = (_currentPage - 1) * _pageSize;
-    const endIndex = startIndex + _pageSize;
-    return allData.slice(startIndex, endIndex);
-  }, [allData, _currentPage, _pageSize]);
-
+  // Paginação server-side - dados já vêm paginados do backend
+  // Usar paginação do contexto quando disponível (atualizada diretamente pelo CRUDTable), senão usar props
+  // Usar total e totalPages retornados pelo backend, mantendo valores anteriores durante carregamento
   const pagination = useMemo(
     () => ({
-      page: _currentPage,
-      limit: _pageSize,
-      total: allData.length,
-      totalPages: Math.ceil(allData.length / _pageSize),
+      page: contextPagination?.page || currentPage,
+      limit: contextPagination?.limit || pageSize,
+      total: query.total ?? lastKnownTotal ?? 0,
+      totalPages: query.totalPages ?? lastKnownTotalPages ?? 0,
     }),
-    [allData.length, _currentPage, _pageSize]
+    [contextPagination?.page, contextPagination?.limit, currentPage, pageSize, query.total, query.totalPages, lastKnownTotal, lastKnownTotalPages]
   );
 
   return (
@@ -350,7 +358,7 @@ Deus abençoe grandemente.`;
       enableEdit
       enableFilters={true}
       enableRowNumbers={true}
-      data={paginatedData}
+      data={data}
       pagination={pagination}
       onPageChange={onPageChange}
       onPageSizeChange={onPageSizeChange}
