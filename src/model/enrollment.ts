@@ -20,6 +20,20 @@ export enum EnrollmentStatus {
   IGNORED = 'IGNORED',
 }
 
+/**
+ * Opções de status para filtros de coluna nas tabelas de inscrições
+ * Valores em minúsculas para corresponder ao formato do backend
+ */
+export const ENROLLMENT_STATUS_FILTER_OPTIONS = [
+  { label: 'Aguardando', value: 'waiting' },
+  { label: 'Chamado', value: 'called' },
+  { label: 'Confirmado', value: 'confirmed' },
+  { label: 'Ignorado', value: 'ignored' },
+  { label: 'Desistiu', value: 'dropped' },
+  { label: 'Faltou', value: 'missed' },
+  { label: 'Certificado', value: 'certified' },
+] as const;
+
 export interface Enrollment {
   id: string;
   name: string;

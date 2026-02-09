@@ -13,7 +13,7 @@ export function CallManagementPage() {
   };
 
   return (
-    <GraphQLCRUDProvider query={GET_CALL_MANAGEMENT_ENROLLMENTS} dataKey="enrollments">
+    <GraphQLCRUDProvider query={GET_CALL_MANAGEMENT_ENROLLMENTS} dataKey="enrollments" enablePagination>
       <CallManagementTable
         onPageChange={setCurrentPage}
         onPageSizeChange={handlePageSizeChange}
