@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { useQuery } from '@apollo/client';
+import { ApolloError, useQuery } from '@apollo/client';
 import { Select, TextInput } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { GraphQLCRUDForm } from '@/components/GraphQLCRUDForm';
@@ -16,8 +16,31 @@ import { Class } from '@/model/class';
 import { Enrollment, EnrollmentDto, EnrollmentStatus } from '@/model/enrollment';
 import { Location } from '@/model/location';
 
-// Tipo para criação de inscrição (sem status e class)
 type CreateEnrollmentDto = Omit<EnrollmentDto, 'status' | 'class'>;
+
+const VALIDATION_TRANSLATIONS: Record<string, string> = {
+  'email must be an email': 'O email informado não é válido',
+  'Email must be a valid email address': 'O email informado não é válido',
+  'name should not be empty': 'O nome é obrigatório',
+  'name must be a string': 'O nome é obrigatório',
+  'phone should not be empty': 'O telefone é obrigatório',
+  'cnh should not be empty': 'A CNH é obrigatória',
+  'uf_cnh should not be empty': 'A UF da CNH é obrigatória',
+  'preferred_city should not be empty': 'A localidade de preferência é obrigatória',
+  'Preferred city ID must be a valid UUID': 'A localidade de preferência é inválida',
+};
+
+function handleError(error: ApolloError): string | undefined {
+  const originalMessages =
+    (error.graphQLErrors?.[0]?.extensions?.originalError as { message?: string[] })?.message;
+
+  if (!Array.isArray(originalMessages)) {return undefined;}
+
+  const translated = originalMessages.map(
+    (msg) => VALIDATION_TRANSLATIONS[msg] ?? msg
+  );
+  return translated.join('. ');
+}
 
 const INITIAL_VALUES = {
   name: '',
@@ -41,41 +64,33 @@ const parseSelected = (enrollment: Enrollment): EnrollmentDto => {
   };
 };
 
-// Função para transformar dados antes do envio (remove status e class apenas para criação)
 const transformData = (
   data: EnrollmentDto,
-  isCreate: boolean = false
-): CreateEnrollmentDto | EnrollmentDto => {
-  if (isCreate) {
-    const { status, class: classField, ...createData } = data;
-    return createData;
-  }
-  return data; // Para edição, retorna todos os dados
+): CreateEnrollmentDto => {
+  const { name, phone, cnh, uf_cnh, preferred_city, email, motorcycle_usage, brand, model } = data;
+  return { name, phone, cnh, uf_cnh, preferred_city, email, motorcycle_usage, brand, model };
 };
 
 export function EnrollmentsForm() {
   const { data: classesData } = useQuery(GET_CLASSES);
   const { data: locationsData } = useQuery(GET_LOCATIONS);
 
-  const classes = classesData?.classes || [];
-  const locations = locationsData?.locations || [];
-
   const classesOptions = useMemo(
     () =>
-      classes.map((classs: Class) => ({
+      (classesData?.classes || []).map((classs: Class) => ({
         label: classs.location?.name ?? '',
         value: classs.id.toString(),
       })),
-    [classes]
+    [classesData?.classes]
   );
 
   const locationsOptions = useMemo(
     () =>
-      locations.map((location: Location) => ({
+      (locationsData?.locations || []).map((location: Location) => ({
         label: location.name,
         value: location.id.toString(),
       })),
-    [locations]
+    [locationsData?.locations]
   );
 
   const { data, loading, error, refetch } = useEnrollmentsData();
@@ -87,12 +102,6 @@ export function EnrollmentsForm() {
 
   const form = useForm<EnrollmentDto>({
     initialValues: INITIAL_VALUES,
-    validate: {
-      email: (value) =>
-        value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)
-          ? 'Email inválido'
-          : null,
-    },
   });
 
   return (
@@ -104,6 +113,7 @@ export function EnrollmentsForm() {
       updateMutation={UPDATE_ENROLLMENT}
       deleteMutation={DELETE_ENROLLMENT}
       refetchQueries={[{ query: GET_ENROLLMENTS }]}
+      handleError={handleError}
       modalProps={{ title: 'Cadastro de Inscrições', size: 'xl' }}
       entityName="Inscrição"
       transformData={transformData}

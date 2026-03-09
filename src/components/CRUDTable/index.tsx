@@ -366,7 +366,7 @@ export function CRUDTable<T extends MRT_RowData>(props: CRUDTableProps<T>) {
       initialState: {
         density: 'xs' as const,
         columnVisibility: columnVisibility || {},
-        showColumnFilters: false, // Filtros desativados por padrão para interface limpa
+        showColumnFilters: enableFilters,
         showGlobalFilter: false, // Filtro global desativado por padrão
         showPagination: true, // Garantir que paginação está visível
         // Não definir pagination no initialState quando usando manualPagination
