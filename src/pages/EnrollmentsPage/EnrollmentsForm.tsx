@@ -87,6 +87,12 @@ export function EnrollmentsForm() {
 
   const form = useForm<EnrollmentDto>({
     initialValues: INITIAL_VALUES,
+    validate: {
+      email: (value) =>
+        value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)
+          ? 'Email inválido'
+          : null,
+    },
   });
 
   return (
