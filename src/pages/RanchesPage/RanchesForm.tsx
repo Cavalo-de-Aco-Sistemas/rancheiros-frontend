@@ -4,6 +4,7 @@ import { GraphQLCRUDForm } from '@/components/GraphQLCRUDForm';
 import { useGraphQLCRUD } from '@/contexts/GraphQLCRUDContext';
 import { CREATE_RANCH, DELETE_RANCH, UPDATE_RANCH } from '@/graphql/ranches';
 import { Ranch, RanchDto } from '@/model/ranch';
+import { ApolloError } from '@apollo/client';
 
 const INITIAL_VALUES = { name: '' };
 
@@ -18,6 +19,14 @@ export function RanchesForm() {
     initialValues: INITIAL_VALUES,
   });
 
+  const handleError = (error: ApolloError): string | undefined => {
+    const message = error.message.toLowerCase();
+    if (message.includes('conflict') || message.includes('unique') || message.includes('duplicate') || message.includes('already exists')) {
+      return `Não é possível usar este nome pois já existe um rancho cadastrado com ele. Caso não consiga visualizá-lo, é possível que você não tenha permissão de acesso.`;
+    }
+    return undefined;
+  };
+
   return (
     <GraphQLCRUDForm<Ranch, RanchDto>
       baseValues={INITIAL_VALUES}
@@ -26,6 +35,7 @@ export function RanchesForm() {
       createMutation={CREATE_RANCH}
       updateMutation={UPDATE_RANCH}
       deleteMutation={DELETE_RANCH}
+      handleError={handleError}
       modalProps={{ title: 'Cadastro de Ranchos', size: 'xl' }}
       entityName="Rancho"
     >
