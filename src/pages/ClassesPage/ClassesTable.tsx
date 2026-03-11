@@ -188,11 +188,11 @@ export function ClassesTable({
   }, [query.data]);
 
   const sortedData = useMemo(() => {
-    if (!contextSorting || contextSorting.length === 0) return allData;
+    if (!contextSorting || contextSorting.length === 0) { return allData; }
 
     return [...allData].sort((a, b) => {
       for (const sort of contextSorting) {
-        const key = sort.id as keyof Class;
+        const key = sort.id;
         const aVal = key === 'location.name' ? (a.location?.name ?? '') : (a[key as keyof Class] ?? '');
         const bVal = key === 'location.name' ? (b.location?.name ?? '') : (b[key as keyof Class] ?? '');
 
@@ -205,7 +205,7 @@ export function ClassesTable({
           cmp = String(aVal).localeCompare(String(bVal));
         }
 
-        if (cmp !== 0) return sort.desc ? -cmp : cmp;
+        if (cmp !== 0) { return sort.desc ? -cmp : cmp; }
       }
       return 0;
     });
