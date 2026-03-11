@@ -95,10 +95,12 @@ export function UsersTable({
         accessorKey: 'super_admin',
         header: 'Super Admin',
         filterVariant: 'select',
-        filterSelectOptions: [
-          { label: 'Sim', value: 'true' },
-          { label: 'Não', value: 'false' },
-        ],
+        mantineFilterSelectProps: {
+          data: [
+            { label: 'Sim', value: 'true' },
+            { label: 'Não', value: 'false' },
+          ],
+        },
         Cell: ({ row }) => (
           <Badge
             color={row.original.super_admin ? 'green' : 'gray'}

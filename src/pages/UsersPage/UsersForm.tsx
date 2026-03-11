@@ -229,26 +229,19 @@ function FlowPermissionRow({ form }: { form: UseFormReturnType<UserDto> }) {
 export function UsersForm() {
   const { query, action } = useGraphQLCRUD();
   const [passwordStrength, setPasswordStrength] = useState(0);
-  const { super_admin: currentUserIsSuperAdmin, ranches: authRanches } = useAuth();
-  
-  // Query all ranches (for super_admin) or use auth ranches (for regular users)
-  const { data: ranchesData } = useQuery(GET_RANCHES, {
-    skip: !currentUserIsSuperAdmin, // Only query if super_admin
-  });
+  const { super_admin: currentUserIsSuperAdmin } = useAuth();
+
+  const { data: ranchesData } = useQuery(GET_RANCHES);
 
   const ranchesOptions = useMemo(() => {
-    // For super_admin, use all ranches from query; for regular users, use from auth
-    const sourceRanches = currentUserIsSuperAdmin 
-      ? (ranchesData?.ranches || [])
-      : (authRanches || []);
-    
-    return sourceRanches
+    const ranches = ranchesData?.ranches || [];
+    return ranches
       .filter((ranch: Ranch | null | undefined): ranch is Ranch => !!ranch && !!ranch.id)
       .map((ranch: Ranch) => ({
         label: ranch.name,
         value: ranch.id.toString(),
       }));
-  }, [currentUserIsSuperAdmin, authRanches, ranchesData]);
+  }, [ranchesData]);
 
   const form = useForm<UserDto>({
     initialValues: INITIAL_VALUES,

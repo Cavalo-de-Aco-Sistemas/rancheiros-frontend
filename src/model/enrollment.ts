@@ -22,7 +22,7 @@ export enum EnrollmentStatus {
 
 /**
  * Opções de status para filtros de coluna nas tabelas de inscrições
- * Valores em minúsculas para corresponder ao formato do backend
+ * Valores em lowercase para corresponder ao enum do banco de dados (PostgreSQL)
  */
 export const ENROLLMENT_STATUS_FILTER_OPTIONS = [
   { label: 'Aguardando', value: 'waiting' },

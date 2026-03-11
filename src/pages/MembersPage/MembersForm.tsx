@@ -5,7 +5,6 @@ import { useForm } from '@mantine/form';
 import { useQuery } from '@apollo/client';
 import { GraphQLCRUDForm } from '@/components/GraphQLCRUDForm';
 import { MemberSearchSelect } from '@/components/MemberSearchSelect';
-import { useAuth } from '@/contexts/AuthContext';
 import { useGraphQLCRUD } from '@/contexts/GraphQLCRUDContext';
 import { CREATE_MEMBER, DELETE_MEMBER, GET_MEMBERS, UPDATE_MEMBER } from '@/graphql/members';
 import { GET_RANCHES } from '@/graphql/ranches';
@@ -182,29 +181,15 @@ const transformData = (data: MemberDto): any => {
 
 export default function MembersForm() {
   const { query, action } = useGraphQLCRUD();
-  const { ranches: authRanches, super_admin } = useAuth();
-  
-  // Query all ranches (for super_admin) or use auth ranches (for regular users)
-  const { data: ranchesData } = useQuery(GET_RANCHES, {
-    skip: !super_admin, // Only query if super_admin
-  });
+
+  const { data: ranchesData } = useQuery(GET_RANCHES);
 
   const ranchesOptions = useMemo(() => {
-    // For super_admin, use all ranches from query; for regular users, use from auth
-    const sourceRanches = super_admin 
-      ? (ranchesData?.ranches || [])
-      : (authRanches || []);
-    
-    if (!sourceRanches || sourceRanches.length === 0) {
-      return [];
-    }
-    
-    const options = sourceRanches
+    const ranches = ranchesData?.ranches || [];
+    return ranches
       .filter((ranch: Ranch | null | undefined): ranch is Ranch => !!ranch && !!ranch.id)
       .map((ranch: Ranch) => ({ label: ranch.name, value: ranch.id.toString() }));
-    
-    return options;
-  }, [super_admin, authRanches, ranchesData]);
+  }, [ranchesData]);
 
   const form = useForm<MemberDto>({
     initialValues: INITIAL_VALUES,

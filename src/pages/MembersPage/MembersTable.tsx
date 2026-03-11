@@ -5,7 +5,6 @@ import { useQuery } from '@apollo/client';
 import { CRUDTable } from '@/components/CRUDTable';
 import { DateCell } from '@/components/DateCell';
 import { useGraphQLCRUD } from '@/contexts/GraphQLCRUDContext';
-import { useAuth } from '@/contexts/AuthContext';
 import { Member } from '@/model/member';
 import { Ranch } from '@/model/ranch';
 import { birthdayBR, dateBR } from '@/utils/dates';
@@ -56,7 +55,6 @@ export function MembersTable({
   pageSize = 10,
 }: MembersTableProps = {}) {
   const { query, setPagination, pagination: contextPagination } = useGraphQLCRUD();
-  const { ranches: authRanches, super_admin } = useAuth();
   const data = (query.data || []) as Member[];
   
   // Manter valores anteriores de total e totalPages durante o carregamento para evitar resetar paginação
@@ -72,25 +70,14 @@ export function MembersTable({
     }
   }, [query.total, query.totalPages]);
 
-  // Query all ranches (for super_admin) or use auth ranches (for regular users)
-  const { data: ranchesData } = useQuery(GET_RANCHES, {
-    skip: !super_admin,
-  });
+  const { data: ranchesData } = useQuery(GET_RANCHES);
 
-  // Get ranches options for filter
   const ranchesOptions = useMemo(() => {
-    const sourceRanches = super_admin 
-      ? (ranchesData?.ranches || [])
-      : (authRanches || []);
-    
-    if (!sourceRanches || sourceRanches.length === 0) {
-      return [];
-    }
-    
-    return sourceRanches
+    const ranches = ranchesData?.ranches || [];
+    return ranches
       .filter((ranch: Ranch | null | undefined): ranch is Ranch => !!ranch && !!ranch.id)
       .map((ranch: Ranch) => ({ label: ranch.name, value: ranch.name }));
-  }, [super_admin, authRanches, ranchesData]);
+  }, [ranchesData]);
 
 
   // Inicializar contexto apenas na montagem

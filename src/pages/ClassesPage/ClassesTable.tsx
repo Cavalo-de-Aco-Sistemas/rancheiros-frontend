@@ -29,7 +29,7 @@ export function ClassesTable({
   currentPage = 1,
   pageSize = 10,
 }: ClassesTableProps = {}) {
-  const { query } = useGraphQLCRUD();
+  const { query, sorting: contextSorting } = useGraphQLCRUD();
   const client = useApolloClient();
   const toggleActiveMutation = useClassToggleActiveMutation();
   const [downloadingClassId, setDownloadingClassId] = useState<string | null>(null);
@@ -187,11 +187,35 @@ export function ClassesTable({
     return extractData(query.data) as unknown as Class[];
   }, [query.data]);
 
+  const sortedData = useMemo(() => {
+    if (!contextSorting || contextSorting.length === 0) { return allData; }
+
+    return [...allData].sort((a, b) => {
+      for (const sort of contextSorting) {
+        const key = sort.id;
+        const aVal = key === 'location.name' ? (a.location?.name ?? '') : (a[key as keyof Class] ?? '');
+        const bVal = key === 'location.name' ? (b.location?.name ?? '') : (b[key as keyof Class] ?? '');
+
+        let cmp = 0;
+        if (typeof aVal === 'string' && typeof bVal === 'string') {
+          cmp = aVal.localeCompare(bVal);
+        } else if (typeof aVal === 'boolean' && typeof bVal === 'boolean') {
+          cmp = Number(aVal) - Number(bVal);
+        } else {
+          cmp = String(aVal).localeCompare(String(bVal));
+        }
+
+        if (cmp !== 0) { return sort.desc ? -cmp : cmp; }
+      }
+      return 0;
+    });
+  }, [allData, contextSorting]);
+
   const paginatedData = useMemo(() => {
     const startIndex = (currentPage - 1) * pageSize;
     const endIndex = startIndex + pageSize;
-    return allData.slice(startIndex, endIndex);
-  }, [allData, currentPage, pageSize]);
+    return sortedData.slice(startIndex, endIndex);
+  }, [sortedData, currentPage, pageSize]);
 
   const pagination = useMemo(
     () => ({
