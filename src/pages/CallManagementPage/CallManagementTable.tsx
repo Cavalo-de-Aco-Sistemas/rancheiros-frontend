@@ -151,7 +151,9 @@ export function CallManagementTable({
         accessorKey: 'status',
         header: 'Status',
         filterVariant: 'select',
-        filterSelectOptions: ENROLLMENT_STATUS_FILTER_OPTIONS,
+        mantineFilterSelectProps: {
+          data: ENROLLMENT_STATUS_FILTER_OPTIONS as any,
+        },
         filterFn: 'equals',
         Cell: ({ row }) => <StatusIcon status={row.original.status} />,
       },
