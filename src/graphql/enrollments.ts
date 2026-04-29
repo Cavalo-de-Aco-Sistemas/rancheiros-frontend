@@ -205,3 +205,35 @@ export const GET_CERTIFICATION_ENROLLMENTS = gql`
     }
   }
 `;
+
+export const GET_ENROLLMENT_SUMMARY_BY_CLASS = gql`
+  query GetEnrollmentSummaryByClass(
+    $pagination: PaginationArgs
+    $activeOnly: Boolean
+    $classDateBucket: ClassDateBucket
+  ) {
+    enrollmentSummaryByClass(
+      pagination: $pagination
+      activeOnly: $activeOnly
+      classDateBucket: $classDateBucket
+    ) {
+      data {
+        classId
+        className
+        classDate
+        waitingCount
+        calledCount
+        confirmedCount
+        certifiedCount
+        missedCount
+        ignoredCount
+        droppedCount
+        totalEnrollments
+      }
+      total
+      page
+      limit
+      totalPages
+    }
+  }
+`;

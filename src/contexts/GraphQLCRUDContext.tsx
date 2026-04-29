@@ -14,6 +14,13 @@ interface ColumnFilter {
   value: any;
 }
 
+const FILTER_FN_MAP: Record<string, string> = {
+  greaterThan: 'gt',
+  greaterThanOrEqualTo: 'gte',
+  lessThan: 'lt',
+  lessThanOrEqualTo: 'lte',
+};
+
 // Sorting state from Mantine React Table
 export interface SortingState {
   id: string;
@@ -64,6 +71,7 @@ interface GraphQLCRUDProviderProps {
   query: DocumentNode;
   dataKey: string; // Key to extract data from query result (e.g., 'members', 'users')
   enablePagination?: boolean; // Enable pagination and sorting support
+  additionalVariables?: Record<string, any>; // Extra GraphQL variables beyond pagination
 }
 
 /**
@@ -86,6 +94,7 @@ export const GraphQLCRUDProvider = ({
   query: graphqlQuery,
   dataKey,
   enablePagination = false,
+  additionalVariables,
 }: PropsWithChildren<GraphQLCRUDProviderProps>) => {
   const [selected, setSelected] = useState<CRUDType | undefined>(undefined);
   const [action, setAction] = useState<'create' | 'update' | 'delete'>('create');
@@ -152,8 +161,6 @@ export const GraphQLCRUDProvider = ({
                 if ('filterFn' in filter.value && !filterFn) {
                   filterFn = filter.value.filterFn;
                 }
-              } else if ('label' in filter.value && 'value' in filter.value) {
-                normalizedValue = filter.value.value;
               } else {
                 // Keep the object as is (might be a date range or other complex filter)
                 normalizedValue = filter.value;
@@ -167,7 +174,7 @@ export const GraphQLCRUDProvider = ({
             
             // Include filterFn if available
             if (filterFn) {
-              result.filterFn = filterFn;
+              result.filterFn = FILTER_FN_MAP[filterFn] || filterFn;
             }
             
             return result;
@@ -190,8 +197,16 @@ export const GraphQLCRUDProvider = ({
   }, [enablePagination, pagination, sorting, columnFilters]);
 
   // Execute GraphQL query
+  const variables = useMemo(
+    () => ({
+      ...(paginationVariables || {}),
+      ...(additionalVariables || {}),
+    }),
+    [paginationVariables, additionalVariables]
+  );
+
   const { data: rawData, loading, error, refetch } = useQuery(graphqlQuery, {
-    variables: paginationVariables,
+    variables,
     skip: false,
     fetchPolicy: 'network-only', // Always fetch from network when variables change
     notifyOnNetworkStatusChange: true,

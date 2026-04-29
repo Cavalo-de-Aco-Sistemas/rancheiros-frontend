@@ -21,6 +21,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { NotFoundPage } from '@/pages/NotFoundPage';
 
 export const ROUTES_MAP = new Map([
+  ['/', { link: '/', label: 'Início', icon: IconHome }],
   ['/membros', { link: '/membros', label: 'Membros', icon: IconIdBadge2, entity: 'members' }],
   ['/ranchos', { link: '/ranchos', label: 'Ranchos', icon: IconHome, entity: 'ranches' }],
   [
@@ -68,9 +69,19 @@ export function MainPage() {
   const location = useLocation();
 
   const hasPermission = useMemo(
-    () =>
-      !ROUTES_MAP.has(location.pathname) ||
-      permissions?.[ROUTES_MAP.get(location.pathname)?.entity as keyof typeof permissions]?.read,
+    () => {
+      const route = ROUTES_MAP.get(location.pathname);
+      if (!route) {
+        return true;
+      }
+
+      // Routes without entity are public within authenticated area (e.g. home dashboard)
+      if (!route.entity) {
+        return true;
+      }
+
+      return permissions?.[route.entity as keyof typeof permissions]?.read;
+    },
     [permissions, location.pathname]
   );
 
