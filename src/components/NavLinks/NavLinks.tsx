@@ -14,10 +14,16 @@ export default function NavLinks({ toggleMobile }: { toggleMobile: () => void })
 
   const items = useMemo(() => {
     return [...ROUTES_MAP.values()].filter((item) => {
+      if (!item.entity) {
+        return true;
+      }
+
       // Check basic read permission for the entity
       const hasReadPermission = permissions?.[item.entity as keyof typeof permissions]?.read;
       
-      if (!hasReadPermission) return false;
+      if (!hasReadPermission) {
+        return false;
+      }
       
       // Gestão de Chamadas and Certificações require flow.update permission
       if (item.link === '/inscricoes/gestao-chamadas' || item.link === '/inscricoes/certificacoes') {
