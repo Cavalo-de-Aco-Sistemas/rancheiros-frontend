@@ -193,7 +193,6 @@ export function HomeSummaryTable({ title }: HomeSummaryTableProps) {
       title={title}
       csvData={csvData}
       pdfConfig={{ tableHeaders, rowMapper }}
-      data={data}
       pagination={pagination}
       enableFilters
       enableRowNumbers

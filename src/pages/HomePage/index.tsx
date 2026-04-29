@@ -5,7 +5,7 @@ import { HomeSummaryTable } from './HomeSummaryTable';
 
 export default function HomePage() {
   return (
-    <Tabs defaultValue="future" keepMounted={false}>
+    <Tabs defaultValue="future" keepMounted>
       <Tabs.List>
         <Tabs.Tab value="future">Próximas</Tabs.Tab>
         <Tabs.Tab value="past">Anteriores</Tabs.Tab>
