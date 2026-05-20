@@ -134,9 +134,11 @@ export function EnrollmentStatusCallActions({
     return (
       currentStatus === EnrollmentStatus.IGNORED ||
       currentStatus === EnrollmentStatus.CONFIRMED ||
-      currentStatus === EnrollmentStatus.DROPPED
+      currentStatus === EnrollmentStatus.DROPPED ||
+      currentStatus === EnrollmentStatus.MISSED ||
+      currentStatus === EnrollmentStatus.CERTIFIED
     );
-    // Permitido IGNORED e DROPPED voltar para CALLED conforme regras de negócio
+    // Permitido voltar para CALLED (rechamada) conforme regras de negócio
   }, [enrollment.status]);
 
   // Memoize enabled actions to prevent unnecessary re-renders
