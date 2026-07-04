@@ -51,3 +51,7 @@ export function useSharedFilters() {
   }
   return context;
 }
+
+export function useOptionalSharedFilters() {
+  return useContext(SharedFiltersContext);
+}

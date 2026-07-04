@@ -237,9 +237,10 @@ export function ClassesTable({
           handleDownloadEnrollments(classItem, 'pdf');
         },
         isVisible: () => true,
+        isLoading: downloadingClassId !== null,
       },
     ],
-    [handleDownloadEnrollments]
+    [handleDownloadEnrollments, downloadingClassId]
   );
 
   return (

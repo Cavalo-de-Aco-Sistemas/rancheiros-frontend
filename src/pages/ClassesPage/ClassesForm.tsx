@@ -9,6 +9,7 @@ import { CREATE_CLASS, DELETE_CLASS, GET_CLASSES, UPDATE_CLASS } from '@/graphql
 import { GET_LOCATIONS } from '@/graphql/locations';
 import { Class, ClassCreateDto, ClassDto } from '@/model/class';
 import { Location } from '@/model/location';
+import { toDate } from '@/utils/dates';
 
 const INITIAL_VALUES = { location: null, date: null, mapsLink: '', active: true };
 
@@ -16,7 +17,7 @@ const parseSelected = (classs: Class): ClassDto => {
   const { location, date, mapsLink, active } = classs;
   return {
     location: location?.id,
-    date: date ? new Date(`${date}T00:00:00`) : null,
+    date: toDate(date),
     mapsLink,
     active,
   };
@@ -75,6 +76,11 @@ export function ClassesForm() {
         disabled={query.isLoading || action === 'delete'}
         valueFormat="DD/MM/YYYY"
         placeholder="DD/MM/AAAA"
+        value={
+          form.values.date && form.values.date instanceof Date && !isNaN(form.values.date.getTime())
+            ? form.values.date
+            : null
+        }
       />
       <TextInput
         required
