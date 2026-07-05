@@ -1,14 +1,10 @@
 import { useCallback, useMemo } from 'react';
-import { useQuery } from '@apollo/client';
 import { IconArrowBack, IconCheck, IconEyeOff, IconPhone, IconX } from '@tabler/icons-react';
-import { ActionIcon, Button, Group, Modal, Select, Text, Tooltip } from '@mantine/core';
-import { useDisclosure } from '@mantine/hooks';
-import { GET_ACTIVE_CLASSES } from '@/graphql/classes';
-import { Class } from '@/model/class';
+import { ActionIcon, Group, Select, Text, Tooltip } from '@mantine/core';
 import { Enrollment, EnrollmentStatus } from '@/model/enrollment';
+import { useClassAssignOptions } from '@/hooks/useClassAssignOptions';
 import { useEnrollmentAssignClassMutation } from '@/mutations/useEnrollmentAssignClassMutation';
 import { useEnrollmentFlowMutation } from '@/mutations/useEnrollmentFlowMutation';
-import { dateBR } from '@/utils/dates';
 import { useAuth } from '@/contexts/AuthContext';
 
 interface EnrollmentStatusCallActionsProps {
@@ -49,29 +45,11 @@ export function EnrollmentStatusCallActions({
 }: EnrollmentStatusCallActionsProps) {
   const updateFlowMutation = useEnrollmentFlowMutation();
   const assignClassMutation = useEnrollmentAssignClassMutation();
-  const { data: classesData } = useQuery(GET_ACTIVE_CLASSES);
-  const classesQuery = { data: classesData?.activeClasses };
-  const [, { open: _open }] = useDisclosure(false);
+  const classesOptions = useClassAssignOptions();
   const { permissions } = useAuth();
 
   // Check if user has permission to update flow
   const canUpdateFlow = permissions?.flow?.update || false;
-
-  const classesOptions = useMemo(() => {
-    if (!classesQuery.data) {
-      return [];
-    }
-
-    // Handle both array and paginated data
-    const classesData = Array.isArray(classesQuery.data)
-      ? classesQuery.data
-      : classesQuery.data.data || [];
-
-    return classesData.map((classItem: Class) => ({
-      value: classItem.id,
-      label: `${classItem.location?.name ?? 'Sem local'} - ${classItem.date ? dateBR(classItem.date) : 'Sem data'}`,
-    }));
-  }, [classesQuery.data]);
 
   const handleAssignClass = useCallback(
     (classId: string) => {
@@ -175,8 +153,12 @@ export function EnrollmentStatusCallActions({
           }
         }}
         disabled={assignClassMutation.isLoading}
+        searchable
+        nothingFoundMessage="Nenhuma turma encontrada"
+        maxDropdownHeight={280}
+        comboboxProps={{ withinPortal: true }}
         size="xs"
-        w={200}
+        w={230}
       />
     );
   }

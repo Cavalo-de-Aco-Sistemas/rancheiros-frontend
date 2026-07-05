@@ -8,7 +8,9 @@ import { StatusIcon } from '@/components/StatusIcon';
 import { useAuth } from '@/contexts/AuthContext';
 import { useGraphQLCRUD } from '@/contexts/GraphQLCRUDContext';
 import { Enrollment, EnrollmentStatus, ENROLLMENT_STATUS_FILTER_OPTIONS } from '@/model/enrollment';
+import { useClassFilterOptions, CLASS_FILTER_SELECT_PROPS } from '@/hooks/useClassFilterOptions';
 import { useEnrollmentFlowMutation } from '@/mutations/useEnrollmentFlowMutation';
+import { buildClassSelectLabel } from '@/utils/classSelectOptions';
 import { dateBR } from '@/utils/dates';
 import { normalizeEnrollments } from '@/utils/statusNormalizer';
 
@@ -43,12 +45,13 @@ export function CertificationManagementTable({
 }: CertificationManagementTableProps) {
   const { query, setPagination, pagination: contextPagination } = useGraphQLCRUD();
   const { name } = useAuth();
+  const classFilterOptions = useClassFilterOptions();
   const updateFlowMutation = useEnrollmentFlowMutation();
-  
+
   // Manter valores anteriores de total e totalPages durante o carregamento para evitar resetar paginação
   const [lastKnownTotal, setLastKnownTotal] = useState<number | undefined>(undefined);
   const [lastKnownTotalPages, setLastKnownTotalPages] = useState<number | undefined>(undefined);
-  
+
   useEffect(() => {
     if (query.total !== undefined) {
       setLastKnownTotal(query.total);
@@ -63,7 +66,7 @@ export function CertificationManagementTable({
     if (setPagination && !contextPagination) {
       setPagination({ page: currentPage, limit: pageSize });
     }
-  }, [setPagination]);
+  }, [setPagination, contextPagination, currentPage, pageSize]);
 
   const data = normalizeEnrollments(query.data || []);
 
@@ -143,27 +146,17 @@ export function CertificationManagementTable({
       {
         id: 'class',
         accessorKey: 'class',
+        accessorFn: (row) => row.class?.id?.toString() ?? '',
         header: 'Turma',
-        filterVariant: 'text',
+        filterVariant: 'select',
         filterFn: 'contains',
+        mantineFilterSelectProps: {
+          data: classFilterOptions as any,
+          ...CLASS_FILTER_SELECT_PROPS,
+        },
         Cell: ({ row }) => {
           const classData = row.original.class;
-          if (!classData) {
-            return '';
-          }
-
-          const date = classData.date ? (dateBR(classData.date) ?? '') : '';
-          const location = classData.location?.name ?? '';
-
-          if (location && date) {
-            return `${location} - ${date}`;
-          } else if (location) {
-            return location;
-          } else if (date) {
-            return date;
-          }
-
-          return '';
+          return classData ? buildClassSelectLabel(classData) : '';
         },
       },
       {
@@ -184,7 +177,7 @@ export function CertificationManagementTable({
         filterVariant: 'date',
         Cell: ({ row }) => {
           const date = row.original.enrollment_date;
-          if (!date) return '';
+          if (!date) { return ''; }
 
           try {
             // Converter para Date e formatar para DD/MM/YYYY
@@ -241,7 +234,7 @@ export function CertificationManagementTable({
       { accessorKey: 'brand', header: 'Marca', enableHiding: true },
       { accessorKey: 'model', header: 'Modelo', enableHiding: true },
     ],
-    [name]
+    [name, classFilterOptions]
   );
 
   // Paginação server-side - dados já vêm paginados do backend
@@ -333,8 +326,8 @@ export function CertificationManagementTable({
       csvData={csvData}
       pdfConfig={pdfConfig}
       customActions={customActions}
-      enableFilters={true}
-      enableRowNumbers={true}
+      enableFilters
+      enableRowNumbers
       columnVisibility={{
         status: false,
         enrollment_date: false,

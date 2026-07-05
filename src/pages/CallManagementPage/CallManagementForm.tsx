@@ -12,8 +12,8 @@ import {
 } from '@/graphql/enrollments';
 import { GET_LOCATIONS } from '@/graphql/locations';
 import { useCallManagementData } from '@/hooks/useSharedEnrollments';
-import { Class } from '@/model/class';
 import { Enrollment, EnrollmentDto, EnrollmentStatus } from '@/model/enrollment';
+import { buildGroupedClassSelectOptions } from '@/utils/classSelectOptions';
 import { Location } from '@/model/location';
 
 const INITIAL_VALUES = {
@@ -42,30 +42,22 @@ export function CallManagementForm() {
   const { data: classesData } = useQuery(GET_ACTIVE_CLASSES);
   const { data: locationsData } = useQuery(GET_LOCATIONS);
 
-  const classes = classesData?.activeClasses || [];
-  const locations = locationsData?.locations || [];
-
   const classesOptions = useMemo(
-    () =>
-      classes.map((classs: Class) => ({
-        label: classs.location?.name ?? '',
-        value: classs.id.toString(),
-      })),
-    [classes]
+    () => buildGroupedClassSelectOptions(classesData?.activeClasses ?? []),
+    [classesData?.activeClasses]
   );
 
   const locationsOptions = useMemo(
     () =>
-      locations.map((location: Location) => ({
+      (locationsData?.locations ?? []).map((location: Location) => ({
         label: location.name,
         value: location.id.toString(),
       })),
-    [locations]
+    [locationsData?.locations]
   );
 
   const { data, loading, error, refetch } = useCallManagementData();
   const query = { data, isLoading: loading, isError: !!error, error, refetch };
-  const action = 'create'; // Default action for form
 
   const form = useForm<EnrollmentDto>({
     initialValues: INITIAL_VALUES,
