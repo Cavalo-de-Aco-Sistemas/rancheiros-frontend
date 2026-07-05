@@ -2,6 +2,7 @@ import { createContext, PropsWithChildren, useCallback, useEffect, useMemo, useS
 import { ApolloError, DocumentNode, useQuery } from '@apollo/client';
 import { MRT_RowData } from 'mantine-react-table';
 import { useContextProvider } from './useContextProvider';
+import { DEFAULT_COLUMN_FILTER_FN } from '@/utils/columnFilterDefaults';
 
 interface Identifiable {
   id: number | string;
@@ -113,8 +114,8 @@ export const GraphQLCRUDProvider = ({
 
   // Reset to first page when filters change
   useEffect(() => {
-    if (enablePagination && columnFilters.length > 0 && pagination.page !== 1) {
-      setPagination(prev => ({ ...prev, page: 1 }));
+    if (enablePagination && columnFilters.length > 0) {
+      setPagination((prev) => (prev.page === 1 ? prev : { ...prev, page: 1 }));
     }
   }, [columnFilters, enablePagination]);
 
@@ -150,7 +151,7 @@ export const GraphQLCRUDProvider = ({
           .map((filter) => {
             // Normalize filter value - Mantine React Table may send different formats
             let normalizedValue = filter.value;
-            let filterFn = (filter as any).filterFn; // Extract filterFn if present
+            let filterFn = (filter as any).filterFn || DEFAULT_COLUMN_FILTER_FN[filter.id];
             
             // If value is an object, try to extract the actual value
             if (typeof filter.value === 'object' && filter.value !== null && !Array.isArray(filter.value)) {
@@ -166,7 +167,7 @@ export const GraphQLCRUDProvider = ({
                 normalizedValue = filter.value;
               }
             }
-            
+
             const result: { id: string; value: any; filterFn?: string } = {
               id: filter.id,
               value: normalizedValue,
@@ -285,6 +286,8 @@ export const GraphQLCRUDProvider = ({
       query,
       selected,
       action,
+      open,
+      close,
       opened,
       columnFilters,
       globalFilter,

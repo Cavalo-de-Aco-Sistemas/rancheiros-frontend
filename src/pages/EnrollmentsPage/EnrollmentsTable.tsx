@@ -7,7 +7,9 @@ import { StatusIcon } from '@/components/StatusIcon';
 import { useAuth } from '@/contexts/AuthContext';
 import { useGraphQLCRUD } from '@/contexts/GraphQLCRUDContext';
 import { Enrollment, EnrollmentStatus, ENROLLMENT_STATUS_FILTER_OPTIONS } from '@/model/enrollment';
+import { useClassFilterOptions, CLASS_FILTER_SELECT_PROPS } from '@/hooks/useClassFilterOptions';
 import { useEnrollmentFlowMutation } from '@/mutations/useEnrollmentFlowMutation';
+import { buildClassSelectLabel } from '@/utils/classSelectOptions';
 import { dateBR } from '@/utils/dates';
 import { normalizeEnrollments } from '@/utils/statusNormalizer';
 
@@ -41,6 +43,7 @@ export function EnrollmentsTable({
 }: EnrollmentsTableProps = {}) {
   const { query, setPagination, pagination: contextPagination } = useGraphQLCRUD();
   const { name } = useAuth();
+  const classFilterOptions = useClassFilterOptions();
   const updateFlowMutation = useEnrollmentFlowMutation();
   
   // Manter valores anteriores de total e totalPages durante o carregamento para evitar resetar paginação
@@ -61,7 +64,7 @@ export function EnrollmentsTable({
     if (setPagination && !contextPagination) {
       setPagination({ page: currentPage, limit: pageSize });
     }
-  }, [setPagination]);
+  }, [setPagination, contextPagination, currentPage, pageSize]);
 
   const data = normalizeEnrollments(query.data || []);
 
@@ -112,27 +115,17 @@ export function EnrollmentsTable({
       {
         id: 'class',
         accessorKey: 'class',
+        accessorFn: (row) => row.class?.id?.toString() ?? '',
         header: 'Turma',
-        filterVariant: 'text',
+        filterVariant: 'select',
         filterFn: 'contains',
+        mantineFilterSelectProps: {
+          data: classFilterOptions as any,
+          ...CLASS_FILTER_SELECT_PROPS,
+        },
         Cell: ({ row }) => {
           const classData = row.original.class;
-          if (!classData) {
-            return '';
-          }
-
-          const date = classData.date ? (dateBR(classData.date) ?? '') : '';
-          const location = classData.location?.name ?? '';
-
-          if (location && date) {
-            return `${location} - ${date}`;
-          } else if (location) {
-            return location;
-          } else if (date) {
-            return date;
-          }
-
-          return '';
+          return classData ? buildClassSelectLabel(classData) : '';
         },
       },
       {
@@ -153,7 +146,9 @@ export function EnrollmentsTable({
         filterVariant: 'date',
         Cell: ({ row }) => {
           const date = row.original.enrollment_date;
-          if (!date) return '';
+          if (!date) {
+            return '';
+          }
 
           try {
             // Converter para Date e formatar para DD/MM/YYYY
@@ -210,7 +205,7 @@ export function EnrollmentsTable({
       { accessorKey: 'brand', header: 'Marca', enableHiding: true },
       { accessorKey: 'model', header: 'Modelo', enableHiding: true },
     ],
-    [name]
+    [name, classFilterOptions]
   );
 
   const csvData = useMemo(() => {
@@ -243,7 +238,7 @@ export function EnrollmentsTable({
         Modelo: model,
       })
     );
-  }, [query.data]);
+  }, [data]);
 
   const rowMapper = useCallback((row: MRT_Row<Enrollment>): string[] => {
     const {
@@ -299,8 +294,8 @@ export function EnrollmentsTable({
       pdfConfig={pdfConfig}
       customActions={customActions}
       enableEdit
-      enableFilters={true}
-      enableRowNumbers={true}
+      enableFilters
+      enableRowNumbers
       data={data}
       pagination={pagination}
       onPageChange={onPageChange}

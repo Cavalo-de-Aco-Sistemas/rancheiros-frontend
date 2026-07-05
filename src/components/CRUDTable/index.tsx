@@ -20,6 +20,7 @@ import { ActionIcon, Button, Group, Menu, Modal, rem, Text, Title } from '@manti
 import { useAuth } from '@/contexts/AuthContext';
 import { GraphQLCRUDContext } from '@/contexts/GraphQLCRUDContext';
 import { useOptionalSharedFilters } from '@/contexts/SharedFiltersContext';
+import { DEFAULT_COLUMN_FILTER_FN } from '@/utils/columnFilterDefaults';
 import { ROUTES_MAP } from '@/pages/MainPage/MainPage';
 
 type AcceptedData = number | string | boolean | null | undefined;
@@ -448,8 +449,18 @@ export function CRUDTable<T extends MRT_RowData>(props: CRUDTableProps<T>) {
           const currentFilters = columnFilters || [];
           const newFilters =
             typeof updaterOrValue === 'function' ? updaterOrValue(currentFilters) : updaterOrValue;
+          const enrichedFilters = newFilters.map((filter: { id: string; value: unknown; filterFn?: string }) => {
+            if (filter.filterFn) {
+              return filter;
+            }
+            const defaultFilterFn = DEFAULT_COLUMN_FILTER_FN[filter.id];
+            if (!defaultFilterFn) {
+              return filter;
+            }
+            return { ...filter, filterFn: defaultFilterFn };
+          });
           if (setColumnFilters) {
-            setColumnFilters(newFilters);
+            setColumnFilters(enrichedFilters);
           }
           // Reset to first page when filters change
           if (pagination && onPageChange) {
@@ -582,6 +593,8 @@ export function CRUDTable<T extends MRT_RowData>(props: CRUDTableProps<T>) {
       contextSorting,
       setContextSorting,
       setContextPagination,
+      emptyStateMessage,
+      emptyStateDescription,
     ]
   );
 
