@@ -9,12 +9,16 @@ import classes from './NavLinks.module.css';
 
 export default function NavLinks({ toggleMobile }: { toggleMobile: () => void }) {
   const location = useLocation();
-  const { permissions } = useAuth();
+  const { permissions, super_admin } = useAuth();
   const [enrollmentsOpened, setEnrollmentsOpened] = useState(false);
 
   const items = useMemo(() => {
     return [...ROUTES_MAP.values()].filter((item) => {
-      if (!item.entity) {
+      if ('superAdminOnly' in item && item.superAdminOnly) {
+        return !!super_admin;
+      }
+
+      if (!('entity' in item) || !item.entity) {
         return true;
       }
 
@@ -32,7 +36,7 @@ export default function NavLinks({ toggleMobile }: { toggleMobile: () => void })
       
       return true;
     });
-  }, [permissions]);
+  }, [permissions, super_admin]);
 
   // Separar itens principais dos subitens de inscrições
   const mainItems = useMemo(
