@@ -10,6 +10,7 @@ import 'dayjs/locale/pt-br';
 
 import { useMemo } from 'react';
 import {
+  IconHistory,
   IconHome,
   IconIdBadge2,
   IconMail,
@@ -57,6 +58,15 @@ export const ROUTES_MAP = new Map([
     { link: '/locais', label: 'Locais de Treinamento', icon: IconMapPin, entity: 'locations' },
   ],
   ['/usuarios', { link: '/usuarios', label: 'Usuários', icon: IconShieldLock, entity: 'users' }],
+  [
+    '/log-de-acoes',
+    {
+      link: '/log-de-acoes',
+      label: 'Log de Ações',
+      icon: IconHistory,
+      superAdminOnly: true,
+    },
+  ],
 ]);
 
 export function MainPage() {
@@ -65,7 +75,7 @@ export function MainPage() {
   const [desktopOpened, { toggle: toggleDesktop }] = useDisclosure(true);
   const mounted = useMounted();
 
-  const { permissions } = useAuth();
+  const { permissions, super_admin } = useAuth();
   const location = useLocation();
 
   const hasPermission = useMemo(
@@ -75,14 +85,18 @@ export function MainPage() {
         return true;
       }
 
+      if ('superAdminOnly' in route && route.superAdminOnly) {
+        return !!super_admin;
+      }
+
       // Routes without entity are public within authenticated area (e.g. home dashboard)
-      if (!route.entity) {
+      if (!('entity' in route) || !route.entity) {
         return true;
       }
 
       return permissions?.[route.entity as keyof typeof permissions]?.read;
     },
-    [permissions, location.pathname]
+    [permissions, super_admin, location.pathname]
   );
 
   if (!mounted) {

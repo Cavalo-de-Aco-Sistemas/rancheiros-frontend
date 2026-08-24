@@ -81,6 +81,7 @@ export interface CRUDTableProps<T extends MRT_RowData> {
   enableRowNumbers?: boolean; // Habilita numeração sequencial das linhas
   emptyStateMessage?: string; // Mensagem personalizada para estado vazio
   emptyStateDescription?: string; // Descrição adicional para estado vazio
+  readOnly?: boolean; // Desabilita ações de criar/editar/excluir (ex: tabelas de auditoria)
 }
 
 const DEFAULT_PERMISSIONS = {
@@ -106,6 +107,7 @@ export function CRUDTable<T extends MRT_RowData>(props: CRUDTableProps<T>) {
     enableRowNumbers = false,
     emptyStateMessage = 'Nenhum dado encontrado',
     emptyStateDescription,
+    readOnly = false,
   } = props;
   // Use GraphQL context (optional for read-only tables)
   const context = useContext(GraphQLCRUDContext);
@@ -268,6 +270,10 @@ export function CRUDTable<T extends MRT_RowData>(props: CRUDTableProps<T>) {
     update,
     delete: remove, // delete is a reserved word
   } = useMemo(() => {
+    if (readOnly) {
+      return DEFAULT_PERMISSIONS;
+    }
+
     const entity = ROUTES_MAP.get(location.pathname)?.entity;
     const entityPermissions = permissions?.[entity as keyof typeof permissions];
 
@@ -278,7 +284,7 @@ export function CRUDTable<T extends MRT_RowData>(props: CRUDTableProps<T>) {
 
     const result = entityPermissions ?? DEFAULT_PERMISSIONS;
     return result;
-  }, [permissions, location.pathname, super_admin]);
+  }, [permissions, location.pathname, super_admin, readOnly]);
 
   const handleExportRowsPDF = useCallback(
     (rows: MRT_Row<T>[], table?: any) => {
@@ -434,7 +440,7 @@ export function CRUDTable<T extends MRT_RowData>(props: CRUDTableProps<T>) {
           overflow: 'auto', // Permitir scroll quando necessário
         },
       },
-      enableRowActions: true,
+      enableRowActions: (update || enableEdit || remove || customActions.length > 0),
       // Configurações de filtros
       enableColumnFilters: enableFilters,
       initialShowColumnFilters: enableFilters,
@@ -595,6 +601,10 @@ export function CRUDTable<T extends MRT_RowData>(props: CRUDTableProps<T>) {
       setContextPagination,
       emptyStateMessage,
       emptyStateDescription,
+      update,
+      enableEdit,
+      remove,
+      customActions,
     ]
   );
 
