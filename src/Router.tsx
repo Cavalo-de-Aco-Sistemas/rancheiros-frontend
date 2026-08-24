@@ -1,4 +1,5 @@
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
+import { ActionLogPage } from './pages/ActionLogPage';
 import { CallManagementPage } from './pages/CallManagementPage';
 import { CertificationManagementPage } from './pages/CertificationPage';
 import { ClassesPage } from './pages/ClassesPage';
@@ -48,6 +49,10 @@ const router = createBrowserRouter([
       {
         path: '/locais',
         element: <LocationsPage />,
+      },
+      {
+        path: '/log-de-acoes',
+        element: <ActionLogPage />,
       },
     ],
   },
